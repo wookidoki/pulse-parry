@@ -1,0 +1,92 @@
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  padding: 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 5;
+}
+
+.hpRow {
+  display: flex;
+  gap: 8px;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.heart {
+  display: inline-block;
+  transition: transform 0.15s, color 0.2s, text-shadow 0.2s;
+}
+
+.heartFull {
+  color: var(--neon-magenta);
+  text-shadow:
+    0 0 8px rgba(255, 43, 214, 0.9),
+    0 0 16px rgba(255, 43, 214, 0.5);
+}
+
+.heartEmpty {
+  color: rgba(240, 246, 255, 0.15);
+  transform: scale(0.85);
+}
+
+.scoreBox {
+  text-align: right;
+  font-family: var(--font-geist-mono), monospace;
+}
+
+.scoreLabel {
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: rgba(240, 246, 255, 0.5);
+}
+
+.scoreValue {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--neon-cyan);
+  text-shadow:
+    0 0 10px rgba(28, 240, 255, 0.7),
+    0 0 24px rgba(28, 240, 255, 0.3);
+  line-height: 1;
+  margin-top: 4px;
+}
+
+.combo {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 4px;
+  animation: comboPop 0.2s ease-out;
+}
+
+.comboX {
+  font-size: 18px;
+  color: var(--neon-yellow);
+}
+
+.comboNum {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--neon-yellow);
+  text-shadow:
+    0 0 10px rgba(247, 255, 58, 0.8),
+    0 0 24px rgba(247, 255, 58, 0.4);
+}
+
+.comboLabel {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: rgba(247, 255, 58, 0.6);
+  margin-left: 6px;
+}
+
+@keyframes comboPop {
+  from { transform: scale(1.4); }
+  to { transform: scale(1); }
+}

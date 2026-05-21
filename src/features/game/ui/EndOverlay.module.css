@@ -1,0 +1,84 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.gameover {
+  background: rgba(5, 3, 10, 0.85);
+}
+
+.victory {
+  background:
+    radial-gradient(circle at center, rgba(28, 240, 255, 0.2), transparent 60%),
+    rgba(5, 3, 10, 0.85);
+}
+
+.titleGameover {
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--neon-red);
+  text-shadow:
+    0 0 16px rgba(255, 56, 99, 0.9),
+    0 0 48px rgba(255, 56, 99, 0.5);
+  animation: glitch 1.5s infinite;
+}
+
+.titleVictory {
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--neon-cyan);
+  text-shadow:
+    0 0 16px rgba(28, 240, 255, 0.9),
+    0 0 48px rgba(28, 240, 255, 0.5);
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 18px;
+  letter-spacing: 0.3em;
+  color: rgba(240, 246, 255, 0.7);
+  text-align: center;
+}
+
+.stats span {
+  color: var(--neon-cyan);
+  margin-left: 16px;
+  font-size: 22px;
+  text-shadow: 0 0 12px rgba(28, 240, 255, 0.6);
+}
+
+.retryBtn {
+  padding: 16px 48px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--bg);
+  background: var(--neon-yellow);
+  border-radius: 4px;
+  box-shadow: 0 0 24px rgba(247, 255, 58, 0.6);
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+
+.retryBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 36px rgba(247, 255, 58, 0.9);
+}
+
+@keyframes glitch {
+  0%, 90%, 100% { transform: translate(0, 0); }
+  92% { transform: translate(-3px, 1px); }
+  94% { transform: translate(2px, -2px); }
+  96% { transform: translate(-1px, 2px); }
+  98% { transform: translate(2px, 1px); }
+}
