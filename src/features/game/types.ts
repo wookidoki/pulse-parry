@@ -51,6 +51,15 @@ export interface Slash {
   radius: number;
 }
 
+export interface Shockwave {
+  x: number;
+  y: number;
+  bornAtMs: number;
+  durationMs: number;
+  maxRadius: number;
+  color: string;
+}
+
 export interface Bullet {
   id: number;
   x: number;
@@ -102,6 +111,7 @@ export interface EngineState {
   scorePops: ScorePop[];
   flashes: ScreenFlash[];
   slashes: Slash[];
+  shockwaves: Shockwave[];
   nextEnemyId: number;
   nextBulletId: number;
   parryHeld: boolean;

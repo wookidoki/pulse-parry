@@ -1,4 +1,4 @@
-import type { EngineState, ScorePop, ScreenFlash, Slash } from "../types";
+import type { EngineState, ScorePop, ScreenFlash, Shockwave, Slash } from "../types";
 import { PALETTE } from "../config/palette";
 import {
   SCOREPOP_LIFE_MS,
@@ -7,6 +7,28 @@ import {
   SLASH_DURATION_MS,
   SLASH_RADIUS,
 } from "../config/tuning";
+
+const SHOCKWAVE_DURATION_MS = 480;
+const SHOCKWAVE_MAX_RADIUS = 160;
+
+export function spawnShockwave(
+  state: EngineState,
+  x: number,
+  y: number,
+  nowMs: number,
+  color: string = PALETTE.yellow,
+  maxRadius: number = SHOCKWAVE_MAX_RADIUS,
+): void {
+  const wave: Shockwave = {
+    x,
+    y,
+    bornAtMs: nowMs,
+    durationMs: SHOCKWAVE_DURATION_MS,
+    maxRadius,
+    color,
+  };
+  state.shockwaves.push(wave);
+}
 
 export function spawnSlash(
   state: EngineState,
@@ -76,6 +98,10 @@ export function updateEffects(state: EngineState, dt: number, nowMs: number): vo
   state.flashes = state.flashes.filter((f) => f.life > 0);
 
   state.slashes = state.slashes.filter(
+    (s) => nowMs - s.bornAtMs < s.durationMs,
+  );
+
+  state.shockwaves = state.shockwaves.filter(
     (s) => nowMs - s.bornAtMs < s.durationMs,
   );
 }

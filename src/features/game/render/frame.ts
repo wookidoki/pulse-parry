@@ -14,6 +14,7 @@ import {
 import {
   drawScorePops,
   drawScreenFlashes,
+  drawShockwaves,
   drawSlashes,
 } from "./effects";
 import {
@@ -50,6 +51,7 @@ export function render(
   c.scale(state.cameraZoom, state.cameraZoom);
 
   drawParticles(c, state);
+  drawShockwaves(c, state, nowMs);
   drawEnemies(c, state, nowMs);
   drawBullets(c, state, nowMs);
 

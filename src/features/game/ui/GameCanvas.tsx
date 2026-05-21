@@ -3,6 +3,13 @@
 import { useEffect, useRef } from "react";
 import { createEngineState, update } from "../engine/update";
 import { ensureAudio, resumeAudio, setMasterVolume } from "../audio";
+import {
+  initMusic,
+  pauseMusic,
+  playStageBgm,
+  resumeMusic,
+  setMusicVolume,
+} from "../music";
 import { useHud } from "../state";
 import type { EngineState, PlayerInput } from "../types";
 import { render } from "../render/frame";
@@ -44,6 +51,8 @@ export function GameCanvas() {
   const victory = useHud((s) => s.victory);
   const togglePause = useHud((s) => s.togglePause);
   const volume = useHud((s) => s.volume);
+  const stageIndex = useHud((s) => s.stageIndex);
+  const status = useHud((s) => s.status);
 
   useEffect(() => {
     start();
@@ -51,7 +60,21 @@ export function GameCanvas() {
 
   useEffect(() => {
     setMasterVolume(volume);
+    setMusicVolume(volume);
   }, [volume]);
+
+  useEffect(() => {
+    initMusic();
+  }, []);
+
+  useEffect(() => {
+    if (status === "playing") playStageBgm(stageIndex);
+  }, [stageIndex, status]);
+
+  useEffect(() => {
+    if (status === "paused") pauseMusic();
+    else if (status === "playing") resumeMusic();
+  }, [status]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -73,8 +96,10 @@ export function GameCanvas() {
 
     ensureAudio();
     setMasterVolume(useHud.getState().volume);
+    setMusicVolume(useHud.getState().volume);
     const gestureHandler = () => {
       resumeAudio();
+      playStageBgm(useHud.getState().stageIndex);
       window.removeEventListener("pointerdown", gestureHandler);
       window.removeEventListener("keydown", gestureHandler);
     };

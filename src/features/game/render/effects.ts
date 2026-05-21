@@ -34,6 +34,29 @@ export function drawSlashes(
   }
 }
 
+export function drawShockwaves(
+  c: CanvasRenderingContext2D,
+  state: EngineState,
+  nowMs: number,
+): void {
+  for (const w of state.shockwaves) {
+    const elapsed = nowMs - w.bornAtMs;
+    const t = Math.max(0, Math.min(1, elapsed / w.durationMs));
+    const ease = 1 - Math.pow(1 - t, 2.4);
+    const radius = w.maxRadius * ease;
+    const alpha = (1 - t) * 0.85;
+    c.save();
+    c.shadowColor = w.color;
+    c.shadowBlur = 18;
+    c.strokeStyle = withAlpha(w.color, alpha);
+    c.lineWidth = 3 + (1 - t) * 4;
+    c.beginPath();
+    c.arc(w.x, w.y, radius, 0, Math.PI * 2);
+    c.stroke();
+    c.restore();
+  }
+}
+
 export function drawScorePops(
   c: CanvasRenderingContext2D,
   state: EngineState,

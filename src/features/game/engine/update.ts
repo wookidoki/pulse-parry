@@ -39,6 +39,7 @@ import { BURSTS, emitBurst, updateParticles } from "./particles";
 import { bpmAt } from "./tempo";
 import {
   spawnScreenFlash,
+  spawnShockwave,
   spawnSlash,
   updateEffects,
 } from "./effects";
@@ -56,6 +57,7 @@ export function createEngineState(nowMs: number): EngineState {
     scorePops: [],
     flashes: [],
     slashes: [],
+    shockwaves: [],
     nextEnemyId: 1,
     nextBulletId: 1,
     parryHeld: false,
@@ -279,7 +281,6 @@ export function update(ctx: UpdateContext): void {
   tickBeat(state.beat, nowMs);
   if (state.beat.isBeatTick) {
     state.bgPulse = 1;
-    sfx.playBeat(state.beat.currentBeat);
   }
 
   advanceStage(state, nowMs, ctx);
@@ -302,10 +303,11 @@ export function update(ctx: UpdateContext): void {
   if (bulletEffects.reflectHits.length > 0) {
     applyHitStop(state, HIT_STOP_MS_REFLECT_HIT);
   }
-  for (let i = 0; i < bulletEffects.enemyKills.length; i++) {
+  for (const kill of bulletEffects.enemyKills) {
     applyShake(state, SHAKE_ON_ENEMY_KILL);
     applyHitStop(state, HIT_STOP_MS_ENEMY_KILL);
     spawnScreenFlash(state, PALETTE.yellow, 0.25);
+    spawnShockwave(state, kill.x, kill.y, nowMs, PALETTE.yellow);
     sfx.playEnemyDie();
   }
   if (bulletEffects.nearMisses > 0) {

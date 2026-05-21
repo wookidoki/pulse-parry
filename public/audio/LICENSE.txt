@@ -1,0 +1,15 @@
+PULSE PARRY — BGM Attribution
+
+Tracks: stage1_awaken.ogg, stage2_pulse.ogg, stage3_overdrive.ogg, boss_electric.ogg
+Source: "T & T Free Cyberpunk Pack 2"
+Creator: Alexander Ehlers (Trasevol_Dog)
+License: CC0 (Public Domain)
+URL: https://opengameart.org/content/t-t-free-cyberpunk-pack-2
+
+Original filenames:
+  stage1_awaken.ogg   ← strange_experiments_80bpm.ogg
+  stage2_pulse.ogg    ← ai_fight_120bpm.ogg
+  stage3_overdrive.ogg ← system_overload_154bpm.ogg
+  boss_electric.ogg   ← electric_stream_180bpm.ogg
+
+CC0 permits any use without attribution. We credit voluntarily.
