@@ -1,6 +1,6 @@
 import type { EngineCallbacks, EngineState, PlayerInput } from "../types";
 import { FINAL_STAGE_INDEX, STAGES, currentStage } from "../config/stages";
-import { tickKickDetection } from "../audioAnalysis";
+import { getDetectedBpm, tickKickDetection } from "../audioAnalysis";
 import {
   BG_PULSE_DECAY_PER_SEC,
   CAMERA_ZOOM_LERP_PER_SEC,
@@ -108,6 +108,14 @@ function stageProgress(state: EngineState, nowMs: number): number {
 }
 
 function tickTempoCurve(state: EngineState, nowMs: number): void {
+  const detected = getDetectedBpm();
+  if (detected >= 60 && detected <= 240) {
+    const smoothed = state.beat.bpm * 0.85 + detected * 0.15;
+    if (Math.abs(smoothed - state.beat.bpm) > BPM_CHANGE_EPSILON) {
+      setBpm(state.beat, smoothed, nowMs);
+    }
+    return;
+  }
   const stage = currentStage(state.stageIndex);
   const target = bpmAt(stage.tempoMap, stageProgress(state, nowMs));
   if (Math.abs(target - state.beat.bpm) > BPM_CHANGE_EPSILON) {

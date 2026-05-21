@@ -133,9 +133,9 @@ function drawLiveBpm(
 ): void {
   const bpm = Math.round(state.beat.bpm);
   c.save();
-  c.fillStyle = "rgba(240, 246, 255, 0.6)";
+  c.fillStyle = "rgba(240, 246, 255, 0.7)";
   c.font = "11px ui-monospace, monospace";
   c.textBaseline = "top";
-  c.fillText(`${bpm} BPM`, x, 6);
+  c.fillText(`${bpm} BPM ♪`, x, 6);
   c.restore();
 }
