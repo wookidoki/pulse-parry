@@ -16,6 +16,16 @@ import {
   drawScreenFlashes,
   drawSlashes,
 } from "./effects";
+import {
+  drawComboFlowEdges,
+  drawPauseOverlay,
+  drawVignette,
+} from "./postfx";
+
+export interface RenderHudSnapshot {
+  combo: number;
+  paused: boolean;
+}
 
 export function render(
   c: CanvasRenderingContext2D,
@@ -24,6 +34,7 @@ export function render(
   h: number,
   dpr: number,
   nowMs: number,
+  hud: RenderHudSnapshot,
 ): void {
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -36,6 +47,7 @@ export function render(
 
   c.save();
   c.translate(cx + shakeX, cy + shakeY);
+  c.scale(state.cameraZoom, state.cameraZoom);
 
   drawParticles(c, state);
   drawAimLine(c, state, w, h);
@@ -48,6 +60,10 @@ export function render(
 
   c.restore();
 
+  drawVignette(c, state, hud.combo, w, h);
+  drawComboFlowEdges(c, state, hud.combo, w, h, nowMs);
   drawScreenFlashes(c, state, w, h);
   drawStageProgress(c, state, w, nowMs);
+
+  if (hud.paused) drawPauseOverlay(c, w, h);
 }

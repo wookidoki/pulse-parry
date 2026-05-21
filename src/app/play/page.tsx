@@ -1,4 +1,11 @@
-import { EndOverlay, GameCanvas, Hud, StageBanner } from "@/features/game";
+import {
+  ComboMilestone,
+  EndOverlay,
+  GameCanvas,
+  Hud,
+  PauseOverlay,
+  StageBanner,
+} from "@/features/game";
 
 export default function PlayPage() {
   return (
@@ -6,6 +13,8 @@ export default function PlayPage() {
       <GameCanvas />
       <Hud />
       <StageBanner />
+      <ComboMilestone />
+      <PauseOverlay />
       <EndOverlay />
     </>
   );

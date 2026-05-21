@@ -2,6 +2,8 @@ import type { EngineCallbacks, EngineState, PlayerInput } from "../types";
 import { BPM_REFERENCE, FINAL_STAGE_INDEX, STAGES, currentStage } from "../config/stages";
 import {
   BG_PULSE_DECAY_PER_SEC,
+  CAMERA_ZOOM_LERP_PER_SEC,
+  CAMERA_ZOOM_PUNCH,
   HIT_STOP_MS_ENEMY_KILL,
   HIT_STOP_MS_PARRY,
   HIT_STOP_MS_PLAYER_HIT,
@@ -13,6 +15,8 @@ import {
   SHAKE_ON_PLAYER_HIT,
   SHAKE_ON_REFLECT,
   SHAKE_ON_STAGE_UP,
+  SLOWMO_NEAR_MISS_MS,
+  SLOWMO_NEAR_MISS_SCALE,
   TAP_THRESHOLD_MS,
 } from "../config/tuning";
 import { PALETTE } from "../config/palette";
@@ -64,6 +68,9 @@ export function createEngineState(nowMs: number): EngineState {
     shake: 0,
     bgPulse: 0,
     hitStopMsLeft: 0,
+    timeScale: 1,
+    slowmoMsLeft: 0,
+    cameraZoom: 1,
   };
 }
 
@@ -216,17 +223,40 @@ function processHitStop(state: EngineState, dt: number): boolean {
   return true;
 }
 
+function updateTimeScale(state: EngineState, dt: number): void {
+  if (state.slowmoMsLeft > 0) {
+    state.slowmoMsLeft = Math.max(0, state.slowmoMsLeft - dt * 1000);
+    state.timeScale = SLOWMO_NEAR_MISS_SCALE;
+  } else {
+    state.timeScale = 1;
+  }
+}
+
+function updateCameraZoom(state: EngineState, dt: number): void {
+  const target = state.hitStopMsLeft > 0 ? CAMERA_ZOOM_PUNCH : 1;
+  const lerp = Math.min(1, dt * CAMERA_ZOOM_LERP_PER_SEC);
+  state.cameraZoom += (target - state.cameraZoom) * lerp;
+}
+
+function applySlowmo(state: EngineState, ms: number): void {
+  if (ms > state.slowmoMsLeft) state.slowmoMsLeft = ms;
+}
+
 export function update(ctx: UpdateContext): void {
   const { state, input, nowMs, dt, canvasW, canvasH } = ctx;
   state.aimAngle = Math.atan2(input.aimY, input.aimX);
 
   state.shake = Math.max(0, state.shake - dt * SHAKE_DECAY_PER_SEC);
   state.bgPulse = Math.max(0, state.bgPulse - dt * BG_PULSE_DECAY_PER_SEC);
+  updateTimeScale(state, dt);
+  updateCameraZoom(state, dt);
 
   if (processHitStop(state, dt)) {
     state.parryHeld = input.parryHeld;
     return;
   }
+
+  const physicsDt = dt * state.timeScale;
 
   tickTempoCurve(state, nowMs);
   tickBeat(state.beat, nowMs);
@@ -241,10 +271,10 @@ export function update(ctx: UpdateContext): void {
 
   spawnEnemyIfNeeded(state, nowMs, canvasW, canvasH);
 
-  const enemyResult = updateEnemies(state, dt, nowMs, canvasW, canvasH);
+  const enemyResult = updateEnemies(state, physicsDt, nowMs, canvasW, canvasH);
   processEnemyShots(state, enemyResult.shotsFired, nowMs);
 
-  const bulletEffects = updateBullets(state, dt, canvasW, canvasH, nowMs);
+  const bulletEffects = updateBullets(state, physicsDt, canvasW, canvasH, nowMs);
   for (let i = 0; i < bulletEffects.parriedCount; i++) sfx.playParryHit();
   if (bulletEffects.damageDealt > 0) {
     applyShake(state, SHAKE_ON_PLAYER_HIT);
@@ -261,11 +291,16 @@ export function update(ctx: UpdateContext): void {
     spawnScreenFlash(state, PALETTE.yellow, 0.25);
     sfx.playEnemyDie();
   }
+  if (bulletEffects.nearMisses > 0) {
+    applySlowmo(state, SLOWMO_NEAR_MISS_MS);
+    spawnScreenFlash(state, PALETTE.cyan, 0.18);
+    ctx.onScore(20);
+  }
   applyBulletEffects(bulletEffects, ctx);
 
   handleParryRelease(state, justReleased, nowMs, ctx);
 
-  updateParticles(state, dt);
+  updateParticles(state, physicsDt);
   updateEffects(state, dt, nowMs);
 
   cleanupBullets(state);

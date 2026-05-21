@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { createEngineState, update } from "../engine/update";
-import { ensureAudio, resumeAudio } from "../audio";
+import { ensureAudio, resumeAudio, setMasterVolume } from "../audio";
 import { useHud } from "../state";
 import type { EngineState, PlayerInput } from "../types";
 import { render } from "../render/frame";
@@ -23,10 +23,16 @@ export function GameCanvas() {
   const breakCombo = useHud((s) => s.breakCombo);
   const setStage = useHud((s) => s.setStage);
   const victory = useHud((s) => s.victory);
+  const togglePause = useHud((s) => s.togglePause);
+  const volume = useHud((s) => s.volume);
 
   useEffect(() => {
     start();
   }, [start]);
+
+  useEffect(() => {
+    setMasterVolume(volume);
+  }, [volume]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -47,6 +53,7 @@ export function GameCanvas() {
     resize();
 
     ensureAudio();
+    setMasterVolume(useHud.getState().volume);
     const gestureHandler = () => {
       resumeAudio();
       window.removeEventListener("pointerdown", gestureHandler);
@@ -61,9 +68,17 @@ export function GameCanvas() {
       inputRef.current.aimY = dy / d;
     };
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code !== "Space") return;
-      e.preventDefault();
-      inputRef.current.parryHeld = true;
+      if (e.code === "Space") {
+        e.preventDefault();
+        inputRef.current.parryHeld = true;
+        return;
+      }
+      if (e.code === "Escape") {
+        e.preventDefault();
+        togglePause();
+        inputRef.current.parryHeld = false;
+        return;
+      }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code !== "Space") return;
@@ -91,8 +106,9 @@ export function GameCanvas() {
 
       const w = window.innerWidth;
       const h = window.innerHeight;
+      const hudState = useHud.getState();
 
-      if (useHud.getState().status === "playing") {
+      if (hudState.status === "playing") {
         update({
           state: engine,
           input: inputRef.current,
@@ -109,7 +125,10 @@ export function GameCanvas() {
         });
       }
 
-      render(ctx, engine, w, h, dprRef.current, nowMs);
+      render(ctx, engine, w, h, dprRef.current, nowMs, {
+        combo: hudState.combo,
+        paused: hudState.status === "paused",
+      });
 
       rafRef.current = requestAnimationFrame(loop);
     };
@@ -124,7 +143,7 @@ export function GameCanvas() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [addScore, bumpCombo, breakCombo, damage, setStage, victory]);
+  }, [addScore, bumpCombo, breakCombo, damage, setStage, victory, togglePause]);
 
   return <canvas ref={canvasRef} className={styles.canvas} />;
 }

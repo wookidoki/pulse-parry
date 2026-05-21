@@ -5,6 +5,7 @@ import {
   ENEMY_KNOCKBACK_AMOUNT,
   ENEMY_RADIUS,
   HIT_RADIUS,
+  NEAR_MISS_RADIUS,
   PARRY_HALF_CONE_RAD,
   PARRY_RANGE,
   SCORE_ENEMY_KILL,
@@ -36,6 +37,8 @@ export function createBullet(
     state: "incoming",
     spawnedAt: nowMs,
     ownerEnemyId: enemy.id,
+    minDist: Infinity,
+    nearMissFired: false,
   };
 }
 
@@ -78,6 +81,7 @@ export interface BulletTickEffects {
   parriedCount: number;
   reflectHits: { x: number; y: number }[];
   enemyKills: { x: number; y: number }[];
+  nearMisses: number;
 }
 
 function radiusOf(kind: BulletKind): number {
@@ -100,6 +104,7 @@ export function updateBullets(
     parriedCount: 0,
     reflectHits: [],
     enemyKills: [],
+    nearMisses: 0,
   };
   const offscreenLimit = Math.max(canvasW, canvasH);
   const beatPhase = state.beat.beatPhase;
@@ -111,6 +116,7 @@ export function updateBullets(
     if (b.state === "incoming") {
       applyIncomingMotion(b, dt, beatPhase, nowMs);
       const dist = magnitude(b.x, b.y);
+      if (dist < b.minDist) b.minDist = dist;
       if (state.parryHeld && isInParryCone(b.x, b.y, state.aimAngle)) {
         b.state = "absorbed";
         effects.parriedCount += 1;
@@ -119,6 +125,16 @@ export function updateBullets(
         b.state = "dead";
         effects.damageDealt += damageOf(b.kind);
         emitBurst(state, b.x, b.y, BURSTS.playerHit());
+      } else {
+        const movingAway = b.x * b.vx + b.y * b.vy > 0;
+        if (
+          movingAway &&
+          !b.nearMissFired &&
+          b.minDist < HIT_RADIUS + radius + NEAR_MISS_RADIUS
+        ) {
+          b.nearMissFired = true;
+          effects.nearMisses += 1;
+        }
       }
     } else if (b.state === "absorbed") {
       const targetR = PARRY_RANGE * 0.5;

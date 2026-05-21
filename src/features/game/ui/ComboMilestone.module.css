@@ -1,0 +1,95 @@
+.container {
+  position: fixed;
+  top: 55%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 7;
+  opacity: 0;
+  animation: slam 1.4s ease-out forwards;
+}
+
+.number {
+  font-size: clamp(80px, 13vw, 180px);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+}
+
+.tagline {
+  font-size: 14px;
+  letter-spacing: 0.4em;
+  font-weight: 700;
+}
+
+.level1 .number {
+  color: var(--neon-cyan);
+  text-shadow:
+    0 0 24px rgba(28, 240, 255, 0.9),
+    0 0 64px rgba(28, 240, 255, 0.5);
+}
+.level1 .tagline { color: rgba(28, 240, 255, 0.75); }
+
+.level2 .number {
+  color: var(--neon-yellow);
+  text-shadow:
+    0 0 28px rgba(247, 255, 58, 0.9),
+    0 0 72px rgba(247, 255, 58, 0.5);
+}
+.level2 .tagline { color: rgba(247, 255, 58, 0.8); }
+
+.level3 .number {
+  color: var(--neon-magenta);
+  text-shadow:
+    0 0 32px rgba(255, 43, 214, 0.95),
+    0 0 80px rgba(255, 43, 214, 0.6),
+    0 0 160px rgba(255, 43, 214, 0.3);
+}
+.level3 .tagline { color: rgba(255, 43, 214, 0.85); }
+
+.level4 .number {
+  color: var(--neon-red);
+  text-shadow:
+    0 0 36px rgba(255, 56, 99, 1),
+    0 0 96px rgba(255, 56, 99, 0.7),
+    0 0 200px rgba(255, 56, 99, 0.4);
+}
+.level4 .tagline { color: rgba(255, 56, 99, 0.9); }
+
+.level5 .number {
+  color: #ffffff;
+  text-shadow:
+    0 0 40px #ffffff,
+    0 0 120px var(--neon-magenta),
+    0 0 240px var(--neon-cyan);
+}
+.level5 .tagline { color: #ffffff; }
+
+@keyframes slam {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.6);
+    filter: blur(40px);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.92);
+    filter: blur(0);
+  }
+  28% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.88) translateY(-30px);
+    filter: blur(8px);
+  }
+}

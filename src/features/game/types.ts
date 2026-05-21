@@ -61,6 +61,8 @@ export interface Bullet {
   state: BulletState;
   spawnedAt: number;
   ownerEnemyId: number;
+  minDist: number;
+  nearMissFired: boolean;
 }
 
 export interface Particle {
@@ -108,6 +110,9 @@ export interface EngineState {
   shake: number;
   bgPulse: number;
   hitStopMsLeft: number;
+  timeScale: number;
+  slowmoMsLeft: number;
+  cameraZoom: number;
 }
 
 export interface EngineCallbacks {
@@ -119,7 +124,12 @@ export interface EngineCallbacks {
   onVictory: () => void;
 }
 
-export type GameStatus = "menu" | "playing" | "gameover" | "victory";
+export type GameStatus = "menu" | "playing" | "paused" | "gameover" | "victory";
+
+export interface ComboMilestone {
+  level: number;
+  key: number;
+}
 
 export interface HudState {
   status: GameStatus;
@@ -130,4 +140,6 @@ export interface HudState {
   maxCombo: number;
   stageIndex: number;
   stageName: string;
+  milestone: ComboMilestone | null;
+  volume: number;
 }

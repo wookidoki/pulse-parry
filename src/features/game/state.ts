@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { HudState } from "./types";
 import { STAGES } from "./config/stages";
+import { COMBO_MILESTONES } from "./config/tuning";
 
 interface HudActions {
   reset: () => void;
@@ -12,6 +13,10 @@ interface HudActions {
   gameOver: () => void;
   victory: () => void;
   setStage: (index: number) => void;
+  pause: () => void;
+  resume: () => void;
+  togglePause: () => void;
+  setVolume: (v: number) => void;
 }
 
 const INITIAL: HudState = {
@@ -23,15 +28,26 @@ const INITIAL: HudState = {
   maxCombo: 0,
   stageIndex: 0,
   stageName: STAGES[0].name,
+  milestone: null,
+  volume: 0.6,
 };
 
 const stageNameOf = (index: number): string =>
   STAGES[Math.min(index, STAGES.length - 1)].name;
 
+function nextMilestoneCrossed(prev: number, next: number): number | null {
+  for (const m of COMBO_MILESTONES) {
+    if (prev < m && next >= m) return m;
+  }
+  return null;
+}
+
 export const useHud = create<HudState & HudActions>((set) => ({
   ...INITIAL,
-  reset: () => set({ ...INITIAL }),
-  start: () => set({ ...INITIAL, status: "playing" }),
+  reset: () =>
+    set((s) => ({ ...INITIAL, volume: s.volume })),
+  start: () =>
+    set((s) => ({ ...INITIAL, volume: s.volume, status: "playing" })),
   damage: (amount) =>
     set((s) => {
       if (s.status !== "playing") return s;
@@ -45,8 +61,15 @@ export const useHud = create<HudState & HudActions>((set) => ({
   addScore: (n) => set((s) => ({ score: s.score + n })),
   bumpCombo: (n) =>
     set((s) => {
-      const combo = s.combo + n;
-      return { combo, maxCombo: Math.max(s.maxCombo, combo) };
+      const newCombo = s.combo + n;
+      const crossed = nextMilestoneCrossed(s.combo, newCombo);
+      return {
+        combo: newCombo,
+        maxCombo: Math.max(s.maxCombo, newCombo),
+        milestone: crossed
+          ? { level: crossed, key: (s.milestone?.key ?? 0) + 1 }
+          : s.milestone,
+      };
     }),
   breakCombo: () => set({ combo: 0 }),
   gameOver: () => set({ status: "gameover" }),
@@ -54,4 +77,15 @@ export const useHud = create<HudState & HudActions>((set) => ({
     set((s) => (s.status === "playing" ? { status: "victory" } : s)),
   setStage: (index) =>
     set({ stageIndex: index, stageName: stageNameOf(index) }),
+  pause: () =>
+    set((s) => (s.status === "playing" ? { status: "paused" } : s)),
+  resume: () =>
+    set((s) => (s.status === "paused" ? { status: "playing" } : s)),
+  togglePause: () =>
+    set((s) => {
+      if (s.status === "playing") return { status: "paused" };
+      if (s.status === "paused") return { status: "playing" };
+      return s;
+    }),
+  setVolume: (v) => set({ volume: Math.max(0, Math.min(1, v)) }),
 }));
