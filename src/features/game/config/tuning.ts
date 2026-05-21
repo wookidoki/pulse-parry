@@ -1,7 +1,7 @@
 export const PLAYER_RADIUS = 14;
 export const HIT_RADIUS = 22;
-export const PLAYER_MAX_DIST = 110;
-export const PLAYER_MOVE_SPEED = 260;
+export const PLAYER_MAX_DIST = 180;
+export const PLAYER_MOVE_SPEED = 300;
 
 export const PARRY_HALF_CONE_RAD = (50 * Math.PI) / 180;
 export const PARRY_RANGE = 140;
@@ -9,7 +9,7 @@ export const PARRY_RANGE = 140;
 export const BULLET_REFLECT_SPEED = 880;
 
 export const ENEMY_RADIUS = 22;
-export const ENEMY_ORBIT_FACTOR = 0.4;
+export const ENEMY_ORBIT_FACTOR = 0.52;
 export const ENEMY_ORBIT_DRIFT_RAD_PER_SEC = 0.05;
 
 export const TELEGRAPH_MS = 350;
@@ -31,10 +31,12 @@ export const BG_PULSE_DECAY_PER_SEC = 2.8;
 export const PARTICLE_DRAG_PER_SEC = 1.8;
 
 export const TAP_THRESHOLD_MS = 200;
+export const CHARGE_THRESHOLD_MS = 700;
 
-export const PERFECT_PARRY_WINDOW_MS = 100;
-export const MASH_COOLDOWN_MS = 120;
+export const PERFECT_PARRY_WINDOW_MS = 160;
+export const MASH_COOLDOWN_MS = 100;
 export const SCORE_PERFECT_BONUS = 25;
+export const SCORE_CHARGED_BONUS = 35;
 
 export const HIT_STOP_MS_PLAYER_HIT = 60;
 export const HIT_STOP_MS_ENEMY_KILL = 95;

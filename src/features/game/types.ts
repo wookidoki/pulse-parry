@@ -22,6 +22,7 @@ export interface Enemy {
   knockbackX: number;
   knockbackY: number;
   hitFlashMsLeft: number;
+  beatOffsetFraction: number;
 }
 
 export interface ScorePop {
@@ -73,6 +74,7 @@ export interface Bullet {
   minDist: number;
   nearMissFired: boolean;
   isPerfect: boolean;
+  isCharged: boolean;
 }
 
 export interface Particle {
@@ -132,6 +134,7 @@ export interface EngineState {
   cameraZoom: number;
   parryCooldownMsLeft: number;
   audioKickThisFrame: boolean;
+  difficulty: Difficulty;
 }
 
 export interface EngineCallbacks {
@@ -144,6 +147,8 @@ export interface EngineCallbacks {
 }
 
 export type GameStatus = "menu" | "playing" | "paused" | "gameover" | "victory";
+
+export type Difficulty = "easy" | "normal" | "hard";
 
 export interface ComboMilestone {
   level: number;

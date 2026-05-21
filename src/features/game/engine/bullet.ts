@@ -44,6 +44,7 @@ export function createBullet(
     minDist: Infinity,
     nearMissFired: false,
     isPerfect: false,
+    isCharged: false,
   };
 }
 
@@ -176,7 +177,8 @@ export function updateBullets(
         const dd = magnitude(b.x - e.x, b.y - e.y);
         if (dd >= ENEMY_RADIUS + radius) continue;
 
-        const damage = b.kind === "heavy" ? 2 : 1;
+        const baseDamage = b.kind === "heavy" ? 2 : 1;
+        const damage = baseDamage + (b.isCharged ? 1 : 0);
         e.hp -= damage;
         e.pulse = 1;
         e.hitFlashMsLeft = 120;

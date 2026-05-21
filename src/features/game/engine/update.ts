@@ -5,6 +5,7 @@ import {
   BG_PULSE_DECAY_PER_SEC,
   CAMERA_ZOOM_LERP_PER_SEC,
   CAMERA_ZOOM_PUNCH,
+  CHARGE_THRESHOLD_MS,
   HIT_STOP_MS_ENEMY_KILL,
   HIT_STOP_MS_PARRY,
   HIT_STOP_MS_PLAYER_HIT,
@@ -13,6 +14,7 @@ import {
   PARRY_HALF_CONE_RAD,
   PLAYER_MAX_DIST,
   PLAYER_MOVE_SPEED,
+  SCORE_CHARGED_BONUS,
   SCORE_PARRY_PER_BULLET,
   SCORE_PERFECT_BONUS,
   SHAKE_DECAY_PER_SEC,
@@ -81,6 +83,7 @@ export function createEngineState(nowMs: number): EngineState {
     cameraZoom: 1,
     parryCooldownMsLeft: 0,
     audioKickThisFrame: false,
+    difficulty: "normal",
   };
 }
 
@@ -190,6 +193,13 @@ function handleParryRelease(
   state.parryCooldownMsLeft = MASH_COOLDOWN_MS;
   const heldMs = nowMs - state.parryStartedAt;
   const isTap = heldMs < TAP_THRESHOLD_MS;
+  const isCharged = heldMs >= CHARGE_THRESHOLD_MS;
+
+  if (isCharged) {
+    for (const b of state.bullets) {
+      if (b.state === "absorbed") b.isCharged = true;
+    }
+  }
 
   const result = isTap
     ? autoCounterAbsorbedBullets(state)
@@ -204,10 +214,26 @@ function handleParryRelease(
     sfx.playSlashWoosh();
     const slashColor = result.perfectCount > 0
       ? "#ffffff"
-      : isTap
-        ? PALETTE.yellow
-        : PALETTE.cyan;
+      : isCharged
+        ? PALETTE.red
+        : isTap
+          ? PALETTE.yellow
+          : PALETTE.cyan;
     spawnSlash(state, state.aimAngle, PARRY_HALF_CONE_RAD, nowMs, slashColor);
+
+    if (isCharged) {
+      cb.onScore(SCORE_CHARGED_BONUS * result.count);
+      applyShake(state, 12);
+      spawnScreenFlash(state, PALETTE.red, 0.32);
+      spawnScorePop(
+        state,
+        state.playerX,
+        state.playerY - 32,
+        `CHARGED ×${result.count}`,
+        PALETTE.red,
+        1.2,
+      );
+    }
 
     if (result.perfectCount > 0) {
       cb.onScore(SCORE_PERFECT_BONUS * result.perfectCount);

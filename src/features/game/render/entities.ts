@@ -159,27 +159,63 @@ export function drawBullets(
   for (const b of state.bullets) {
     const kindConfig = BULLET_KINDS[b.kind];
     c.save();
+    let color = kindConfig.color;
     if (b.state === "incoming") {
-      c.shadowColor = kindConfig.color;
+      c.shadowColor = color;
       c.shadowBlur = 14;
-      c.fillStyle = kindConfig.color;
       if (b.kind === "heavy") drawHeavyAura(c, b.x, b.y, kindConfig.radius);
     } else if (b.state === "absorbed") {
       const pulse = 0.7 + Math.sin(nowMs / 60) * 0.3;
+      color = PALETTE.yellow;
       c.shadowColor = withAlpha(PALETTE.yellow, pulse);
       c.shadowBlur = 18;
-      c.fillStyle = PALETTE.yellow;
     } else if (b.state === "reflected") {
+      color = PALETTE.cyan;
       c.shadowColor = PALETTE.cyan;
       c.shadowBlur = 20;
-      c.fillStyle = PALETTE.cyan;
       drawBulletTrail(c, b.x, b.y, b.vx, b.vy);
     }
-    c.beginPath();
-    c.arc(b.x, b.y, kindConfig.radius, 0, Math.PI * 2);
-    c.fill();
+    drawShuriken(c, b.x, b.y, kindConfig.radius, b.kind, nowMs, color);
     c.restore();
   }
+}
+
+function drawShuriken(
+  c: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  kind: string,
+  nowMs: number,
+  color: string,
+): void {
+  const points = kind === "heavy" ? 6 : kind === "rapid" ? 3 : 4;
+  const spinSpeed = kind === "rapid" ? 0.04 : kind === "heavy" ? 0.012 : 0.025;
+  const rotation = nowMs * spinSpeed;
+  const innerR = radius * (kind === "heavy" ? 0.55 : 0.42);
+
+  c.save();
+  c.translate(x, y);
+  c.rotate(rotation);
+  c.fillStyle = color;
+  c.beginPath();
+  const totalPoints = points * 2;
+  for (let i = 0; i < totalPoints; i++) {
+    const angle = (i / totalPoints) * Math.PI * 2;
+    const r = i % 2 === 0 ? radius : innerR;
+    const px = Math.cos(angle) * r;
+    const py = Math.sin(angle) * r;
+    if (i === 0) c.moveTo(px, py);
+    else c.lineTo(px, py);
+  }
+  c.closePath();
+  c.fill();
+  c.shadowBlur = 0;
+  c.fillStyle = "rgba(5, 3, 10, 0.7)";
+  c.beginPath();
+  c.arc(0, 0, innerR * 0.45, 0, Math.PI * 2);
+  c.fill();
+  c.restore();
 }
 
 function drawHeavyAura(

@@ -18,22 +18,17 @@ function pickSpawnAngle(state: EngineState): number {
   const taken = state.enemies
     .filter((e) => e.state !== "dead")
     .map((e) => e.orbitAngle);
-  let bestAngle = 0;
-  let bestSpread = -1;
-  const candidates = 12;
-  for (let i = 0; i < candidates; i++) {
-    const candidate = (i / candidates) * Math.PI * 2 + state.beat.currentBeat * 0.1;
-    let minDelta = Math.PI;
-    for (const takenA of taken) {
-      const d = Math.abs(normalizeAngle(candidate - takenA));
-      if (d < minDelta) minDelta = d;
-    }
-    if (minDelta > bestSpread) {
-      bestSpread = minDelta;
-      bestAngle = candidate;
-    }
+  const seedBase = state.beat.currentBeat * 9301 + state.nextEnemyId * 49297;
+  const seed = ((seedBase % 233280) + 233280) % 233280;
+  const baseAngle = (seed / 233280) * Math.PI * 2;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const candidate = baseAngle + attempt * 0.42;
+    const tooClose = taken.some(
+      (a) => Math.abs(normalizeAngle(candidate - a)) < 0.6,
+    );
+    if (!tooClose) return candidate;
   }
-  return bestAngle;
+  return baseAngle;
 }
 
 function pickEnemyKind(stage: StageConfig): EnemyKind {
@@ -70,6 +65,7 @@ export function createEnemy(
     knockbackX: 0,
     knockbackY: 0,
     hitFlashMsLeft: 0,
+    beatOffsetFraction: (state.nextEnemyId % 4) * 0.25,
   };
 }
 
@@ -144,7 +140,11 @@ function maybeStartTelegraph(enemy: Enemy, state: EngineState): void {
   if (!fireEvent) return;
   const config = ENEMY_KINDS[enemy.kind];
   if (state.beat.currentBeat - enemy.lastShotBeat < config.beatsPerShot) return;
-  enemy.telegraphMsLeft = Math.min(TELEGRAPH_MS, state.beat.beatPeriodMs * 0.55);
+  const offsetMs = enemy.beatOffsetFraction * state.beat.beatPeriodMs;
+  enemy.telegraphMsLeft = Math.min(
+    TELEGRAPH_MS + offsetMs,
+    state.beat.beatPeriodMs * 0.55 + offsetMs,
+  );
   enemy.lastShotBeat = state.beat.currentBeat;
 }
 
