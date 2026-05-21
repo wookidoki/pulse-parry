@@ -17,8 +17,6 @@ import {
   SHAKE_ON_PLAYER_HIT,
   SHAKE_ON_REFLECT,
   SHAKE_ON_STAGE_UP,
-  SLOWMO_NEAR_MISS_MS,
-  SLOWMO_NEAR_MISS_SCALE,
   TAP_THRESHOLD_MS,
 } from "../config/tuning";
 import { PALETTE } from "../config/palette";
@@ -227,23 +225,15 @@ function processHitStop(state: EngineState, dt: number): boolean {
   return true;
 }
 
-function updateTimeScale(state: EngineState, dt: number): void {
-  if (state.slowmoMsLeft > 0) {
-    state.slowmoMsLeft = Math.max(0, state.slowmoMsLeft - dt * 1000);
-    state.timeScale = SLOWMO_NEAR_MISS_SCALE;
-  } else {
-    state.timeScale = 1;
-  }
+function updateTimeScale(state: EngineState): void {
+  state.timeScale = 1;
+  state.slowmoMsLeft = 0;
 }
 
 function updateCameraZoom(state: EngineState, dt: number): void {
   const target = state.hitStopMsLeft > 0 ? CAMERA_ZOOM_PUNCH : 1;
   const lerp = Math.min(1, dt * CAMERA_ZOOM_LERP_PER_SEC);
   state.cameraZoom += (target - state.cameraZoom) * lerp;
-}
-
-function applySlowmo(state: EngineState, ms: number): void {
-  if (ms > state.slowmoMsLeft) state.slowmoMsLeft = ms;
 }
 
 function updatePlayerMovement(state: EngineState, input: PlayerInput, dt: number): void {
@@ -272,7 +262,7 @@ export function update(ctx: UpdateContext): void {
 
   state.shake = Math.max(0, state.shake - dt * SHAKE_DECAY_PER_SEC);
   state.bgPulse = Math.max(0, state.bgPulse - dt * BG_PULSE_DECAY_PER_SEC);
-  updateTimeScale(state, dt);
+  updateTimeScale(state);
   updateCameraZoom(state, dt);
 
   if (processHitStop(state, dt)) {
@@ -319,8 +309,8 @@ export function update(ctx: UpdateContext): void {
     sfx.playEnemyDie();
   }
   if (bulletEffects.nearMisses > 0) {
-    applySlowmo(state, SLOWMO_NEAR_MISS_MS);
-    spawnScreenFlash(state, PALETTE.cyan, 0.18);
+    spawnScreenFlash(state, PALETTE.cyan, 0.22);
+    applyShake(state, 4);
     ctx.onScore(20);
   }
   applyBulletEffects(bulletEffects, ctx);
