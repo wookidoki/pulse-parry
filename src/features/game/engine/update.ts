@@ -1,6 +1,7 @@
 import type { EngineCallbacks, EngineState, PlayerInput } from "../types";
 import { FINAL_STAGE_INDEX, STAGES, currentStage } from "../config/stages";
 import { getDetectedBpm, tickKickDetection } from "../audioAnalysis";
+import { getCurrentTrackIndex } from "../music";
 import {
   BG_PULSE_DECAY_PER_SEC,
   CAMERA_ZOOM_LERP_PER_SEC,
@@ -326,7 +327,7 @@ export function update(ctx: UpdateContext): void {
 
   tickTempoCurve(state, nowMs);
   tickBeat(state.beat, nowMs);
-  state.audioKickThisFrame = tickKickDetection(state.stageIndex, nowMs);
+  state.audioKickThisFrame = tickKickDetection(getCurrentTrackIndex(), nowMs);
   if (state.beat.isBeatTick || state.audioKickThisFrame) {
     state.bgPulse = 1;
   }

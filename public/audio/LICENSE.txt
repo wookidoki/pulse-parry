@@ -1,18 +1,57 @@
 PULSE PARRY — BGM Attribution
 
-CURRENT STAGE TRACKS:
+스테이지마다 여러 트랙이 풀로 묶여 있고 매 플레이 랜덤 선택됨.
 
-  stage1_breach.mp3      — "Low Level Breach"        (AI-generated via Lyria 3, owner: wookidoki)
-  stage2_coldrain.mp3    — "Cold Rain Heavy Boots"   (AI-generated via Lyria 3, owner: wookidoki)
-  stage3_overdrive.ogg   — "System Overload"         (CC0, Alexander Ehlers)
-  stage4_chaos.ogg       — "Through the Sewers"      (CC0, Alexander Ehlers)
-  boss_electric.ogg      — "Electric Stream"         (CC0, Alexander Ehlers)
+═══ STAGE TRACK POOLS ═══
 
-CC0 SOURCE (Alexander Ehlers / Trasevol_Dog):
+STAGE 1 — INFILTRATION (잠입, 침투, 차가운 분위기)
+  stage1_breach.mp3       — "Low Level Breach"        (Lyria 3, owner: wookidoki)
+  stage1_awaken.ogg       — strange_experiments_80bpm (CC0, Alexander Ehlers)
+  oga_chill_100.ogg       — night_club_chill_100bpm    (CC0, Alexander Ehlers)
+  oga1_anti_matter.ogg    — Anti Matter Magic          (CC0, Alexander Ehlers)
+  oga1_currents.ogg       — Currents                   (CC0, Alexander Ehlers)
+  oga1_simulation.ogg     — Simulation Unknown         (CC0, Alexander Ehlers)
+
+STAGE 2 — FACTORY (각성된 공장, 산업적 박동)
+  stage2_coldrain.mp3     — "Cold Rain Heavy Boots"   (Lyria 3, owner: wookidoki)
+  stage2_pulse.ogg        — ai_fight_120bpm            (CC0, Alexander Ehlers)
+  oga_welcome_110.ogg     — welcome_mix_110bpm         (CC0, Alexander Ehlers)
+  oga_jumping_110.ogg     — jumping_cyborg_110bpm      (CC0, Alexander Ehlers)
+  oga_casino_120.ogg      — the_casino_120bpm          (CC0, Alexander Ehlers)
+
+STAGE 3 — OVERDRIVE (과부하, 시스템 인지)
+  stage3_factory.ogg      — new_factory_129bpm         (CC0, Alexander Ehlers)
+  stage3_overdrive.ogg    — system_overload_154bpm     (CC0, Alexander Ehlers)
+  oga_15k.mp3             — Synthwave 15k              (CC0, OGA)
+  oga_synth_remix.ogg     — synth_type_mix             (CC0, OGA collab)
+  oga1_experiment_g.ogg   — Experiment G               (CC0, Alexander Ehlers)
+
+STAGE 4 — CHAOS (혼돈, 신호 부서짐)
+  stage4_chaos.ogg        — through_the_sewers_176bpm  (CC0, Alexander Ehlers)
+  oga1_caves.ogg          — Caves                      (CC0, Alexander Ehlers)
+  oga1_space_collisions.ogg — Space Collisions         (CC0, Alexander Ehlers)
+  oga1_test_subject.ogg   — Test Subject               (CC0, Alexander Ehlers)
+  oga_synth_remix_lo.ogg  — synth_type_mix (low)       (CC0, OGA collab)
+
+STAGE 5 — REVOLT / BOSS (본체 반란, 코어 돌파)
+  boss_electric.ogg       — electric_stream_180bpm     (CC0, Alexander Ehlers)
+  oga1_tribal_chaos.ogg   — Tribal Chaos               (CC0, Alexander Ehlers)
+  oga1_wicked.ogg         — Wicked Beast               (CC0, Alexander Ehlers)
+  oga_moonlight.mp3       — Cyberpunk Moonlight Sonata (CC0, OGA artist)
+
+═══ SOURCES ═══
+
+Alexander Ehlers (Trasevol_Dog) — T & T Free Cyberpunk Pack 1 & 2:
+  https://opengameart.org/content/t-t-free-cyberpunk-pack
   https://opengameart.org/content/t-t-free-cyberpunk-pack-2
-  License: CC0 (Public Domain), attribution optional but credited voluntarily.
 
-UNUSED / LEGACY OGGs in this folder:
-  stage1_awaken.ogg      ← strange_experiments_80bpm.ogg (CC0 OGA, kept as fallback)
-  stage2_pulse.ogg       ← ai_fight_120bpm.ogg            (CC0 OGA, kept as fallback)
-  stage3_factory.ogg     ← new_factory_129bpm.ogg         (CC0 OGA, kept as fallback)
+OGA Collab Tracks:
+  https://opengameart.org/content/synthwave-type-remixed-gp-vs-vitalezzz-vs-tricksntraps-vs-zodik
+  https://opengameart.org/content/cyberpunk-moonlight-sonata
+  https://opengameart.org/content/calm-ambient-2-synthwave-15k
+
+Lyria 3 (Google) Generated:
+  Owner: wookidoki98@gmail.com
+  License: granted by Google Lyria 3 terms (commercial use allowed)
+
+All CC0 tracks: Public Domain. No attribution required, credited voluntarily.
