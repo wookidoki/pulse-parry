@@ -51,6 +51,37 @@ export function createBullet(
   };
 }
 
+export function createHealItem(
+  state: EngineState,
+  nowMs: number,
+  canvasW: number,
+  canvasH: number,
+  speed: number,
+): Bullet {
+  const angle = Math.random() * Math.PI * 2;
+  const spawnR = Math.max(canvasW, canvasH) * 0.55;
+  const x = Math.cos(angle) * spawnR;
+  const y = Math.sin(angle) * spawnR;
+  const dx = state.playerX - x;
+  const dy = state.playerY - y;
+  const { ux, uy } = unitVector(dx, dy);
+  return {
+    id: state.nextBulletId++,
+    x,
+    y,
+    vx: ux * speed,
+    vy: uy * speed,
+    kind: "heal",
+    state: "incoming",
+    spawnedAt: nowMs,
+    ownerEnemyId: -1,
+    minDist: Infinity,
+    nearMissFired: false,
+    isPerfect: false,
+    isCharged: false,
+  };
+}
+
 function isInParryCone(
   bx: number,
   by: number,
@@ -100,6 +131,7 @@ export interface BulletTickEffects {
   reflectHits: { x: number; y: number }[];
   enemyKills: { x: number; y: number }[];
   nearMisses: number;
+  healCaught: number;
 }
 
 function radiusOf(kind: BulletKind): number {
@@ -124,6 +156,7 @@ export function updateBullets(
     reflectHits: [],
     enemyKills: [],
     nearMisses: 0,
+    healCaught: 0,
   };
   const offscreenLimit = Math.max(canvasW, canvasH);
   const beatPhase = state.beat.beatPhase;
@@ -138,7 +171,17 @@ export function updateBullets(
       applyIncomingMotion(b, dt, beatPhase, nowMs);
       const distToPlayer = magnitude(b.x - px, b.y - py);
       if (distToPlayer < b.minDist) b.minDist = distToPlayer;
-      if (state.parryHeld && isInParryCone(b.x, b.y, px, py, state.aimAngle)) {
+      const inCone =
+        state.parryHeld && isInParryCone(b.x, b.y, px, py, state.aimAngle);
+      if (b.kind === "heal") {
+        if (inCone) {
+          b.state = "dead";
+          effects.healCaught += 1;
+          emitBurst(state, b.x, b.y, BURSTS.healCatch());
+        } else if (distToPlayer <= HIT_RADIUS + radius) {
+          b.state = "dead";
+        }
+      } else if (inCone) {
         b.state = "absorbed";
         const timeSincePress = nowMs - state.parryStartedAt;
         const perfectWindow =

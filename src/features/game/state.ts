@@ -7,6 +7,7 @@ interface HudActions {
   reset: () => void;
   start: () => void;
   damage: (amount: number) => void;
+  heal: (amount: number) => void;
   addScore: (n: number) => void;
   bumpCombo: (n: number) => void;
   breakCombo: () => void;
@@ -57,6 +58,11 @@ export const useHud = create<HudState & HudActions>((set) => ({
         combo: 0,
         status: hp === 0 ? "gameover" : s.status,
       };
+    }),
+  heal: (amount) =>
+    set((s) => {
+      if (s.status !== "playing") return s;
+      return { hp: Math.min(s.maxHp, s.hp + amount) };
     }),
   addScore: (n) => set((s) => ({ score: s.score + n })),
   bumpCombo: (n) =>

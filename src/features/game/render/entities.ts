@@ -6,6 +6,7 @@ import {
   ENEMY_RADIUS,
   ENEMY_SPAWN_DELAY_MS,
   HIT_RADIUS,
+  PLAYER_MAX_DIST,
   PLAYER_RADIUS,
   TELEGRAPH_MS,
 } from "../config/tuning";
@@ -23,6 +24,22 @@ const KIND_SHAPE: Record<Enemy["kind"], KindShape> = {
   burster: { sides: 6, rotationSpeed: 0.0014, coreSize: 3, radiusScale: 0.9 },
   charger: { sides: 5, rotationSpeed: 0.0002, coreSize: 6, radiusScale: 1.18 },
 };
+
+export function drawMovementRing(
+  c: CanvasRenderingContext2D,
+  nowMs: number,
+): void {
+  const pulse = 0.5 + Math.sin(nowMs / 800) * 0.2;
+  c.save();
+  c.strokeStyle = `rgba(28, 240, 255, ${0.12 * pulse})`;
+  c.lineWidth = 1;
+  c.setLineDash([6, 10]);
+  c.beginPath();
+  c.arc(0, 0, PLAYER_MAX_DIST, 0, Math.PI * 2);
+  c.stroke();
+  c.setLineDash([]);
+  c.restore();
+}
 
 export function drawParticles(c: CanvasRenderingContext2D, state: EngineState): void {
   for (const p of state.particles) {
@@ -175,9 +192,41 @@ export function drawBullets(
       c.shadowBlur = 20;
       drawBulletTrail(c, b.x, b.y, b.vx, b.vy);
     }
-    drawShuriken(c, b.x, b.y, kindConfig.radius, b.kind, nowMs, color);
+    if (b.kind === "heal") {
+      drawHealCross(c, b.x, b.y, kindConfig.radius, nowMs, color);
+    } else {
+      drawShuriken(c, b.x, b.y, kindConfig.radius, b.kind, nowMs, color);
+    }
     c.restore();
   }
+}
+
+function drawHealCross(
+  c: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  nowMs: number,
+  color: string,
+): void {
+  const pulse = 0.85 + Math.sin(nowMs / 140) * 0.15;
+  const rotation = nowMs * 0.0008;
+  const arm = radius * 1.05 * pulse;
+  const thickness = radius * 0.42;
+
+  c.save();
+  c.translate(x, y);
+  c.rotate(rotation);
+  c.shadowColor = color;
+  c.shadowBlur = 24;
+  c.fillStyle = color;
+  c.fillRect(-thickness / 2, -arm, thickness, arm * 2);
+  c.fillRect(-arm, -thickness / 2, arm * 2, thickness);
+  c.shadowBlur = 0;
+  c.fillStyle = "rgba(255, 255, 255, 0.85)";
+  c.fillRect(-thickness / 4, -arm * 0.85, thickness / 2, arm * 1.7);
+  c.fillRect(-arm * 0.85, -thickness / 4, arm * 1.7, thickness / 2);
+  c.restore();
 }
 
 function drawShuriken(

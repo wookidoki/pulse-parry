@@ -5,6 +5,7 @@ import { DIFFICULTIES } from "../config/difficulty";
 import {
   ENEMY_ORBIT_DRIFT_RAD_PER_SEC,
   ENEMY_ORBIT_FACTOR,
+  ENEMY_ORBIT_MARGIN,
   ENEMY_SPAWN_DELAY_MS,
   KNOCKBACK_DECAY_PER_SEC,
   TELEGRAPH_MS,
@@ -12,7 +13,10 @@ import {
 import { normalizeAngle } from "./geometry";
 
 function orbitRadius(canvasW: number, canvasH: number): number {
-  return Math.min(canvasW, canvasH) * ENEMY_ORBIT_FACTOR;
+  const min = Math.min(canvasW, canvasH);
+  const factored = min * ENEMY_ORBIT_FACTOR;
+  const cap = min / 2 - ENEMY_ORBIT_MARGIN;
+  return Math.min(factored, Math.max(120, cap));
 }
 
 function pickSpawnAngle(state: EngineState): number {

@@ -45,6 +45,7 @@ export function GameCanvas() {
 
   const start = useHud((s) => s.start);
   const damage = useHud((s) => s.damage);
+  const heal = useHud((s) => s.heal);
   const addScore = useHud((s) => s.addScore);
   const bumpCombo = useHud((s) => s.bumpCombo);
   const breakCombo = useHud((s) => s.breakCombo);
@@ -179,10 +180,12 @@ export function GameCanvas() {
           dt,
           canvasW: w,
           canvasH: h,
+          currentComboHint: hudState.combo,
           onScore: addScore,
           onCombo: bumpCombo,
           onComboBreak: breakCombo,
           onDamage: damage,
+          onHeal: heal,
           onStageUp: setStage,
           onVictory: victory,
         });
@@ -207,7 +210,7 @@ export function GameCanvas() {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [addScore, bumpCombo, breakCombo, damage, setStage, victory, togglePause]);
+  }, [addScore, bumpCombo, breakCombo, damage, heal, setStage, victory, togglePause]);
 
   return <canvas ref={canvasRef} className={styles.canvas} />;
 }

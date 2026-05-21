@@ -12,10 +12,14 @@ import {
   HIT_STOP_MS_PLAYER_HIT,
   HIT_STOP_MS_REFLECT_HIT,
   MASH_COOLDOWN_MS,
+  HEAL_BULLET_SPEED,
+  HEAL_COMBO_MILESTONES,
+  HEAL_SPAWN_INTERVAL_MS,
   PARRY_HALF_CONE_RAD,
   PLAYER_MAX_DIST,
   PLAYER_MOVE_SPEED,
   SCORE_CHARGED_BONUS,
+  SCORE_HEAL_CATCH,
   SCORE_PARRY_PER_BULLET,
   SCORE_PERFECT_BONUS,
   SHAKE_DECAY_PER_SEC,
@@ -32,6 +36,7 @@ import {
   autoCounterAbsorbedBullets,
   cleanupBullets,
   createBullet,
+  createHealItem,
   reflectAbsorbedBullets,
   updateBullets,
 } from "./bullet";
@@ -83,6 +88,8 @@ export function createEngineState(nowMs: number): EngineState {
     parryCooldownMsLeft: 0,
     audioKickThisFrame: false,
     difficulty: "normal",
+    lastHealSpawnAtMs: nowMs,
+    lastHealMilestone: 0,
   };
 }
 
@@ -93,6 +100,7 @@ export interface UpdateContext extends EngineCallbacks {
   dt: number;
   canvasW: number;
   canvasH: number;
+  currentComboHint: number;
 }
 
 function applyShake(state: EngineState, amount: number): void {
@@ -173,6 +181,28 @@ function spawnEnemyIfNeeded(
   if (!shouldSpawnEnemy(state, stage)) return;
   state.enemies.push(createEnemy(state, nowMs, canvasW, canvasH, stage));
   state.lastEnemySpawnBeat = state.beat.currentBeat;
+}
+
+function spawnHealIfNeeded(
+  state: EngineState,
+  nowMs: number,
+  canvasW: number,
+  canvasH: number,
+  comboNow: number,
+): void {
+  const dueByTime = nowMs - state.lastHealSpawnAtMs >= HEAL_SPAWN_INTERVAL_MS;
+  let dueByCombo = 0;
+  for (const m of HEAL_COMBO_MILESTONES) {
+    if (comboNow >= m && state.lastHealMilestone < m) {
+      dueByCombo = m;
+    }
+  }
+  if (!dueByTime && dueByCombo === 0) return;
+  state.bullets.push(
+    createHealItem(state, nowMs, canvasW, canvasH, HEAL_BULLET_SPEED),
+  );
+  state.lastHealSpawnAtMs = nowMs;
+  if (dueByCombo > 0) state.lastHealMilestone = dueByCombo;
 }
 
 function processEnemyShots(
@@ -337,6 +367,7 @@ export function update(ctx: UpdateContext): void {
   const { justReleased } = handleParryInputTransitions(state, input, nowMs, dt);
 
   spawnEnemyIfNeeded(state, nowMs, canvasW, canvasH);
+  spawnHealIfNeeded(state, nowMs, canvasW, canvasH, ctx.currentComboHint);
 
   const enemyResult = updateEnemies(state, dt, nowMs, canvasW, canvasH);
   processEnemyShots(state, enemyResult.shotsFired, nowMs);
@@ -363,6 +394,20 @@ export function update(ctx: UpdateContext): void {
     spawnScreenFlash(state, PALETTE.cyan, 0.22);
     applyShake(state, 4);
     ctx.onScore(20);
+  }
+  if (bulletEffects.healCaught > 0) {
+    ctx.onHeal(bulletEffects.healCaught);
+    ctx.onScore(SCORE_HEAL_CATCH * bulletEffects.healCaught);
+    spawnScreenFlash(state, "#1cf78f", 0.3);
+    spawnScorePop(
+      state,
+      state.playerX,
+      state.playerY - 36,
+      `+${bulletEffects.healCaught} HP`,
+      "#1cf78f",
+      1.3,
+    );
+    sfx.playPerfectHeal();
   }
   applyBulletEffects(bulletEffects, ctx);
 

@@ -3,6 +3,7 @@ import { drawBackground } from "./background";
 import {
   drawBullets,
   drawEnemies,
+  drawMovementRing,
   drawParticles,
   drawPlayer,
 } from "./entities";
@@ -50,6 +51,7 @@ export function render(
   c.translate(cx + shakeX, cy + shakeY);
   c.scale(state.cameraZoom, state.cameraZoom);
 
+  drawMovementRing(c, nowMs);
   drawParticles(c, state);
   drawShockwaves(c, state, nowMs);
   drawEnemies(c, state, nowMs);

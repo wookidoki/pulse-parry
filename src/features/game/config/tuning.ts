@@ -9,7 +9,8 @@ export const PARRY_RANGE = 140;
 export const BULLET_REFLECT_SPEED = 880;
 
 export const ENEMY_RADIUS = 22;
-export const ENEMY_ORBIT_FACTOR = 0.52;
+export const ENEMY_ORBIT_FACTOR = 0.40;
+export const ENEMY_ORBIT_MARGIN = 90;
 export const ENEMY_ORBIT_DRIFT_RAD_PER_SEC = 0.05;
 
 export const TELEGRAPH_MS = 350;
@@ -37,6 +38,11 @@ export const PERFECT_PARRY_WINDOW_MS = 160;
 export const MASH_COOLDOWN_MS = 100;
 export const SCORE_PERFECT_BONUS = 25;
 export const SCORE_CHARGED_BONUS = 35;
+export const SCORE_HEAL_CATCH = 50;
+
+export const HEAL_SPAWN_INTERVAL_MS = 45000;
+export const HEAL_BULLET_SPEED = 140;
+export const HEAL_COMBO_MILESTONES = [25, 50, 100, 200] as const;
 
 export const HIT_STOP_MS_PLAYER_HIT = 60;
 export const HIT_STOP_MS_ENEMY_KILL = 95;

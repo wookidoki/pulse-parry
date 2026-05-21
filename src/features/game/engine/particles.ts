@@ -59,6 +59,13 @@ export const BURSTS = {
     speedMax: 320,
     lifeMs: 700,
   }),
+  healCatch: (): BurstSpec => ({
+    count: 18,
+    color: "#1cf78f",
+    speedMin: 60,
+    speedMax: 220,
+    lifeMs: 500,
+  }),
 };
 
 export function emitBurst(

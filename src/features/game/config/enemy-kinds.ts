@@ -71,4 +71,10 @@ export const BULLET_KINDS: Record<BulletKind, BulletKindConfig> = {
     color: PALETTE.purple,
     trailColor: "rgba(177, 75, 255, 0.5)",
   },
+  heal: {
+    radius: 12,
+    damage: 0,
+    color: "#1cf78f",
+    trailColor: "rgba(28, 247, 143, 0.5)",
+  },
 };

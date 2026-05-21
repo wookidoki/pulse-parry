@@ -107,6 +107,12 @@ export function playPlayerHit() {
   noiseBurst(0.22, 0.2, 320);
 }
 
+export function playPerfectHeal() {
+  envOsc(660, 1320, 0.18, "sine", 0.22);
+  envOsc(990, 1980, 0.18, "triangle", 0.16);
+  noiseBurst(0.05, 0.08, 5000);
+}
+
 export function playStageUp() {
   if (!ctx) return;
   [392, 523, 784].forEach((f, i) => {

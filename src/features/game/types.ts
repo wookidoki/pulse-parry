@@ -1,7 +1,7 @@
 export type EnemyKind = "shooter" | "burster" | "charger";
 export type EnemyState = "spawning" | "alive" | "dying" | "dead";
 
-export type BulletKind = "normal" | "rapid" | "heavy";
+export type BulletKind = "normal" | "rapid" | "heavy" | "heal";
 export type BulletState = "incoming" | "absorbed" | "reflected" | "dead";
 
 export interface Enemy {
@@ -133,6 +133,8 @@ export interface EngineState {
   parryCooldownMsLeft: number;
   audioKickThisFrame: boolean;
   difficulty: Difficulty;
+  lastHealSpawnAtMs: number;
+  lastHealMilestone: number;
 }
 
 export interface EngineCallbacks {
@@ -140,6 +142,7 @@ export interface EngineCallbacks {
   onCombo: (n: number) => void;
   onComboBreak: () => void;
   onDamage: (amount: number) => void;
+  onHeal: (amount: number) => void;
   onStageUp: (stageIndex: number) => void;
   onVictory: () => void;
 }
