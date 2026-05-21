@@ -1,5 +1,18 @@
 export type EnemyKind = "shooter" | "burster" | "charger";
+export type EnemyRace = "omnic" | "virus" | "drone";
 export type EnemyState = "spawning" | "alive" | "dying" | "dead";
+
+export const KIND_RACE: Record<EnemyKind, EnemyRace> = {
+  shooter: "omnic",
+  burster: "virus",
+  charger: "drone",
+};
+
+export const RACE_LABEL: Record<EnemyRace, string> = {
+  omnic: "OMNIC",
+  virus: "VIRUS",
+  drone: "DRONE",
+};
 
 export type BulletKind = "normal" | "rapid" | "heavy" | "heal";
 export type BulletState = "incoming" | "absorbed" | "reflected" | "dead";

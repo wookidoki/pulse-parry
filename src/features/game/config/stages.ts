@@ -26,7 +26,7 @@ export const STAGES: StageConfig[] = [
   {
     index: 0,
     name: "INFILTRATION",
-    tagline: "신호가 침투했다. 첫 응답은 단발.",
+    tagline: "옴닉 보초들이 깨어난다. 박자에 맞춰 쳐내라.",
     durationMs: 60000,
     tempoMap: [
       { t: 0, bpm: 118 },
@@ -46,7 +46,7 @@ export const STAGES: StageConfig[] = [
   {
     index: 1,
     name: "FACTORY",
-    tagline: "공장 라인이 깨어난다. 점사가 시작된다.",
+    tagline: "바이러스 군체가 합류한다. 점사 3연발 주의.",
     durationMs: 75000,
     tempoMap: [
       { t: 0, bpm: 128 },
@@ -65,7 +65,7 @@ export const STAGES: StageConfig[] = [
   {
     index: 2,
     name: "OVERDRIVE",
-    tagline: "방어막을 뚫는 무거운 일격이 합세한다.",
+    tagline: "보안 드론 출격. 무거운 일격 — 차지 패링으로 받아쳐라.",
     durationMs: 90000,
     tempoMap: [
       { t: 0, bpm: 150 },
@@ -85,7 +85,7 @@ export const STAGES: StageConfig[] = [
   {
     index: 3,
     name: "CHAOS",
-    tagline: "신호가 일그러진다. 박자가 거칠어진다.",
+    tagline: "옴닉도 바이러스도 드론도 함께. 신호가 일그러진다.",
     durationMs: 105000,
     tempoMap: [
       { t: 0, bpm: 172 },
@@ -105,7 +105,7 @@ export const STAGES: StageConfig[] = [
   {
     index: 4,
     name: "REVOLT",
-    tagline: "본체가 깨어났다. 모든 박자를 휩쓸어라.",
+    tagline: "본체가 모든 종족을 일제히 풀어놨다. 코어를 부숴라.",
     durationMs: 120000,
     tempoMap: [
       { t: 0, bpm: 176 },
