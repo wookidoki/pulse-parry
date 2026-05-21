@@ -1,17 +1,19 @@
-export type EnemyKind = "shooter" | "burster" | "charger";
-export type EnemyRace = "omnic" | "virus" | "drone";
+export type EnemyKind = "shooter" | "burster" | "charger" | "boss";
+export type EnemyRace = "omnic" | "virus" | "drone" | "core";
 export type EnemyState = "spawning" | "alive" | "dying" | "dead";
 
 export const KIND_RACE: Record<EnemyKind, EnemyRace> = {
   shooter: "omnic",
   burster: "virus",
   charger: "drone",
+  boss: "core",
 };
 
 export const RACE_LABEL: Record<EnemyRace, string> = {
   omnic: "OMNIC",
   virus: "VIRUS",
   drone: "DRONE",
+  core: "THE CORE",
 };
 
 export type BulletKind = "normal" | "rapid" | "heavy" | "heal";
@@ -148,6 +150,7 @@ export interface EngineState {
   difficulty: Difficulty;
   lastHealSpawnAtMs: number;
   lastHealMilestone: number;
+  bossSpawned: boolean;
 }
 
 export interface EngineCallbacks {

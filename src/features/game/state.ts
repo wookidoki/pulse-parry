@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { HudState } from "./types";
 import { STAGES } from "./config/stages";
 import { COMBO_MILESTONES } from "./config/tuning";
+import { unlockStage } from "./progress";
 
 interface HudActions {
   reset: () => void;
@@ -80,7 +81,11 @@ export const useHud = create<HudState & HudActions>((set) => ({
   breakCombo: () => set({ combo: 0 }),
   gameOver: () => set({ status: "gameover" }),
   victory: () =>
-    set((s) => (s.status === "playing" ? { status: "victory" } : s)),
+    set((s) => {
+      if (s.status !== "playing") return s;
+      unlockStage(s.stageIndex);
+      return { status: "victory" };
+    }),
   setStage: (index) =>
     set({ stageIndex: index, stageName: stageNameOf(index) }),
   pause: () =>

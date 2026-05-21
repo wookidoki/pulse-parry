@@ -83,7 +83,67 @@ function drawEnemyByRace(
     case "drone":
       drawDrone(c, e, x, y, nowMs);
       break;
+    case "core":
+      drawCore(c, e, x, y, nowMs);
+      break;
   }
+}
+
+function drawCore(
+  c: CanvasRenderingContext2D,
+  e: Enemy,
+  x: number,
+  y: number,
+  nowMs: number,
+): void {
+  const config = ENEMY_KINDS[e.kind];
+  const baseR = ENEMY_RADIUS * 1.9;
+  const styles = flashStyles(e);
+  const beat = Math.sin(nowMs / 240) * 0.08 + 1;
+  const rot = nowMs * 0.0004;
+
+  c.save();
+  c.translate(x, y);
+
+  c.shadowColor = config.glowColor;
+  c.shadowBlur = 28 + e.pulse * 30;
+  c.strokeStyle = styles.stroke;
+  c.lineWidth = 2;
+  for (let i = 0; i < 3; i++) {
+    const r = baseR + i * 14 + Math.sin(nowMs / 200 + i) * 4;
+    c.beginPath();
+    c.arc(0, 0, r * beat, 0, Math.PI * 2);
+    c.stroke();
+  }
+
+  c.save();
+  c.rotate(rot);
+  c.fillStyle = styles.bgFill;
+  c.strokeStyle = styles.stroke;
+  c.lineWidth = 3;
+  drawPolygon(c, 8, baseR);
+  c.fill();
+  c.stroke();
+  c.restore();
+
+  c.save();
+  c.rotate(-rot * 1.4);
+  c.strokeStyle = styles.stroke;
+  c.lineWidth = 1.5;
+  drawPolygon(c, 6, baseR * 0.65);
+  c.stroke();
+  c.restore();
+
+  c.shadowBlur = 32;
+  c.fillStyle = "#ffffff";
+  c.beginPath();
+  c.arc(0, 0, 7 + e.pulse * 6, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = styles.fill;
+  c.beginPath();
+  c.arc(0, 0, 4 + e.pulse * 3, 0, Math.PI * 2);
+  c.fill();
+  c.restore();
 }
 
 function flashStyles(e: Enemy): { fill: string; stroke: string; bgFill: string } {

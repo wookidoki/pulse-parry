@@ -12,7 +12,7 @@ import {
   setupAudioAnalysis,
 } from "../music";
 import { useHud } from "../state";
-import type { EngineState, PlayerInput } from "../types";
+import type { Difficulty, EngineState, PlayerInput } from "../types";
 import { render } from "../render/frame";
 import styles from "./GameCanvas.module.css";
 
@@ -29,7 +29,12 @@ const MOVE_KEYS: Record<string, keyof Pick<PlayerInput, "moveUp" | "moveDown" | 
   ArrowRight: "moveRight",
 };
 
-export function GameCanvas() {
+interface GameCanvasProps {
+  startStage?: number;
+  difficulty?: Difficulty;
+}
+
+export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<EngineState | null>(null);
   const inputRef = useRef<PlayerInput>({
@@ -158,7 +163,8 @@ export function GameCanvas() {
     window.addEventListener("blur", handleBlur);
 
     const startTime = performance.now();
-    engineRef.current = createEngineState(0);
+    engineRef.current = createEngineState(0, startStage, difficulty);
+    setStage(startStage);
     let prevTime = startTime;
 
     const loop = (t: number) => {
@@ -210,7 +216,7 @@ export function GameCanvas() {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [addScore, bumpCombo, breakCombo, damage, heal, setStage, victory, togglePause]);
+  }, [addScore, bumpCombo, breakCombo, damage, heal, setStage, victory, togglePause, startStage, difficulty]);
 
   return <canvas ref={canvasRef} className={styles.canvas} />;
 }

@@ -59,8 +59,13 @@ import * as sfx from "../audio";
 
 const BPM_CHANGE_EPSILON = 0.6;
 
-export function createEngineState(nowMs: number): EngineState {
-  const stage = STAGES[0];
+export function createEngineState(
+  nowMs: number,
+  startStage = 0,
+  difficulty: EngineState["difficulty"] = "normal",
+): EngineState {
+  const safeStage = Math.max(0, Math.min(STAGES.length - 1, startStage));
+  const stage = STAGES[safeStage];
   const initialBpm = stage.tempoMap[0]?.bpm ?? 120;
   return {
     enemies: [],
@@ -78,7 +83,7 @@ export function createEngineState(nowMs: number): EngineState {
     playerX: 0,
     playerY: 0,
     beat: createBeatClock(initialBpm, nowMs),
-    stageIndex: 0,
+    stageIndex: safeStage,
     stageStartMs: nowMs,
     lastEnemySpawnBeat: -999,
     shake: 0,
@@ -87,9 +92,10 @@ export function createEngineState(nowMs: number): EngineState {
     cameraZoom: 1,
     parryCooldownMsLeft: 0,
     audioKickThisFrame: false,
-    difficulty: "normal",
+    difficulty,
     lastHealSpawnAtMs: nowMs,
     lastHealMilestone: 0,
+    bossSpawned: false,
   };
 }
 
@@ -179,8 +185,10 @@ function spawnEnemyIfNeeded(
 ): void {
   const stage = currentStage(state.stageIndex);
   if (!shouldSpawnEnemy(state, stage)) return;
-  state.enemies.push(createEnemy(state, nowMs, canvasW, canvasH, stage));
+  const enemy = createEnemy(state, nowMs, canvasW, canvasH, stage);
+  state.enemies.push(enemy);
   state.lastEnemySpawnBeat = state.beat.currentBeat;
+  if (enemy.kind === "boss") state.bossSpawned = true;
 }
 
 function spawnHealIfNeeded(
@@ -300,8 +308,15 @@ function cleanupEnemies(state: EngineState, nowMs: number): void {
 
 function checkVictory(state: EngineState, nowMs: number, cb: EngineCallbacks): void {
   if (state.stageIndex !== FINAL_STAGE_INDEX) return;
+  const stage = STAGES[FINAL_STAGE_INDEX];
+  if (stage.isBoss) {
+    if (!state.bossSpawned) return;
+    const bossExists = state.enemies.some((e) => e.kind === "boss");
+    if (!bossExists) cb.onVictory();
+    return;
+  }
   const elapsed = nowMs - state.stageStartMs;
-  if (elapsed < STAGES[FINAL_STAGE_INDEX].durationMs) return;
+  if (elapsed < stage.durationMs) return;
   if (state.enemies.length > 0) return;
   cb.onVictory();
 }

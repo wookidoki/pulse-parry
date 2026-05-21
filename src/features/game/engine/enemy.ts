@@ -48,10 +48,11 @@ export function createEnemy(
   canvasH: number,
   stage: StageConfig,
 ): Enemy {
-  const angle = pickSpawnAngle(state);
   const kind = pickEnemyKind(stage);
+  const angle = kind === "boss" ? -Math.PI / 2 : pickSpawnAngle(state);
   const config = ENEMY_KINDS[kind];
-  const r = orbitRadius(canvasW, canvasH);
+  const baseR = orbitRadius(canvasW, canvasH);
+  const r = kind === "boss" ? baseR * 1.1 : baseR;
   const id = state.nextEnemyId++;
   return {
     id,
@@ -79,12 +80,15 @@ export function shouldSpawnEnemy(
   state: EngineState,
   stage: StageConfig,
 ): boolean {
+  if (stage.isBoss && state.bossSpawned) return false;
   let alive = 0;
   for (const e of state.enemies) {
     if (e.state === "alive" || e.state === "spawning") alive += 1;
   }
   const diffConfig = DIFFICULTIES[state.difficulty];
-  const maxEnemies = Math.max(1, stage.maxEnemies + diffConfig.enemyCountDelta);
+  const maxEnemies = stage.isBoss
+    ? 1
+    : Math.max(1, stage.maxEnemies + diffConfig.enemyCountDelta);
   if (alive >= maxEnemies) return false;
   const beatsSinceLastSpawn = state.beat.currentBeat - state.lastEnemySpawnBeat;
   return state.enemies.length === 0 || beatsSinceLastSpawn >= stage.spawnEveryBeats;

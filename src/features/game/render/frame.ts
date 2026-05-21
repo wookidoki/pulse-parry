@@ -9,6 +9,7 @@ import {
 } from "./entities";
 import {
   drawAimLine,
+  drawBossHpBar,
   drawParryCone,
   drawStageProgress,
 } from "./overlay";
@@ -73,6 +74,7 @@ export function render(
   drawComboFlowEdges(c, state, hud.combo, w, h, nowMs);
   drawScreenFlashes(c, state, w, h);
   drawStageProgress(c, state, w, nowMs);
+  drawBossHpBar(c, state, w, nowMs);
 
   if (hud.paused) drawPauseOverlay(c, w, h);
 }

@@ -47,6 +47,53 @@ export function drawParryCone(
   c.restore();
 }
 
+export function drawBossHpBar(
+  c: CanvasRenderingContext2D,
+  state: EngineState,
+  w: number,
+  nowMs: number,
+): void {
+  let boss: { hp: number; maxHp: number } | null = null;
+  for (const e of state.enemies) {
+    if (e.kind === "boss" && e.state !== "dead") {
+      boss = { hp: Math.max(0, e.hp), maxHp: e.maxHp };
+      break;
+    }
+  }
+  if (!boss) return;
+
+  const barW = w * 0.5;
+  const barX = (w - barW) / 2;
+  const barY = 24;
+  const barH = 10;
+  const fraction = boss.hp / boss.maxHp;
+  const pulse = 0.7 + Math.sin(nowMs / 180) * 0.3;
+
+  c.save();
+  c.fillStyle = "rgba(5, 3, 10, 0.7)";
+  c.fillRect(barX - 4, barY - 4, barW + 8, barH + 8);
+
+  c.fillStyle = "rgba(240, 246, 255, 0.1)";
+  c.fillRect(barX, barY, barW, barH);
+
+  c.fillStyle = "#ff3863";
+  c.shadowColor = "#ff3863";
+  c.shadowBlur = 14 * pulse;
+  c.fillRect(barX, barY, barW * fraction, barH);
+  c.shadowBlur = 0;
+
+  c.strokeStyle = "rgba(255, 56, 99, 0.7)";
+  c.lineWidth = 1;
+  c.strokeRect(barX, barY, barW, barH);
+
+  c.fillStyle = "#ffffff";
+  c.font = "bold 11px ui-monospace, monospace";
+  c.textAlign = "center";
+  c.textBaseline = "bottom";
+  c.fillText(`THE CORE  —  ${boss.hp} / ${boss.maxHp}`, w / 2, barY - 6);
+  c.restore();
+}
+
 export function drawStageProgress(
   c: CanvasRenderingContext2D,
   state: EngineState,
