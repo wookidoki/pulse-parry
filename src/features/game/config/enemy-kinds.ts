@@ -5,9 +5,9 @@ export interface EnemyKindConfig {
   hp: number;
   beatsPerShot: number;
   bulletKind: BulletKind;
-  bulletSpeedMul: number;
+  flightBeats: number;
   burstShots: number;
-  burstIntervalMs: number;
+  burstIntervalBeatFraction: number;
   color: string;
   glowColor: string;
 }
@@ -15,31 +15,31 @@ export interface EnemyKindConfig {
 export const ENEMY_KINDS: Record<EnemyKind, EnemyKindConfig> = {
   shooter: {
     hp: 2,
-    beatsPerShot: 4,
+    beatsPerShot: 2,
     bulletKind: "normal",
-    bulletSpeedMul: 1.0,
+    flightBeats: 1,
     burstShots: 1,
-    burstIntervalMs: 0,
+    burstIntervalBeatFraction: 0,
     color: PALETTE.magenta,
     glowColor: PALETTE.magenta,
   },
   burster: {
     hp: 2,
-    beatsPerShot: 6,
+    beatsPerShot: 4,
     bulletKind: "rapid",
-    bulletSpeedMul: 1.25,
+    flightBeats: 1,
     burstShots: 3,
-    burstIntervalMs: 130,
+    burstIntervalBeatFraction: 0.25,
     color: PALETTE.cyan,
     glowColor: PALETTE.cyan,
   },
   charger: {
     hp: 3,
-    beatsPerShot: 8,
+    beatsPerShot: 6,
     bulletKind: "heavy",
-    bulletSpeedMul: 0.7,
+    flightBeats: 2,
     burstShots: 1,
-    burstIntervalMs: 0,
+    burstIntervalBeatFraction: 0,
     color: PALETTE.purple,
     glowColor: PALETTE.purple,
   },

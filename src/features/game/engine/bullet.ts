@@ -22,12 +22,15 @@ export function createBullet(
   state: EngineState,
   enemy: Enemy,
   nowMs: number,
-  baseSpeed: number,
 ): Bullet {
   const enemyConfig = ENEMY_KINDS[enemy.kind];
   const kind = enemyConfig.bulletKind;
-  const speed = baseSpeed * enemyConfig.bulletSpeedMul;
-  const { ux, uy } = unitVector(state.playerX - enemy.x, state.playerY - enemy.y);
+  const dx = state.playerX - enemy.x;
+  const dy = state.playerY - enemy.y;
+  const distance = magnitude(dx, dy);
+  const flightMs = enemyConfig.flightBeats * state.beat.beatPeriodMs;
+  const speed = distance / Math.max(0.05, flightMs / 1000);
+  const { ux, uy } = unitVector(dx, dy);
   return {
     id: state.nextBulletId++,
     x: enemy.x,

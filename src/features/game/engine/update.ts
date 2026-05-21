@@ -1,5 +1,6 @@
 import type { EngineCallbacks, EngineState, PlayerInput } from "../types";
-import { BPM_REFERENCE, FINAL_STAGE_INDEX, STAGES, currentStage } from "../config/stages";
+import { FINAL_STAGE_INDEX, STAGES, currentStage } from "../config/stages";
+import { tickKickDetection } from "../audioAnalysis";
 import {
   BG_PULSE_DECAY_PER_SEC,
   CAMERA_ZOOM_LERP_PER_SEC,
@@ -79,6 +80,7 @@ export function createEngineState(nowMs: number): EngineState {
     slowmoMsLeft: 0,
     cameraZoom: 1,
     parryCooldownMsLeft: 0,
+    audioKickThisFrame: false,
   };
 }
 
@@ -163,24 +165,17 @@ function spawnEnemyIfNeeded(
   state.lastEnemySpawnBeat = state.beat.currentBeat;
 }
 
-function bulletSpeedForCurrentTempo(state: EngineState): number {
-  const stage = currentStage(state.stageIndex);
-  const ratio = state.beat.bpm / BPM_REFERENCE;
-  return stage.bulletSpeed * ratio;
-}
-
 function processEnemyShots(
   state: EngineState,
   shots: EnemyShot[],
   nowMs: number,
 ): void {
   if (shots.length === 0) return;
-  const speed = bulletSpeedForCurrentTempo(state);
   const enemyById = new Map(state.enemies.map((e) => [e.id, e]));
   for (const s of shots) {
     const enemy = enemyById.get(s.enemyId);
     if (!enemy) continue;
-    state.bullets.push(createBullet(state, enemy, nowMs, speed));
+    state.bullets.push(createBullet(state, enemy, nowMs));
     sfx.playEnemyShoot();
   }
 }
@@ -306,7 +301,8 @@ export function update(ctx: UpdateContext): void {
 
   tickTempoCurve(state, nowMs);
   tickBeat(state.beat, nowMs);
-  if (state.beat.isBeatTick) {
+  state.audioKickThisFrame = tickKickDetection(state.stageIndex, nowMs);
+  if (state.beat.isBeatTick || state.audioKickThisFrame) {
     state.bgPulse = 1;
   }
 

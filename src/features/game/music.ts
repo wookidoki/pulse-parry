@@ -1,13 +1,16 @@
 const STAGE_TRACKS: string[] = [
-  "/audio/stage1_awaken.ogg",
   "/audio/stage2_pulse.ogg",
   "/audio/stage3_factory.ogg",
   "/audio/stage3_overdrive.ogg",
+  "/audio/stage4_chaos.ogg",
   "/audio/boss_electric.ogg",
 ];
 
 const CROSSFADE_MS = 700;
 const MUSIC_VOLUME_FACTOR = 0.55;
+
+import { attachAnalyser, resetAnalysisState } from "./audioAnalysis";
+import { getAudioContext } from "./audio";
 
 const audioElements: HTMLAudioElement[] = [];
 let currentIndex = -1;
@@ -21,8 +24,21 @@ export function initMusic(): void {
     a.loop = true;
     a.volume = 0;
     a.preload = "auto";
+    a.crossOrigin = "anonymous";
     audioElements.push(a);
   }
+}
+
+export function setupAudioAnalysis(): void {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  for (let i = 0; i < audioElements.length; i++) {
+    attachAnalyser(ctx, audioElements[i], i);
+  }
+}
+
+export function getCurrentTrackIndex(): number {
+  return currentIndex;
 }
 
 function fade(el: HTMLAudioElement, target: number, durationMs: number): void {
@@ -65,6 +81,7 @@ export function playStageBgm(stageIndex: number): void {
   fade(next, targetVolume(), CROSSFADE_MS);
   currentIndex = idx;
   isPaused = false;
+  resetAnalysisState();
 }
 
 export function pauseMusic(): void {

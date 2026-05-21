@@ -131,6 +131,7 @@ export interface EngineState {
   slowmoMsLeft: number;
   cameraZoom: number;
   parryCooldownMsLeft: number;
+  audioKickThisFrame: boolean;
 }
 
 export interface EngineCallbacks {

@@ -30,6 +30,10 @@ export function resumeAudio() {
   if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
 }
 
+export function getAudioContext(): AudioContext | null {
+  return ctx;
+}
+
 function envOsc(
   freqStart: number,
   freqEnd: number,

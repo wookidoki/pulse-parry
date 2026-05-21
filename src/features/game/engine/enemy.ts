@@ -99,6 +99,7 @@ function tryFireMainShot(
   enemy: Enemy,
   nowMs: number,
   dt: number,
+  beatPeriodMs: number,
   result: EnemyTickResult,
 ): boolean {
   if (enemy.telegraphMsLeft <= 0) return false;
@@ -112,7 +113,8 @@ function tryFireMainShot(
   const config = ENEMY_KINDS[enemy.kind];
   if (config.burstShots > 1) {
     enemy.burstShotsRemaining = config.burstShots - 1;
-    enemy.burstNextShotAtMs = nowMs + config.burstIntervalMs;
+    enemy.burstNextShotAtMs =
+      nowMs + config.burstIntervalBeatFraction * beatPeriodMs;
   }
   return true;
 }
@@ -120,6 +122,7 @@ function tryFireMainShot(
 function tryFireBurstShot(
   enemy: Enemy,
   nowMs: number,
+  beatPeriodMs: number,
   result: EnemyTickResult,
 ): boolean {
   if (enemy.burstShotsRemaining <= 0) return false;
@@ -130,19 +133,18 @@ function tryFireBurstShot(
   enemy.burstShotsRemaining -= 1;
   if (enemy.burstShotsRemaining > 0) {
     const config = ENEMY_KINDS[enemy.kind];
-    enemy.burstNextShotAtMs = nowMs + config.burstIntervalMs;
+    enemy.burstNextShotAtMs =
+      nowMs + config.burstIntervalBeatFraction * beatPeriodMs;
   }
   return true;
 }
 
-function maybeStartTelegraph(
-  enemy: Enemy,
-  state: EngineState,
-): void {
-  if (!state.beat.isBeatTick) return;
+function maybeStartTelegraph(enemy: Enemy, state: EngineState): void {
+  const fireEvent = state.beat.isBeatTick || state.audioKickThisFrame;
+  if (!fireEvent) return;
   const config = ENEMY_KINDS[enemy.kind];
   if (state.beat.currentBeat - enemy.lastShotBeat < config.beatsPerShot) return;
-  enemy.telegraphMsLeft = TELEGRAPH_MS;
+  enemy.telegraphMsLeft = Math.min(TELEGRAPH_MS, state.beat.beatPeriodMs * 0.55);
   enemy.lastShotBeat = state.beat.currentBeat;
 }
 
@@ -179,8 +181,8 @@ export function updateEnemies(
 
     if (e.state !== "alive") continue;
 
-    if (tryFireMainShot(e, nowMs, dt, result)) continue;
-    if (tryFireBurstShot(e, nowMs, result)) continue;
+    if (tryFireMainShot(e, nowMs, dt, state.beat.beatPeriodMs, result)) continue;
+    if (tryFireBurstShot(e, nowMs, state.beat.beatPeriodMs, result)) continue;
     maybeStartTelegraph(e, state);
   }
   return result;

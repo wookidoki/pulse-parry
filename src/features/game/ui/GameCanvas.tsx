@@ -9,6 +9,7 @@ import {
   playStageBgm,
   resumeMusic,
   setMusicVolume,
+  setupAudioAnalysis,
 } from "../music";
 import { useHud } from "../state";
 import type { EngineState, PlayerInput } from "../types";
@@ -99,6 +100,7 @@ export function GameCanvas() {
     setMusicVolume(useHud.getState().volume);
     const gestureHandler = () => {
       resumeAudio();
+      setupAudioAnalysis();
       playStageBgm(useHud.getState().stageIndex);
       window.removeEventListener("pointerdown", gestureHandler);
       window.removeEventListener("keydown", gestureHandler);
