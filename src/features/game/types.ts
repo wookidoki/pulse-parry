@@ -86,9 +86,13 @@ export interface BeatClock {
 }
 
 export interface PlayerInput {
-  aimX: number;
-  aimY: number;
+  rawMouseX: number;
+  rawMouseY: number;
   parryHeld: boolean;
+  moveUp: boolean;
+  moveDown: boolean;
+  moveLeft: boolean;
+  moveRight: boolean;
 }
 
 export interface EngineState {
@@ -103,6 +107,8 @@ export interface EngineState {
   parryHeld: boolean;
   parryStartedAt: number;
   aimAngle: number;
+  playerX: number;
+  playerY: number;
   beat: BeatClock;
   stageIndex: number;
   stageStartMs: number;

@@ -1,5 +1,7 @@
 export const PLAYER_RADIUS = 14;
 export const HIT_RADIUS = 22;
+export const PLAYER_MAX_DIST = 110;
+export const PLAYER_MOVE_SPEED = 260;
 
 export const PARRY_HALF_CONE_RAD = (50 * Math.PI) / 180;
 export const PARRY_RANGE = 140;

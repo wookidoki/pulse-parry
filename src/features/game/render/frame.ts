@@ -50,12 +50,17 @@ export function render(
   c.scale(state.cameraZoom, state.cameraZoom);
 
   drawParticles(c, state);
-  drawAimLine(c, state, w, h);
-  drawParryCone(c, state, nowMs);
   drawEnemies(c, state, nowMs);
   drawBullets(c, state, nowMs);
+
+  c.save();
+  c.translate(state.playerX, state.playerY);
+  drawAimLine(c, state, w, h);
+  drawParryCone(c, state, nowMs);
   drawSlashes(c, state, nowMs);
   drawPlayer(c, state, nowMs);
+  c.restore();
+
   drawScorePops(c, state);
 
   c.restore();

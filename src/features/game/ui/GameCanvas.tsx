@@ -10,10 +10,29 @@ import styles from "./GameCanvas.module.css";
 
 const MAX_DT_SEC = 0.05;
 
+const MOVE_KEYS: Record<string, keyof Pick<PlayerInput, "moveUp" | "moveDown" | "moveLeft" | "moveRight">> = {
+  KeyW: "moveUp",
+  KeyS: "moveDown",
+  KeyA: "moveLeft",
+  KeyD: "moveRight",
+  ArrowUp: "moveUp",
+  ArrowDown: "moveDown",
+  ArrowLeft: "moveLeft",
+  ArrowRight: "moveRight",
+};
+
 export function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<EngineState | null>(null);
-  const inputRef = useRef<PlayerInput>({ aimX: 1, aimY: 0, parryHeld: false });
+  const inputRef = useRef<PlayerInput>({
+    rawMouseX: 1,
+    rawMouseY: 0,
+    parryHeld: false,
+    moveUp: false,
+    moveDown: false,
+    moveLeft: false,
+    moveRight: false,
+  });
   const rafRef = useRef<number | null>(null);
 
   const start = useHud((s) => s.start);
@@ -61,11 +80,8 @@ export function GameCanvas() {
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      const dx = e.clientX - window.innerWidth / 2;
-      const dy = e.clientY - window.innerHeight / 2;
-      const d = Math.hypot(dx, dy) || 1;
-      inputRef.current.aimX = dx / d;
-      inputRef.current.aimY = dy / d;
+      inputRef.current.rawMouseX = e.clientX - window.innerWidth / 2;
+      inputRef.current.rawMouseY = e.clientY - window.innerHeight / 2;
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space") {
@@ -79,11 +95,30 @@ export function GameCanvas() {
         inputRef.current.parryHeld = false;
         return;
       }
+      const moveKey = MOVE_KEYS[e.code];
+      if (moveKey) {
+        e.preventDefault();
+        inputRef.current[moveKey] = true;
+      }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code !== "Space") return;
-      e.preventDefault();
+      if (e.code === "Space") {
+        e.preventDefault();
+        inputRef.current.parryHeld = false;
+        return;
+      }
+      const moveKey = MOVE_KEYS[e.code];
+      if (moveKey) {
+        e.preventDefault();
+        inputRef.current[moveKey] = false;
+      }
+    };
+    const handleBlur = () => {
       inputRef.current.parryHeld = false;
+      inputRef.current.moveUp = false;
+      inputRef.current.moveDown = false;
+      inputRef.current.moveLeft = false;
+      inputRef.current.moveRight = false;
     };
 
     window.addEventListener("resize", resize);
@@ -92,6 +127,7 @@ export function GameCanvas() {
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleBlur);
 
     const startTime = performance.now();
     engineRef.current = createEngineState(0);
@@ -142,6 +178,7 @@ export function GameCanvas() {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleBlur);
     };
   }, [addScore, bumpCombo, breakCombo, damage, setStage, victory, togglePause]);
 

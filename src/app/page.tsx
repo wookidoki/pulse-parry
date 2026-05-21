@@ -19,7 +19,9 @@ export default function Home() {
       </div>
 
       <div className={styles.hints}>
-        <p><kbd>마우스</kbd> 조준 · <kbd>SPACE</kbd> 패링 · <kbd>놓기</kbd> 반격</p>
+        <p>
+          <kbd>WASD</kbd> 회피 · <kbd>마우스</kbd> 조준 · <kbd>SPACE</kbd> 패링 · <kbd>놓기</kbd> 반격 · <kbd>ESC</kbd> 일시정지
+        </p>
       </div>
     </main>
   );

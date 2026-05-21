@@ -9,6 +9,8 @@ import {
   HIT_STOP_MS_PLAYER_HIT,
   HIT_STOP_MS_REFLECT_HIT,
   PARRY_HALF_CONE_RAD,
+  PLAYER_MAX_DIST,
+  PLAYER_MOVE_SPEED,
   SCORE_PARRY_PER_BULLET,
   SHAKE_DECAY_PER_SEC,
   SHAKE_ON_ENEMY_KILL,
@@ -61,6 +63,8 @@ export function createEngineState(nowMs: number): EngineState {
     parryHeld: false,
     parryStartedAt: 0,
     aimAngle: 0,
+    playerX: 0,
+    playerY: 0,
     beat: createBeatClock(initialBpm, nowMs),
     stageIndex: 0,
     stageStartMs: nowMs,
@@ -242,9 +246,29 @@ function applySlowmo(state: EngineState, ms: number): void {
   if (ms > state.slowmoMsLeft) state.slowmoMsLeft = ms;
 }
 
+function updatePlayerMovement(state: EngineState, input: PlayerInput, dt: number): void {
+  const mx = (input.moveRight ? 1 : 0) - (input.moveLeft ? 1 : 0);
+  const my = (input.moveDown ? 1 : 0) - (input.moveUp ? 1 : 0);
+  if (mx !== 0 || my !== 0) {
+    const mag = Math.hypot(mx, my);
+    state.playerX += (mx / mag) * PLAYER_MOVE_SPEED * dt;
+    state.playerY += (my / mag) * PLAYER_MOVE_SPEED * dt;
+  }
+  const dist = Math.hypot(state.playerX, state.playerY);
+  if (dist > PLAYER_MAX_DIST) {
+    state.playerX *= PLAYER_MAX_DIST / dist;
+    state.playerY *= PLAYER_MAX_DIST / dist;
+  }
+}
+
+function recomputeAimAngle(state: EngineState, input: PlayerInput): void {
+  const dx = input.rawMouseX - state.playerX;
+  const dy = input.rawMouseY - state.playerY;
+  state.aimAngle = Math.atan2(dy, dx);
+}
+
 export function update(ctx: UpdateContext): void {
   const { state, input, nowMs, dt, canvasW, canvasH } = ctx;
-  state.aimAngle = Math.atan2(input.aimY, input.aimX);
 
   state.shake = Math.max(0, state.shake - dt * SHAKE_DECAY_PER_SEC);
   state.bgPulse = Math.max(0, state.bgPulse - dt * BG_PULSE_DECAY_PER_SEC);
@@ -253,10 +277,13 @@ export function update(ctx: UpdateContext): void {
 
   if (processHitStop(state, dt)) {
     state.parryHeld = input.parryHeld;
+    recomputeAimAngle(state, input);
     return;
   }
 
   const physicsDt = dt * state.timeScale;
+  updatePlayerMovement(state, input, physicsDt);
+  recomputeAimAngle(state, input);
 
   tickTempoCurve(state, nowMs);
   tickBeat(state.beat, nowMs);

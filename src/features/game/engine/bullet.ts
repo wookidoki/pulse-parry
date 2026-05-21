@@ -26,7 +26,7 @@ export function createBullet(
   const enemyConfig = ENEMY_KINDS[enemy.kind];
   const kind = enemyConfig.bulletKind;
   const speed = baseSpeed * enemyConfig.bulletSpeedMul;
-  const { ux, uy } = unitVector(-enemy.x, -enemy.y);
+  const { ux, uy } = unitVector(state.playerX - enemy.x, state.playerY - enemy.y);
   return {
     id: state.nextBulletId++,
     x: enemy.x,
@@ -42,10 +42,18 @@ export function createBullet(
   };
 }
 
-function isInParryCone(x: number, y: number, aimAngle: number): boolean {
-  const dist = magnitude(x, y);
+function isInParryCone(
+  bx: number,
+  by: number,
+  px: number,
+  py: number,
+  aimAngle: number,
+): boolean {
+  const dx = bx - px;
+  const dy = by - py;
+  const dist = magnitude(dx, dy);
   if (dist > PARRY_RANGE || dist < 4) return false;
-  const angle = angleBetween(x, y);
+  const angle = angleBetween(dx, dy);
   return Math.abs(normalizeAngle(angle - aimAngle)) <= PARRY_HALF_CONE_RAD;
 }
 
@@ -108,6 +116,8 @@ export function updateBullets(
   };
   const offscreenLimit = Math.max(canvasW, canvasH);
   const beatPhase = state.beat.beatPhase;
+  const px = state.playerX;
+  const py = state.playerY;
 
   for (const b of state.bullets) {
     if (b.state === "dead") continue;
@@ -115,18 +125,20 @@ export function updateBullets(
 
     if (b.state === "incoming") {
       applyIncomingMotion(b, dt, beatPhase, nowMs);
-      const dist = magnitude(b.x, b.y);
-      if (dist < b.minDist) b.minDist = dist;
-      if (state.parryHeld && isInParryCone(b.x, b.y, state.aimAngle)) {
+      const distToPlayer = magnitude(b.x - px, b.y - py);
+      if (distToPlayer < b.minDist) b.minDist = distToPlayer;
+      if (state.parryHeld && isInParryCone(b.x, b.y, px, py, state.aimAngle)) {
         b.state = "absorbed";
         effects.parriedCount += 1;
         emitBurst(state, b.x, b.y, BURSTS.parryCatch());
-      } else if (dist <= HIT_RADIUS + radius) {
+      } else if (distToPlayer <= HIT_RADIUS + radius) {
         b.state = "dead";
         effects.damageDealt += damageOf(b.kind);
         emitBurst(state, b.x, b.y, BURSTS.playerHit());
       } else {
-        const movingAway = b.x * b.vx + b.y * b.vy > 0;
+        const towardPlayerX = px - b.x;
+        const towardPlayerY = py - b.y;
+        const movingAway = b.vx * towardPlayerX + b.vy * towardPlayerY < 0;
         if (
           movingAway &&
           !b.nearMissFired &&
@@ -138,9 +150,11 @@ export function updateBullets(
       }
     } else if (b.state === "absorbed") {
       const targetR = PARRY_RANGE * 0.5;
-      const d = magnitude(b.x, b.y) || 1;
-      const tx = (b.x / d) * targetR;
-      const ty = (b.y / d) * targetR;
+      const dx = b.x - px;
+      const dy = b.y - py;
+      const d = magnitude(dx, dy) || 1;
+      const tx = px + (dx / d) * targetR;
+      const ty = py + (dy / d) * targetR;
       const ease = Math.min(1, dt * 8);
       b.x += (tx - b.x) * ease;
       b.y += (ty - b.y) * ease;
@@ -195,7 +209,7 @@ export function reflectAbsorbedBullets(state: EngineState): number {
     count++;
   }
   if (count > 0) {
-    emitBurst(state, 0, 0, BURSTS.reflect(count, state.aimAngle));
+    emitBurst(state, state.playerX, state.playerY, BURSTS.reflect(count, state.aimAngle));
   }
   return count;
 }
@@ -220,7 +234,7 @@ export function autoCounterAbsorbedBullets(state: EngineState): number {
     count++;
   }
   if (count > 0) {
-    emitBurst(state, 0, 0, BURSTS.reflect(count, state.aimAngle));
+    emitBurst(state, state.playerX, state.playerY, BURSTS.reflect(count, state.aimAngle));
   }
   return count;
 }
