@@ -12,10 +12,10 @@ export function createBeatClock(bpm: number, startedAtMs: number): BeatClock {
 }
 
 export function setBpm(clock: BeatClock, bpm: number, nowMs: number): void {
-  const elapsedInBeat = clock.beatPhase * clock.beatPeriodMs;
+  const totalElapsedBeats = clock.currentBeat + clock.beatPhase;
   clock.bpm = bpm;
   clock.beatPeriodMs = 60000 / bpm;
-  clock.startedAtMs = nowMs - elapsedInBeat;
+  clock.startedAtMs = nowMs - totalElapsedBeats * clock.beatPeriodMs;
 }
 
 export function tickBeat(clock: BeatClock, nowMs: number): void {
