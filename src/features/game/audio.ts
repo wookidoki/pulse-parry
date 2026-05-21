@@ -101,8 +101,15 @@ export function playParryHit() {
 }
 
 export function playReflect() {
-  envOsc(900, 2200, 0.18, "sawtooth", 0.18);
-  noiseBurst(0.06, 0.08, 4000);
+  envOsc(900, 2200, 0.18, "sawtooth", 0.22);
+  envOsc(80, 38, 0.16, "sine", 0.42);
+  envOsc(2600, 600, 0.08, "square", 0.14);
+  noiseBurst(0.08, 0.12, 3800);
+}
+
+export function playSlashWoosh() {
+  envOsc(1800, 320, 0.22, "sawtooth", 0.16);
+  noiseBurst(0.18, 0.16, 2200);
 }
 
 export function playEnemyShoot() {
@@ -111,7 +118,10 @@ export function playEnemyShoot() {
 
 export function playEnemyDie() {
   envOsc(800, 90, 0.32, "triangle", 0.25);
-  noiseBurst(0.18, 0.18, 600);
+  envOsc(60, 28, 0.22, "sine", 0.55);
+  envOsc(2400, 380, 0.06, "sawtooth", 0.18);
+  noiseBurst(0.22, 0.22, 480);
+  noiseBurst(0.05, 0.3, 2400);
 }
 
 export function playPlayerHit() {

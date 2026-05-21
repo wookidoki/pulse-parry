@@ -19,6 +19,36 @@ export interface Enemy {
   orbitAngle: number;
   burstShotsRemaining: number;
   burstNextShotAtMs: number;
+  knockbackX: number;
+  knockbackY: number;
+  hitFlashMsLeft: number;
+}
+
+export interface ScorePop {
+  x: number;
+  y: number;
+  vy: number;
+  text: string;
+  color: string;
+  life: number;
+  maxLifeMs: number;
+  scale: number;
+}
+
+export interface ScreenFlash {
+  color: string;
+  life: number;
+  maxLifeMs: number;
+  intensity: number;
+}
+
+export interface Slash {
+  startAngle: number;
+  endAngle: number;
+  bornAtMs: number;
+  durationMs: number;
+  color: string;
+  radius: number;
 }
 
 export interface Bullet {
@@ -63,6 +93,9 @@ export interface EngineState {
   enemies: Enemy[];
   bullets: Bullet[];
   particles: Particle[];
+  scorePops: ScorePop[];
+  flashes: ScreenFlash[];
+  slashes: Slash[];
   nextEnemyId: number;
   nextBulletId: number;
   parryHeld: boolean;
@@ -74,6 +107,7 @@ export interface EngineState {
   lastEnemySpawnBeat: number;
   shake: number;
   bgPulse: number;
+  hitStopMsLeft: number;
 }
 
 export interface EngineCallbacks {

@@ -11,6 +11,11 @@ import {
   drawParryCone,
   drawStageProgress,
 } from "./overlay";
+import {
+  drawScorePops,
+  drawScreenFlashes,
+  drawSlashes,
+} from "./effects";
 
 export function render(
   c: CanvasRenderingContext2D,
@@ -37,9 +42,12 @@ export function render(
   drawParryCone(c, state, nowMs);
   drawEnemies(c, state, nowMs);
   drawBullets(c, state, nowMs);
+  drawSlashes(c, state, nowMs);
   drawPlayer(c, state, nowMs);
+  drawScorePops(c, state);
 
   c.restore();
 
+  drawScreenFlashes(c, state, w, h);
   drawStageProgress(c, state, w, nowMs);
 }

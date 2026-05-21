@@ -2,16 +2,24 @@ import type { EngineCallbacks, EngineState, PlayerInput } from "../types";
 import { BPM_REFERENCE, FINAL_STAGE_INDEX, STAGES, currentStage } from "../config/stages";
 import {
   BG_PULSE_DECAY_PER_SEC,
+  HIT_STOP_MS_ENEMY_KILL,
+  HIT_STOP_MS_PARRY,
+  HIT_STOP_MS_PLAYER_HIT,
+  HIT_STOP_MS_REFLECT_HIT,
+  PARRY_HALF_CONE_RAD,
   SCORE_PARRY_PER_BULLET,
   SHAKE_DECAY_PER_SEC,
   SHAKE_ON_ENEMY_KILL,
   SHAKE_ON_PLAYER_HIT,
   SHAKE_ON_REFLECT,
   SHAKE_ON_STAGE_UP,
+  TAP_THRESHOLD_MS,
 } from "../config/tuning";
+import { PALETTE } from "../config/palette";
 import { createBeatClock, setBpm, tickBeat } from "./beat";
 import {
   applyBulletEffects,
+  autoCounterAbsorbedBullets,
   cleanupBullets,
   createBullet,
   reflectAbsorbedBullets,
@@ -25,6 +33,11 @@ import {
 } from "./enemy";
 import { BURSTS, emitBurst, updateParticles } from "./particles";
 import { bpmAt } from "./tempo";
+import {
+  spawnScreenFlash,
+  spawnSlash,
+  updateEffects,
+} from "./effects";
 import * as sfx from "../audio";
 
 const BPM_CHANGE_EPSILON = 0.6;
@@ -36,6 +49,9 @@ export function createEngineState(nowMs: number): EngineState {
     enemies: [],
     bullets: [],
     particles: [],
+    scorePops: [],
+    flashes: [],
+    slashes: [],
     nextEnemyId: 1,
     nextBulletId: 1,
     parryHeld: false,
@@ -47,6 +63,7 @@ export function createEngineState(nowMs: number): EngineState {
     lastEnemySpawnBeat: -999,
     shake: 0,
     bgPulse: 0,
+    hitStopMsLeft: 0,
   };
 }
 
@@ -61,6 +78,10 @@ export interface UpdateContext extends EngineCallbacks {
 
 function applyShake(state: EngineState, amount: number): void {
   if (amount > state.shake) state.shake = amount;
+}
+
+function applyHitStop(state: EngineState, ms: number): void {
+  if (ms > state.hitStopMsLeft) state.hitStopMsLeft = ms;
 }
 
 function stageProgress(state: EngineState, nowMs: number): number {
@@ -89,6 +110,7 @@ function advanceStage(state: EngineState, nowMs: number, cb: EngineCallbacks): b
   setBpm(state.beat, next.tempoMap[0]?.bpm ?? 120, nowMs);
   applyShake(state, SHAKE_ON_STAGE_UP);
   emitBurst(state, 0, 0, BURSTS.stageUp());
+  spawnScreenFlash(state, PALETTE.cyan, 0.5);
   sfx.playStageUp();
   cb.onStageUp(state.stageIndex);
   return true;
@@ -147,15 +169,30 @@ function handleParryRelease(
   cb: EngineCallbacks,
 ): void {
   if (!justReleased) return;
-  const fired = reflectAbsorbedBullets(state);
+  const heldMs = nowMs - state.parryStartedAt;
+  const isTap = heldMs < TAP_THRESHOLD_MS;
+
+  const fired = isTap
+    ? autoCounterAbsorbedBullets(state)
+    : reflectAbsorbedBullets(state);
+
   if (fired > 0) {
     cb.onScore(SCORE_PARRY_PER_BULLET * fired);
     cb.onCombo(fired);
     applyShake(state, SHAKE_ON_REFLECT);
+    applyHitStop(state, HIT_STOP_MS_PARRY);
     sfx.playReflect();
-  } else if (nowMs - state.parryStartedAt > 80) {
-    cb.onComboBreak();
+    sfx.playSlashWoosh();
+    spawnSlash(
+      state,
+      state.aimAngle,
+      PARRY_HALF_CONE_RAD,
+      nowMs,
+      isTap ? PALETTE.yellow : PALETTE.cyan,
+    );
+    return;
   }
+  if (heldMs > 80) cb.onComboBreak();
 }
 
 function cleanupEnemies(state: EngineState, nowMs: number): void {
@@ -173,9 +210,23 @@ function checkVictory(state: EngineState, nowMs: number, cb: EngineCallbacks): v
   cb.onVictory();
 }
 
+function processHitStop(state: EngineState, dt: number): boolean {
+  if (state.hitStopMsLeft <= 0) return false;
+  state.hitStopMsLeft = Math.max(0, state.hitStopMsLeft - dt * 1000);
+  return true;
+}
+
 export function update(ctx: UpdateContext): void {
   const { state, input, nowMs, dt, canvasW, canvasH } = ctx;
   state.aimAngle = Math.atan2(input.aimY, input.aimX);
+
+  state.shake = Math.max(0, state.shake - dt * SHAKE_DECAY_PER_SEC);
+  state.bgPulse = Math.max(0, state.bgPulse - dt * BG_PULSE_DECAY_PER_SEC);
+
+  if (processHitStop(state, dt)) {
+    state.parryHeld = input.parryHeld;
+    return;
+  }
 
   tickTempoCurve(state, nowMs);
   tickBeat(state.beat, nowMs);
@@ -197,10 +248,17 @@ export function update(ctx: UpdateContext): void {
   for (let i = 0; i < bulletEffects.parriedCount; i++) sfx.playParryHit();
   if (bulletEffects.damageDealt > 0) {
     applyShake(state, SHAKE_ON_PLAYER_HIT);
+    applyHitStop(state, HIT_STOP_MS_PLAYER_HIT);
+    spawnScreenFlash(state, PALETTE.red, 0.5);
     sfx.playPlayerHit();
+  }
+  if (bulletEffects.reflectHits.length > 0) {
+    applyHitStop(state, HIT_STOP_MS_REFLECT_HIT);
   }
   for (let i = 0; i < bulletEffects.enemyKills.length; i++) {
     applyShake(state, SHAKE_ON_ENEMY_KILL);
+    applyHitStop(state, HIT_STOP_MS_ENEMY_KILL);
+    spawnScreenFlash(state, PALETTE.yellow, 0.25);
     sfx.playEnemyDie();
   }
   applyBulletEffects(bulletEffects, ctx);
@@ -208,9 +266,7 @@ export function update(ctx: UpdateContext): void {
   handleParryRelease(state, justReleased, nowMs, ctx);
 
   updateParticles(state, dt);
-
-  state.shake = Math.max(0, state.shake - dt * SHAKE_DECAY_PER_SEC);
-  state.bgPulse = Math.max(0, state.bgPulse - dt * BG_PULSE_DECAY_PER_SEC);
+  updateEffects(state, dt, nowMs);
 
   cleanupBullets(state);
   cleanupEnemies(state, nowMs);

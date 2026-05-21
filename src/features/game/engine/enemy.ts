@@ -5,6 +5,7 @@ import {
   ENEMY_ORBIT_DRIFT_RAD_PER_SEC,
   ENEMY_ORBIT_FACTOR,
   ENEMY_SPAWN_DELAY_MS,
+  KNOCKBACK_DECAY_PER_SEC,
   TELEGRAPH_MS,
 } from "../config/tuning";
 import { normalizeAngle } from "./geometry";
@@ -66,6 +67,9 @@ export function createEnemy(
     orbitAngle: angle,
     burstShotsRemaining: 0,
     burstNextShotAtMs: 0,
+    knockbackX: 0,
+    knockbackY: 0,
+    hitFlashMsLeft: 0,
   };
 }
 
@@ -168,6 +172,10 @@ export function updateEnemies(
     e.x = Math.cos(e.orbitAngle) * r;
     e.y = Math.sin(e.orbitAngle) * r;
     e.pulse = Math.max(0, e.pulse - dt * 3);
+    const decay = Math.max(0, 1 - dt * KNOCKBACK_DECAY_PER_SEC);
+    e.knockbackX *= decay;
+    e.knockbackY *= decay;
+    e.hitFlashMsLeft = Math.max(0, e.hitFlashMsLeft - dt * 1000);
 
     if (e.state !== "alive") continue;
 

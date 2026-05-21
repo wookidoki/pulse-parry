@@ -50,10 +50,12 @@ export function drawEnemies(
     } else if (e.state === "dying") {
       c.globalAlpha = Math.max(0, 1 - (nowMs - e.stateEnteredAt) / ENEMY_DEATH_MS);
     }
-    drawEnemyBody(c, e, nowMs);
-    drawEnemyHpRing(c, e);
+    const drawX = e.x + e.knockbackX;
+    const drawY = e.y + e.knockbackY;
+    drawEnemyBody(c, e, drawX, drawY, nowMs);
+    drawEnemyHpRing(c, e, drawX, drawY);
     if (e.telegraphMsLeft > 0) {
-      drawTelegraphBeam(c, e);
+      drawTelegraphBeam(c, e, drawX, drawY);
     }
     c.restore();
   }
@@ -62,23 +64,28 @@ export function drawEnemies(
 function drawEnemyBody(
   c: CanvasRenderingContext2D,
   e: Enemy,
+  x: number,
+  y: number,
   nowMs: number,
 ): void {
   const kindConfig = ENEMY_KINDS[e.kind];
   const shape = KIND_SHAPE[e.kind];
   const radius = ENEMY_RADIUS * shape.radiusScale;
+  const flashAmount = Math.max(0, Math.min(1, e.hitFlashMsLeft / 120));
   const color = kindConfig.color;
 
   c.shadowColor = kindConfig.glowColor;
-  c.shadowBlur = 16 + e.pulse * 18;
-  c.fillStyle = "rgba(5, 3, 10, 0.6)";
-  c.strokeStyle = color;
-  c.lineWidth = 2;
+  c.shadowBlur = 16 + e.pulse * 18 + flashAmount * 20;
+  c.fillStyle = flashAmount > 0
+    ? `rgba(255, 255, 255, ${0.3 + flashAmount * 0.5})`
+    : "rgba(5, 3, 10, 0.6)";
+  c.strokeStyle = flashAmount > 0 ? "#ffffff" : color;
+  c.lineWidth = 2 + flashAmount * 2;
   c.beginPath();
   for (let i = 0; i < shape.sides; i++) {
     const a = (i / shape.sides) * Math.PI * 2 + nowMs * shape.rotationSpeed;
-    const px = e.x + Math.cos(a) * radius;
-    const py = e.y + Math.sin(a) * radius;
+    const px = x + Math.cos(a) * radius;
+    const py = y + Math.sin(a) * radius;
     if (i === 0) c.moveTo(px, py);
     else c.lineTo(px, py);
   }
@@ -86,18 +93,23 @@ function drawEnemyBody(
   c.fill();
   c.stroke();
   c.shadowBlur = 0;
-  c.fillStyle = color;
+  c.fillStyle = flashAmount > 0 ? "#ffffff" : color;
   c.beginPath();
-  c.arc(e.x, e.y, shape.coreSize + e.pulse * 4, 0, Math.PI * 2);
+  c.arc(x, y, shape.coreSize + e.pulse * 4, 0, Math.PI * 2);
   c.fill();
 }
 
-function drawEnemyHpRing(c: CanvasRenderingContext2D, e: Enemy): void {
+function drawEnemyHpRing(
+  c: CanvasRenderingContext2D,
+  e: Enemy,
+  x: number,
+  y: number,
+): void {
   const hpRadius = ENEMY_RADIUS + 10;
   for (let i = 0; i < e.maxHp; i++) {
     const a = (i / e.maxHp) * Math.PI * 2 - Math.PI / 2;
-    const px = e.x + Math.cos(a) * hpRadius;
-    const py = e.y + Math.sin(a) * hpRadius;
+    const px = x + Math.cos(a) * hpRadius;
+    const py = y + Math.sin(a) * hpRadius;
     c.fillStyle = i < e.hp ? PALETTE.cyan : "rgba(240, 246, 255, 0.15)";
     c.beginPath();
     c.arc(px, py, 2.5, 0, Math.PI * 2);
@@ -105,10 +117,15 @@ function drawEnemyHpRing(c: CanvasRenderingContext2D, e: Enemy): void {
   }
 }
 
-function drawTelegraphBeam(c: CanvasRenderingContext2D, e: Enemy): void {
+function drawTelegraphBeam(
+  c: CanvasRenderingContext2D,
+  e: Enemy,
+  x: number,
+  y: number,
+): void {
   const progress = 1 - e.telegraphMsLeft / TELEGRAPH_MS;
-  const dist = magnitude(e.x, e.y);
-  const { ux, uy } = unitVector(-e.x, -e.y);
+  const dist = magnitude(x, y);
+  const { ux, uy } = unitVector(-x, -y);
   const beamLen = dist * progress;
   const bulletKind = ENEMY_KINDS[e.kind].bulletKind;
   const color = BULLET_KINDS[bulletKind].color;
@@ -118,8 +135,8 @@ function drawTelegraphBeam(c: CanvasRenderingContext2D, e: Enemy): void {
   c.strokeStyle = withAlpha(color, 0.4 + progress * 0.5);
   c.lineWidth = 2 + progress * 3;
   c.beginPath();
-  c.moveTo(e.x, e.y);
-  c.lineTo(e.x + ux * beamLen, e.y + uy * beamLen);
+  c.moveTo(x, y);
+  c.lineTo(x + ux * beamLen, y + uy * beamLen);
   c.stroke();
   c.restore();
 }
@@ -197,6 +214,10 @@ function drawBulletTrail(
   c.stroke();
 }
 
+const BLADE_INNER_OFFSET = PLAYER_RADIUS + 4;
+const BLADE_LENGTH_IDLE = 38;
+const BLADE_LENGTH_PARRY = 64;
+
 export function drawPlayer(
   c: CanvasRenderingContext2D,
   state: EngineState,
@@ -221,5 +242,54 @@ export function drawPlayer(
   c.beginPath();
   c.arc(0, 0, HIT_RADIUS, 0, Math.PI * 2);
   c.stroke();
+  c.restore();
+
+  drawLightsaberBlade(c, state, nowMs);
+}
+
+function drawLightsaberBlade(
+  c: CanvasRenderingContext2D,
+  state: EngineState,
+  nowMs: number,
+): void {
+  const cos = Math.cos(state.aimAngle);
+  const sin = Math.sin(state.aimAngle);
+  const innerX = cos * BLADE_INNER_OFFSET;
+  const innerY = sin * BLADE_INNER_OFFSET;
+  const length = state.parryHeld
+    ? BLADE_LENGTH_PARRY + Math.sin(nowMs / 60) * 4
+    : BLADE_LENGTH_IDLE;
+  const tipX = cos * (BLADE_INNER_OFFSET + length);
+  const tipY = sin * (BLADE_INNER_OFFSET + length);
+
+  const bladeColor = state.parryHeld ? PALETTE.yellow : PALETTE.cyan;
+
+  c.save();
+  c.lineCap = "round";
+  c.shadowColor = bladeColor;
+  c.shadowBlur = state.parryHeld ? 28 : 18;
+  c.strokeStyle = bladeColor;
+  c.lineWidth = state.parryHeld ? 8 : 5;
+  c.beginPath();
+  c.moveTo(innerX, innerY);
+  c.lineTo(tipX, tipY);
+  c.stroke();
+
+  c.shadowBlur = 0;
+  c.strokeStyle = "rgba(255, 255, 255, 0.95)";
+  c.lineWidth = state.parryHeld ? 3 : 2;
+  c.beginPath();
+  c.moveTo(innerX, innerY);
+  c.lineTo(tipX, tipY);
+  c.stroke();
+
+  if (state.parryHeld) {
+    c.fillStyle = `rgba(255, 255, 255, ${0.6 + Math.sin(nowMs / 50) * 0.2})`;
+    c.shadowColor = bladeColor;
+    c.shadowBlur = 16;
+    c.beginPath();
+    c.arc(tipX, tipY, 4, 0, Math.PI * 2);
+    c.fill();
+  }
   c.restore();
 }

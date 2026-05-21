@@ -27,3 +27,21 @@ export const SHAKE_DECAY_PER_SEC = 80;
 export const BG_PULSE_DECAY_PER_SEC = 2.8;
 
 export const PARTICLE_DRAG_PER_SEC = 1.8;
+
+export const TAP_THRESHOLD_MS = 200;
+
+export const HIT_STOP_MS_PLAYER_HIT = 60;
+export const HIT_STOP_MS_ENEMY_KILL = 95;
+export const HIT_STOP_MS_REFLECT_HIT = 35;
+export const HIT_STOP_MS_PARRY = 25;
+
+export const KNOCKBACK_DECAY_PER_SEC = 8;
+export const ENEMY_KNOCKBACK_AMOUNT = 14;
+
+export const SLASH_DURATION_MS = 260;
+export const SLASH_RADIUS = 130;
+
+export const SCOREPOP_RISE_VY = -120;
+export const SCOREPOP_LIFE_MS = 800;
+
+export const SCREEN_FLASH_LIFE_MS = 220;
