@@ -5,7 +5,7 @@ import { STAGES } from "./config/stages";
 interface HudActions {
   reset: () => void;
   start: () => void;
-  damage: () => void;
+  damage: (amount: number) => void;
   addScore: (n: number) => void;
   bumpCombo: (n: number) => void;
   breakCombo: () => void;
@@ -32,10 +32,10 @@ export const useHud = create<HudState & HudActions>((set) => ({
   ...INITIAL,
   reset: () => set({ ...INITIAL }),
   start: () => set({ ...INITIAL, status: "playing" }),
-  damage: () =>
+  damage: (amount) =>
     set((s) => {
       if (s.status !== "playing") return s;
-      const hp = Math.max(0, s.hp - 1);
+      const hp = Math.max(0, s.hp - amount);
       return {
         hp,
         combo: 0,

@@ -1,6 +1,6 @@
-import type { Bullet, Enemy, EngineCallbacks, EngineState } from "../types";
+import type { Bullet, BulletKind, Enemy, EngineCallbacks, EngineState } from "../types";
+import { BULLET_KINDS, ENEMY_KINDS } from "../config/enemy-kinds";
 import {
-  BULLET_RADIUS,
   BULLET_REFLECT_SPEED,
   ENEMY_RADIUS,
   HIT_RADIUS,
@@ -17,8 +17,11 @@ export function createBullet(
   state: EngineState,
   enemy: Enemy,
   nowMs: number,
-  speed: number,
+  baseSpeed: number,
 ): Bullet {
+  const enemyConfig = ENEMY_KINDS[enemy.kind];
+  const kind = enemyConfig.bulletKind;
+  const speed = baseSpeed * enemyConfig.bulletSpeedMul;
   const { ux, uy } = unitVector(-enemy.x, -enemy.y);
   return {
     id: state.nextBulletId++,
@@ -26,7 +29,7 @@ export function createBullet(
     y: enemy.y,
     vx: ux * speed,
     vy: uy * speed,
-    kind: "normal",
+    kind,
     state: "incoming",
     spawnedAt: nowMs,
     ownerEnemyId: enemy.id,
@@ -41,10 +44,18 @@ function isInParryCone(x: number, y: number, aimAngle: number): boolean {
 }
 
 export interface BulletTickEffects {
-  playerHit: boolean;
+  damageDealt: number;
   parriedCount: number;
   reflectHits: { x: number; y: number }[];
   enemyKills: { x: number; y: number }[];
+}
+
+function radiusOf(kind: BulletKind): number {
+  return BULLET_KINDS[kind].radius;
+}
+
+function damageOf(kind: BulletKind): number {
+  return BULLET_KINDS[kind].damage;
 }
 
 export function updateBullets(
@@ -55,7 +66,7 @@ export function updateBullets(
   nowMs: number,
 ): BulletTickEffects {
   const effects: BulletTickEffects = {
-    playerHit: false,
+    damageDealt: 0,
     parriedCount: 0,
     reflectHits: [],
     enemyKills: [],
@@ -64,6 +75,7 @@ export function updateBullets(
 
   for (const b of state.bullets) {
     if (b.state === "dead") continue;
+    const radius = radiusOf(b.kind);
 
     if (b.state === "incoming") {
       b.x += b.vx * dt;
@@ -73,9 +85,9 @@ export function updateBullets(
         b.state = "absorbed";
         effects.parriedCount += 1;
         emitBurst(state, b.x, b.y, BURSTS.parryCatch());
-      } else if (dist <= HIT_RADIUS + BULLET_RADIUS) {
+      } else if (dist <= HIT_RADIUS + radius) {
         b.state = "dead";
-        effects.playerHit = true;
+        effects.damageDealt += damageOf(b.kind);
         emitBurst(state, b.x, b.y, BURSTS.playerHit());
       }
     } else if (b.state === "absorbed") {
@@ -92,9 +104,10 @@ export function updateBullets(
       for (const e of state.enemies) {
         if (e.state !== "alive") continue;
         const dd = magnitude(b.x - e.x, b.y - e.y);
-        if (dd >= ENEMY_RADIUS + BULLET_RADIUS) continue;
+        if (dd >= ENEMY_RADIUS + radius) continue;
 
-        e.hp -= 1;
+        const damage = b.kind === "heavy" ? 2 : 1;
+        e.hp -= damage;
         e.pulse = 1;
         b.state = "dead";
         effects.reflectHits.push({ x: b.x, y: b.y });
@@ -139,7 +152,7 @@ export function applyBulletEffects(
   effects: BulletTickEffects,
   cb: EngineCallbacks,
 ): void {
-  if (effects.playerHit) cb.onDamage();
+  if (effects.damageDealt > 0) cb.onDamage(effects.damageDealt);
   for (let i = 0; i < effects.reflectHits.length; i++) {
     cb.onScore(SCORE_REFLECT_HIT);
     cb.onCombo(1);

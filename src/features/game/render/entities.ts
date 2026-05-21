@@ -1,8 +1,7 @@
-import type { EngineState } from "../types";
-import { currentStage } from "../config/stages";
+import type { Enemy, EngineState } from "../types";
 import { PALETTE } from "../config/palette";
+import { BULLET_KINDS, ENEMY_KINDS } from "../config/enemy-kinds";
 import {
-  BULLET_RADIUS,
   ENEMY_DEATH_MS,
   ENEMY_RADIUS,
   ENEMY_SPAWN_DELAY_MS,
@@ -11,6 +10,19 @@ import {
   TELEGRAPH_MS,
 } from "../config/tuning";
 import { magnitude, unitVector } from "../engine/geometry";
+
+interface KindShape {
+  sides: number;
+  rotationSpeed: number;
+  coreSize: number;
+  radiusScale: number;
+}
+
+const KIND_SHAPE: Record<Enemy["kind"], KindShape> = {
+  shooter: { sides: 8, rotationSpeed: 0.0005, coreSize: 4, radiusScale: 1.0 },
+  burster: { sides: 6, rotationSpeed: 0.0014, coreSize: 3, radiusScale: 0.9 },
+  charger: { sides: 5, rotationSpeed: 0.0002, coreSize: 6, radiusScale: 1.18 },
+};
 
 export function drawParticles(c: CanvasRenderingContext2D, state: EngineState): void {
   for (const p of state.particles) {
@@ -31,7 +43,6 @@ export function drawEnemies(
   state: EngineState,
   nowMs: number,
 ): void {
-  const stage = currentStage(state.stageIndex);
   for (const e of state.enemies) {
     c.save();
     if (e.state === "spawning") {
@@ -39,11 +50,10 @@ export function drawEnemies(
     } else if (e.state === "dying") {
       c.globalAlpha = Math.max(0, 1 - (nowMs - e.stateEnteredAt) / ENEMY_DEATH_MS);
     }
-
-    drawEnemyBody(c, e.x, e.y, e.pulse, nowMs, stage.accentMagenta);
-    drawEnemyHpRing(c, e.x, e.y, e.hp, e.maxHp, stage.accentCyan);
+    drawEnemyBody(c, e, nowMs);
+    drawEnemyHpRing(c, e);
     if (e.telegraphMsLeft > 0) {
-      drawTelegraphBeam(c, e.x, e.y, e.telegraphMsLeft);
+      drawTelegraphBeam(c, e);
     }
     c.restore();
   }
@@ -51,22 +61,24 @@ export function drawEnemies(
 
 function drawEnemyBody(
   c: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  pulse: number,
+  e: Enemy,
   nowMs: number,
-  color: string,
 ): void {
-  c.shadowColor = color;
-  c.shadowBlur = 16 + pulse * 18;
+  const kindConfig = ENEMY_KINDS[e.kind];
+  const shape = KIND_SHAPE[e.kind];
+  const radius = ENEMY_RADIUS * shape.radiusScale;
+  const color = kindConfig.color;
+
+  c.shadowColor = kindConfig.glowColor;
+  c.shadowBlur = 16 + e.pulse * 18;
   c.fillStyle = "rgba(5, 3, 10, 0.6)";
   c.strokeStyle = color;
   c.lineWidth = 2;
   c.beginPath();
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2 + nowMs * 0.0005;
-    const px = x + Math.cos(a) * ENEMY_RADIUS;
-    const py = y + Math.sin(a) * ENEMY_RADIUS;
+  for (let i = 0; i < shape.sides; i++) {
+    const a = (i / shape.sides) * Math.PI * 2 + nowMs * shape.rotationSpeed;
+    const px = e.x + Math.cos(a) * radius;
+    const py = e.y + Math.sin(a) * radius;
     if (i === 0) c.moveTo(px, py);
     else c.lineTo(px, py);
   }
@@ -76,50 +88,50 @@ function drawEnemyBody(
   c.shadowBlur = 0;
   c.fillStyle = color;
   c.beginPath();
-  c.arc(x, y, 4 + pulse * 4, 0, Math.PI * 2);
+  c.arc(e.x, e.y, shape.coreSize + e.pulse * 4, 0, Math.PI * 2);
   c.fill();
 }
 
-function drawEnemyHpRing(
-  c: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  hp: number,
-  maxHp: number,
-  fullColor: string,
-): void {
+function drawEnemyHpRing(c: CanvasRenderingContext2D, e: Enemy): void {
   const hpRadius = ENEMY_RADIUS + 10;
-  for (let i = 0; i < maxHp; i++) {
-    const a = (i / maxHp) * Math.PI * 2 - Math.PI / 2;
-    const px = x + Math.cos(a) * hpRadius;
-    const py = y + Math.sin(a) * hpRadius;
-    c.fillStyle = i < hp ? fullColor : "rgba(240, 246, 255, 0.15)";
+  for (let i = 0; i < e.maxHp; i++) {
+    const a = (i / e.maxHp) * Math.PI * 2 - Math.PI / 2;
+    const px = e.x + Math.cos(a) * hpRadius;
+    const py = e.y + Math.sin(a) * hpRadius;
+    c.fillStyle = i < e.hp ? PALETTE.cyan : "rgba(240, 246, 255, 0.15)";
     c.beginPath();
     c.arc(px, py, 2.5, 0, Math.PI * 2);
     c.fill();
   }
 }
 
-function drawTelegraphBeam(
-  c: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  msLeft: number,
-): void {
-  const progress = 1 - msLeft / TELEGRAPH_MS;
-  const dist = magnitude(x, y);
-  const { ux, uy } = unitVector(-x, -y);
+function drawTelegraphBeam(c: CanvasRenderingContext2D, e: Enemy): void {
+  const progress = 1 - e.telegraphMsLeft / TELEGRAPH_MS;
+  const dist = magnitude(e.x, e.y);
+  const { ux, uy } = unitVector(-e.x, -e.y);
   const beamLen = dist * progress;
+  const bulletKind = ENEMY_KINDS[e.kind].bulletKind;
+  const color = BULLET_KINDS[bulletKind].color;
   c.save();
-  c.shadowColor = PALETTE.red;
+  c.shadowColor = color;
   c.shadowBlur = 18;
-  c.strokeStyle = `rgba(255, 56, 99, ${0.4 + progress * 0.5})`;
+  c.strokeStyle = withAlpha(color, 0.4 + progress * 0.5);
   c.lineWidth = 2 + progress * 3;
   c.beginPath();
-  c.moveTo(x, y);
-  c.lineTo(x + ux * beamLen, y + uy * beamLen);
+  c.moveTo(e.x, e.y);
+  c.lineTo(e.x + ux * beamLen, e.y + uy * beamLen);
   c.stroke();
   c.restore();
+}
+
+function withAlpha(hexOrColor: string, alpha: number): string {
+  if (hexOrColor.startsWith("#") && hexOrColor.length === 7) {
+    const r = parseInt(hexOrColor.slice(1, 3), 16);
+    const g = parseInt(hexOrColor.slice(3, 5), 16);
+    const b = parseInt(hexOrColor.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  return hexOrColor;
 }
 
 export function drawBullets(
@@ -128,14 +140,16 @@ export function drawBullets(
   nowMs: number,
 ): void {
   for (const b of state.bullets) {
+    const kindConfig = BULLET_KINDS[b.kind];
     c.save();
     if (b.state === "incoming") {
-      c.shadowColor = PALETTE.red;
+      c.shadowColor = kindConfig.color;
       c.shadowBlur = 14;
-      c.fillStyle = PALETTE.red;
+      c.fillStyle = kindConfig.color;
+      if (b.kind === "heavy") drawHeavyAura(c, b.x, b.y, kindConfig.radius);
     } else if (b.state === "absorbed") {
       const pulse = 0.7 + Math.sin(nowMs / 60) * 0.3;
-      c.shadowColor = `rgba(247, 255, 58, ${pulse})`;
+      c.shadowColor = withAlpha(PALETTE.yellow, pulse);
       c.shadowBlur = 18;
       c.fillStyle = PALETTE.yellow;
     } else if (b.state === "reflected") {
@@ -145,10 +159,23 @@ export function drawBullets(
       drawBulletTrail(c, b.x, b.y, b.vx, b.vy);
     }
     c.beginPath();
-    c.arc(b.x, b.y, BULLET_RADIUS, 0, Math.PI * 2);
+    c.arc(b.x, b.y, kindConfig.radius, 0, Math.PI * 2);
     c.fill();
     c.restore();
   }
+}
+
+function drawHeavyAura(
+  c: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+): void {
+  c.strokeStyle = "rgba(177, 75, 255, 0.5)";
+  c.lineWidth = 2;
+  c.beginPath();
+  c.arc(x, y, radius + 6, 0, Math.PI * 2);
+  c.stroke();
 }
 
 function drawBulletTrail(

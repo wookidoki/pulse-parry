@@ -4,6 +4,7 @@ import {
   PARRY_HALF_CONE_RAD,
   PARRY_RANGE,
 } from "../config/tuning";
+import { bpmAt } from "../engine/tempo";
 
 export function drawAimLine(
   c: CanvasRenderingContext2D,
@@ -72,4 +73,69 @@ export function drawStageProgress(
     const segX = barX + (i / STAGES.length) * barW;
     c.fillRect(segX - 1, 0, 2, 6);
   }
+
+  drawTempoCurve(c, state, barX, barW, progress);
+  drawLiveBpm(c, state, barX + barW + 12);
+}
+
+function drawTempoCurve(
+  c: CanvasRenderingContext2D,
+  state: EngineState,
+  barX: number,
+  barW: number,
+  liveT: number,
+): void {
+  const stage = currentStage(state.stageIndex);
+  const samples = 80;
+  const top = 12;
+  const height = 18;
+  let minBpm = Infinity;
+  let maxBpm = -Infinity;
+  for (const point of stage.tempoMap) {
+    if (point.bpm < minBpm) minBpm = point.bpm;
+    if (point.bpm > maxBpm) maxBpm = point.bpm;
+  }
+  const range = Math.max(1, maxBpm - minBpm);
+
+  c.save();
+  c.strokeStyle = "rgba(240, 246, 255, 0.18)";
+  c.lineWidth = 1;
+  c.beginPath();
+  for (let i = 0; i <= samples; i++) {
+    const t = i / samples;
+    const bpm = bpmAt(stage.tempoMap, t);
+    const x = barX + t * barW;
+    const y = top + height - ((bpm - minBpm) / range) * height;
+    if (i === 0) c.moveTo(x, y);
+    else c.lineTo(x, y);
+  }
+  c.stroke();
+  c.restore();
+
+  const liveBpm = bpmAt(stage.tempoMap, liveT);
+  const markerX = barX + liveT * barW;
+  const markerY = top + height - ((liveBpm - minBpm) / range) * height;
+
+  c.save();
+  c.fillStyle = stage.accentCyan;
+  c.shadowColor = stage.accentCyan;
+  c.shadowBlur = 6;
+  c.beginPath();
+  c.arc(markerX, markerY, 3, 0, Math.PI * 2);
+  c.fill();
+  c.restore();
+}
+
+function drawLiveBpm(
+  c: CanvasRenderingContext2D,
+  state: EngineState,
+  x: number,
+): void {
+  const bpm = Math.round(state.beat.bpm);
+  c.save();
+  c.fillStyle = "rgba(240, 246, 255, 0.6)";
+  c.font = "11px ui-monospace, monospace";
+  c.textBaseline = "top";
+  c.fillText(`${bpm} BPM`, x, 6);
+  c.restore();
 }

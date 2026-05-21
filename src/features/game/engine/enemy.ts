@@ -1,5 +1,6 @@
-import type { Enemy, EngineState } from "../types";
+import type { Enemy, EngineState, EnemyKind } from "../types";
 import type { StageConfig } from "../config/stages";
+import { ENEMY_KINDS } from "../config/enemy-kinds";
 import {
   ENEMY_ORBIT_DRIFT_RAD_PER_SEC,
   ENEMY_ORBIT_FACTOR,
@@ -22,8 +23,8 @@ function pickSpawnAngle(state: EngineState): number {
   for (let i = 0; i < candidates; i++) {
     const candidate = (i / candidates) * Math.PI * 2 + state.beat.currentBeat * 0.1;
     let minDelta = Math.PI;
-    for (const taken_a of taken) {
-      const d = Math.abs(normalizeAngle(candidate - taken_a));
+    for (const takenA of taken) {
+      const d = Math.abs(normalizeAngle(candidate - takenA));
       if (d < minDelta) minDelta = d;
     }
     if (minDelta > bestSpread) {
@@ -34,6 +35,11 @@ function pickSpawnAngle(state: EngineState): number {
   return bestAngle;
 }
 
+function pickEnemyKind(stage: StageConfig): EnemyKind {
+  const list = stage.enemyKinds;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
 export function createEnemy(
   state: EngineState,
   nowMs: number,
@@ -42,20 +48,24 @@ export function createEnemy(
   stage: StageConfig,
 ): Enemy {
   const angle = pickSpawnAngle(state);
+  const kind = pickEnemyKind(stage);
+  const config = ENEMY_KINDS[kind];
   const r = orbitRadius(canvasW, canvasH);
   return {
     id: state.nextEnemyId++,
     x: Math.cos(angle) * r,
     y: Math.sin(angle) * r,
-    kind: "shooter",
-    hp: stage.enemyHp,
-    maxHp: stage.enemyHp,
+    kind,
+    hp: config.hp,
+    maxHp: config.hp,
     state: "spawning",
     stateEnteredAt: nowMs,
     lastShotBeat: state.beat.currentBeat,
     telegraphMsLeft: 0,
     pulse: 0,
     orbitAngle: angle,
+    burstShotsRemaining: 0,
+    burstNextShotAtMs: 0,
   };
 }
 
@@ -71,8 +81,65 @@ export function shouldSpawnEnemy(
   return state.enemies.length === 0 || beatsSinceLastSpawn >= stage.spawnEveryBeats;
 }
 
+export interface EnemyShot {
+  enemyId: number;
+  x: number;
+  y: number;
+}
+
 export interface EnemyTickResult {
-  shotsFired: { enemyId: number; x: number; y: number }[];
+  shotsFired: EnemyShot[];
+}
+
+function tryFireMainShot(
+  enemy: Enemy,
+  nowMs: number,
+  dt: number,
+  result: EnemyTickResult,
+): boolean {
+  if (enemy.telegraphMsLeft <= 0) return false;
+  enemy.telegraphMsLeft -= dt * 1000;
+  if (enemy.telegraphMsLeft > 0) return true;
+
+  enemy.telegraphMsLeft = 0;
+  enemy.pulse = 1;
+  result.shotsFired.push({ enemyId: enemy.id, x: enemy.x, y: enemy.y });
+
+  const config = ENEMY_KINDS[enemy.kind];
+  if (config.burstShots > 1) {
+    enemy.burstShotsRemaining = config.burstShots - 1;
+    enemy.burstNextShotAtMs = nowMs + config.burstIntervalMs;
+  }
+  return true;
+}
+
+function tryFireBurstShot(
+  enemy: Enemy,
+  nowMs: number,
+  result: EnemyTickResult,
+): boolean {
+  if (enemy.burstShotsRemaining <= 0) return false;
+  if (nowMs < enemy.burstNextShotAtMs) return true;
+
+  enemy.pulse = 1;
+  result.shotsFired.push({ enemyId: enemy.id, x: enemy.x, y: enemy.y });
+  enemy.burstShotsRemaining -= 1;
+  if (enemy.burstShotsRemaining > 0) {
+    const config = ENEMY_KINDS[enemy.kind];
+    enemy.burstNextShotAtMs = nowMs + config.burstIntervalMs;
+  }
+  return true;
+}
+
+function maybeStartTelegraph(
+  enemy: Enemy,
+  state: EngineState,
+): void {
+  if (!state.beat.isBeatTick) return;
+  const config = ENEMY_KINDS[enemy.kind];
+  if (state.beat.currentBeat - enemy.lastShotBeat < config.beatsPerShot) return;
+  enemy.telegraphMsLeft = TELEGRAPH_MS;
+  enemy.lastShotBeat = state.beat.currentBeat;
 }
 
 export function updateEnemies(
@@ -81,7 +148,6 @@ export function updateEnemies(
   nowMs: number,
   canvasW: number,
   canvasH: number,
-  stage: StageConfig,
 ): EnemyTickResult {
   const result: EnemyTickResult = { shotsFired: [] };
   const r = orbitRadius(canvasW, canvasH);
@@ -105,20 +171,9 @@ export function updateEnemies(
 
     if (e.state !== "alive") continue;
 
-    if (e.telegraphMsLeft > 0) {
-      e.telegraphMsLeft -= dt * 1000;
-      if (e.telegraphMsLeft <= 0) {
-        e.telegraphMsLeft = 0;
-        e.pulse = 1;
-        result.shotsFired.push({ enemyId: e.id, x: e.x, y: e.y });
-      }
-    } else if (
-      state.beat.isBeatTick &&
-      state.beat.currentBeat - e.lastShotBeat >= stage.beatsPerShot
-    ) {
-      e.telegraphMsLeft = TELEGRAPH_MS;
-      e.lastShotBeat = state.beat.currentBeat;
-    }
+    if (tryFireMainShot(e, nowMs, dt, result)) continue;
+    if (tryFireBurstShot(e, nowMs, result)) continue;
+    maybeStartTelegraph(e, state);
   }
   return result;
 }

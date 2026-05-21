@@ -1,7 +1,7 @@
-export type EnemyKind = "shooter";
+export type EnemyKind = "shooter" | "burster" | "charger";
 export type EnemyState = "spawning" | "alive" | "dying" | "dead";
 
-export type BulletKind = "normal";
+export type BulletKind = "normal" | "rapid" | "heavy";
 export type BulletState = "incoming" | "absorbed" | "reflected" | "dead";
 
 export interface Enemy {
@@ -17,6 +17,8 @@ export interface Enemy {
   telegraphMsLeft: number;
   pulse: number;
   orbitAngle: number;
+  burstShotsRemaining: number;
+  burstNextShotAtMs: number;
 }
 
 export interface Bullet {
@@ -78,7 +80,7 @@ export interface EngineCallbacks {
   onScore: (n: number) => void;
   onCombo: (n: number) => void;
   onComboBreak: () => void;
-  onDamage: () => void;
+  onDamage: (amount: number) => void;
   onStageUp: (stageIndex: number) => void;
   onVictory: () => void;
 }

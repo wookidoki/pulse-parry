@@ -1,5 +1,5 @@
 import type { EngineCallbacks, EngineState, PlayerInput } from "../types";
-import { FINAL_STAGE_INDEX, STAGES, currentStage } from "../config/stages";
+import { BPM_REFERENCE, FINAL_STAGE_INDEX, STAGES, currentStage } from "../config/stages";
 import {
   BG_PULSE_DECAY_PER_SEC,
   SCORE_PARRY_PER_BULLET,
@@ -21,12 +21,17 @@ import {
   createEnemy,
   shouldSpawnEnemy,
   updateEnemies,
+  type EnemyShot,
 } from "./enemy";
 import { BURSTS, emitBurst, updateParticles } from "./particles";
+import { bpmAt } from "./tempo";
 import * as sfx from "../audio";
+
+const BPM_CHANGE_EPSILON = 0.6;
 
 export function createEngineState(nowMs: number): EngineState {
   const stage = STAGES[0];
+  const initialBpm = stage.tempoMap[0]?.bpm ?? 120;
   return {
     enemies: [],
     bullets: [],
@@ -36,7 +41,7 @@ export function createEngineState(nowMs: number): EngineState {
     parryHeld: false,
     parryStartedAt: 0,
     aimAngle: 0,
-    beat: createBeatClock(stage.bpm, nowMs),
+    beat: createBeatClock(initialBpm, nowMs),
     stageIndex: 0,
     stageStartMs: nowMs,
     lastEnemySpawnBeat: -999,
@@ -58,6 +63,19 @@ function applyShake(state: EngineState, amount: number): void {
   if (amount > state.shake) state.shake = amount;
 }
 
+function stageProgress(state: EngineState, nowMs: number): number {
+  const stage = currentStage(state.stageIndex);
+  return Math.min(1, (nowMs - state.stageStartMs) / stage.durationMs);
+}
+
+function tickTempoCurve(state: EngineState, nowMs: number): void {
+  const stage = currentStage(state.stageIndex);
+  const target = bpmAt(stage.tempoMap, stageProgress(state, nowMs));
+  if (Math.abs(target - state.beat.bpm) > BPM_CHANGE_EPSILON) {
+    setBpm(state.beat, target, nowMs);
+  }
+}
+
 function advanceStage(state: EngineState, nowMs: number, cb: EngineCallbacks): boolean {
   const stage = currentStage(state.stageIndex);
   const elapsed = nowMs - state.stageStartMs;
@@ -67,7 +85,8 @@ function advanceStage(state: EngineState, nowMs: number, cb: EngineCallbacks): b
   state.stageIndex += 1;
   state.stageStartMs = nowMs;
   state.lastEnemySpawnBeat = state.beat.currentBeat;
-  setBpm(state.beat, STAGES[state.stageIndex].bpm, nowMs);
+  const next = STAGES[state.stageIndex];
+  setBpm(state.beat, next.tempoMap[0]?.bpm ?? 120, nowMs);
   applyShake(state, SHAKE_ON_STAGE_UP);
   emitBurst(state, 0, 0, BURSTS.stageUp());
   sfx.playStageUp();
@@ -75,7 +94,11 @@ function advanceStage(state: EngineState, nowMs: number, cb: EngineCallbacks): b
   return true;
 }
 
-function handleParryInputTransitions(state: EngineState, input: PlayerInput, nowMs: number) {
+function handleParryInputTransitions(
+  state: EngineState,
+  input: PlayerInput,
+  nowMs: number,
+) {
   const justPressed = input.parryHeld && !state.parryHeld;
   const justReleased = !input.parryHeld && state.parryHeld;
   state.parryHeld = input.parryHeld;
@@ -95,18 +118,24 @@ function spawnEnemyIfNeeded(
   state.lastEnemySpawnBeat = state.beat.currentBeat;
 }
 
+function bulletSpeedForCurrentTempo(state: EngineState): number {
+  const stage = currentStage(state.stageIndex);
+  const ratio = state.beat.bpm / BPM_REFERENCE;
+  return stage.bulletSpeed * ratio;
+}
+
 function processEnemyShots(
   state: EngineState,
-  shots: { enemyId: number; x: number; y: number }[],
+  shots: EnemyShot[],
   nowMs: number,
 ): void {
   if (shots.length === 0) return;
-  const stage = currentStage(state.stageIndex);
+  const speed = bulletSpeedForCurrentTempo(state);
   const enemyById = new Map(state.enemies.map((e) => [e.id, e]));
   for (const s of shots) {
     const enemy = enemyById.get(s.enemyId);
     if (!enemy) continue;
-    state.bullets.push(createBullet(state, enemy, nowMs, stage.bulletSpeed));
+    state.bullets.push(createBullet(state, enemy, nowMs, speed));
     sfx.playEnemyShoot();
   }
 }
@@ -148,6 +177,7 @@ export function update(ctx: UpdateContext): void {
   const { state, input, nowMs, dt, canvasW, canvasH } = ctx;
   state.aimAngle = Math.atan2(input.aimY, input.aimX);
 
+  tickTempoCurve(state, nowMs);
   tickBeat(state.beat, nowMs);
   if (state.beat.isBeatTick) {
     state.bgPulse = 1;
@@ -160,19 +190,12 @@ export function update(ctx: UpdateContext): void {
 
   spawnEnemyIfNeeded(state, nowMs, canvasW, canvasH);
 
-  const enemyResult = updateEnemies(
-    state,
-    dt,
-    nowMs,
-    canvasW,
-    canvasH,
-    currentStage(state.stageIndex),
-  );
+  const enemyResult = updateEnemies(state, dt, nowMs, canvasW, canvasH);
   processEnemyShots(state, enemyResult.shotsFired, nowMs);
 
   const bulletEffects = updateBullets(state, dt, canvasW, canvasH, nowMs);
   for (let i = 0; i < bulletEffects.parriedCount; i++) sfx.playParryHit();
-  if (bulletEffects.playerHit) {
+  if (bulletEffects.damageDealt > 0) {
     applyShake(state, SHAKE_ON_PLAYER_HIT);
     sfx.playPlayerHit();
   }

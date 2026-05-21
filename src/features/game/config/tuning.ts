@@ -4,7 +4,6 @@ export const HIT_RADIUS = 22;
 export const PARRY_HALF_CONE_RAD = (50 * Math.PI) / 180;
 export const PARRY_RANGE = 140;
 
-export const BULLET_RADIUS = 7;
 export const BULLET_REFLECT_SPEED = 880;
 
 export const ENEMY_RADIUS = 22;
