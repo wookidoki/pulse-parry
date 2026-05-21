@@ -1,16 +1,15 @@
 const STAGE_TRACKS: string[] = [
   "/audio/stage1_awaken.ogg",
   "/audio/stage2_pulse.ogg",
+  "/audio/stage3_factory.ogg",
   "/audio/stage3_overdrive.ogg",
+  "/audio/boss_electric.ogg",
 ];
-
-const BOSS_TRACK = "/audio/boss_electric.ogg";
 
 const CROSSFADE_MS = 700;
 const MUSIC_VOLUME_FACTOR = 0.55;
 
 const audioElements: HTMLAudioElement[] = [];
-let bossAudio: HTMLAudioElement | null = null;
 let currentIndex = -1;
 let masterVolume = 0.5;
 let isPaused = false;
@@ -24,10 +23,6 @@ export function initMusic(): void {
     a.preload = "auto";
     audioElements.push(a);
   }
-  bossAudio = new Audio(BOSS_TRACK);
-  bossAudio.loop = true;
-  bossAudio.volume = 0;
-  bossAudio.preload = "auto";
 }
 
 function fade(el: HTMLAudioElement, target: number, durationMs: number): void {
@@ -45,9 +40,6 @@ export function setMusicVolume(v: number): void {
   masterVolume = Math.max(0, Math.min(1, v));
   if (currentIndex >= 0 && audioElements[currentIndex]) {
     audioElements[currentIndex].volume = targetVolume();
-  }
-  if (bossAudio && !bossAudio.paused) {
-    bossAudio.volume = targetVolume();
   }
 }
 
@@ -94,10 +86,6 @@ export function stopMusic(): void {
   for (const a of audioElements) {
     a.pause();
     a.currentTime = 0;
-  }
-  if (bossAudio) {
-    bossAudio.pause();
-    bossAudio.currentTime = 0;
   }
   currentIndex = -1;
   isPaused = false;

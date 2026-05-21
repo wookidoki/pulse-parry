@@ -72,6 +72,7 @@ export interface Bullet {
   ownerEnemyId: number;
   minDist: number;
   nearMissFired: boolean;
+  isPerfect: boolean;
 }
 
 export interface Particle {
@@ -129,6 +130,7 @@ export interface EngineState {
   timeScale: number;
   slowmoMsLeft: number;
   cameraZoom: number;
+  parryCooldownMsLeft: number;
 }
 
 export interface EngineCallbacks {

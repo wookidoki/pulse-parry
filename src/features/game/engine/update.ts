@@ -8,10 +8,12 @@ import {
   HIT_STOP_MS_PARRY,
   HIT_STOP_MS_PLAYER_HIT,
   HIT_STOP_MS_REFLECT_HIT,
+  MASH_COOLDOWN_MS,
   PARRY_HALF_CONE_RAD,
   PLAYER_MAX_DIST,
   PLAYER_MOVE_SPEED,
   SCORE_PARRY_PER_BULLET,
+  SCORE_PERFECT_BONUS,
   SHAKE_DECAY_PER_SEC,
   SHAKE_ON_ENEMY_KILL,
   SHAKE_ON_PLAYER_HIT,
@@ -38,6 +40,7 @@ import {
 import { BURSTS, emitBurst, updateParticles } from "./particles";
 import { bpmAt } from "./tempo";
 import {
+  spawnScorePop,
   spawnScreenFlash,
   spawnShockwave,
   spawnSlash,
@@ -75,6 +78,7 @@ export function createEngineState(nowMs: number): EngineState {
     timeScale: 1,
     slowmoMsLeft: 0,
     cameraZoom: 1,
+    parryCooldownMsLeft: 0,
   };
 }
 
@@ -131,7 +135,15 @@ function handleParryInputTransitions(
   state: EngineState,
   input: PlayerInput,
   nowMs: number,
+  dt: number,
 ) {
+  state.parryCooldownMsLeft = Math.max(0, state.parryCooldownMsLeft - dt * 1000);
+
+  if (state.parryCooldownMsLeft > 0) {
+    if (state.parryHeld) state.parryHeld = false;
+    return { justReleased: false };
+  }
+
   const justPressed = input.parryHeld && !state.parryHeld;
   const justReleased = !input.parryHeld && state.parryHeld;
   state.parryHeld = input.parryHeld;
@@ -180,27 +192,42 @@ function handleParryRelease(
   cb: EngineCallbacks,
 ): void {
   if (!justReleased) return;
+  state.parryCooldownMsLeft = MASH_COOLDOWN_MS;
   const heldMs = nowMs - state.parryStartedAt;
   const isTap = heldMs < TAP_THRESHOLD_MS;
 
-  const fired = isTap
+  const result = isTap
     ? autoCounterAbsorbedBullets(state)
     : reflectAbsorbedBullets(state);
 
-  if (fired > 0) {
-    cb.onScore(SCORE_PARRY_PER_BULLET * fired);
-    cb.onCombo(fired);
+  if (result.count > 0) {
+    cb.onScore(SCORE_PARRY_PER_BULLET * result.count);
+    cb.onCombo(result.count);
     applyShake(state, SHAKE_ON_REFLECT);
     applyHitStop(state, HIT_STOP_MS_PARRY);
     sfx.playReflect();
     sfx.playSlashWoosh();
-    spawnSlash(
-      state,
-      state.aimAngle,
-      PARRY_HALF_CONE_RAD,
-      nowMs,
-      isTap ? PALETTE.yellow : PALETTE.cyan,
-    );
+    const slashColor = result.perfectCount > 0
+      ? "#ffffff"
+      : isTap
+        ? PALETTE.yellow
+        : PALETTE.cyan;
+    spawnSlash(state, state.aimAngle, PARRY_HALF_CONE_RAD, nowMs, slashColor);
+
+    if (result.perfectCount > 0) {
+      cb.onScore(SCORE_PERFECT_BONUS * result.perfectCount);
+      cb.onCombo(result.perfectCount);
+      spawnScreenFlash(state, "#ffffff", 0.35);
+      spawnScorePop(
+        state,
+        state.playerX,
+        state.playerY - 50,
+        result.perfectCount > 1 ? `PERFECT ×${result.perfectCount}` : "PERFECT!",
+        "#ffffff",
+        1.4,
+      );
+      sfx.playSlashWoosh();
+    }
     return;
   }
   if (heldMs > 80) cb.onComboBreak();
@@ -285,7 +312,7 @@ export function update(ctx: UpdateContext): void {
 
   advanceStage(state, nowMs, ctx);
 
-  const { justReleased } = handleParryInputTransitions(state, input, nowMs);
+  const { justReleased } = handleParryInputTransitions(state, input, nowMs, dt);
 
   spawnEnemyIfNeeded(state, nowMs, canvasW, canvasH);
 

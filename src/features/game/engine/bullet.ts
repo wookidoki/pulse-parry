@@ -8,6 +8,7 @@ import {
   NEAR_MISS_RADIUS,
   PARRY_HALF_CONE_RAD,
   PARRY_RANGE,
+  PERFECT_PARRY_WINDOW_MS,
   SCORE_ENEMY_KILL,
   SCORE_REFLECT_HIT,
 } from "../config/tuning";
@@ -39,6 +40,7 @@ export function createBullet(
     ownerEnemyId: enemy.id,
     minDist: Infinity,
     nearMissFired: false,
+    isPerfect: false,
   };
 }
 
@@ -87,6 +89,7 @@ function applyIncomingMotion(b: Bullet, dt: number, beatPhase: number, nowMs: nu
 export interface BulletTickEffects {
   damageDealt: number;
   parriedCount: number;
+  perfectCount: number;
   reflectHits: { x: number; y: number }[];
   enemyKills: { x: number; y: number }[];
   nearMisses: number;
@@ -110,6 +113,7 @@ export function updateBullets(
   const effects: BulletTickEffects = {
     damageDealt: 0,
     parriedCount: 0,
+    perfectCount: 0,
     reflectHits: [],
     enemyKills: [],
     nearMisses: 0,
@@ -129,7 +133,10 @@ export function updateBullets(
       if (distToPlayer < b.minDist) b.minDist = distToPlayer;
       if (state.parryHeld && isInParryCone(b.x, b.y, px, py, state.aimAngle)) {
         b.state = "absorbed";
+        const timeSincePress = nowMs - state.parryStartedAt;
+        b.isPerfect = timeSincePress <= PERFECT_PARRY_WINDOW_MS;
         effects.parriedCount += 1;
+        if (b.isPerfect) effects.perfectCount += 1;
         emitBurst(state, b.x, b.y, BURSTS.parryCatch());
       } else if (distToPlayer <= HIT_RADIUS + radius) {
         b.state = "dead";
@@ -197,8 +204,14 @@ function applyKnockback(enemy: Enemy, vx: number, vy: number): void {
   enemy.knockbackY += (vy / speed) * ENEMY_KNOCKBACK_AMOUNT;
 }
 
-export function reflectAbsorbedBullets(state: EngineState): number {
+export interface ReleaseResult {
+  count: number;
+  perfectCount: number;
+}
+
+export function reflectAbsorbedBullets(state: EngineState): ReleaseResult {
   let count = 0;
+  let perfectCount = 0;
   const cos = Math.cos(state.aimAngle);
   const sin = Math.sin(state.aimAngle);
   for (const b of state.bullets) {
@@ -207,15 +220,17 @@ export function reflectAbsorbedBullets(state: EngineState): number {
     b.vx = cos * BULLET_REFLECT_SPEED;
     b.vy = sin * BULLET_REFLECT_SPEED;
     count++;
+    if (b.isPerfect) perfectCount++;
   }
   if (count > 0) {
     emitBurst(state, state.playerX, state.playerY, BURSTS.reflect(count, state.aimAngle));
   }
-  return count;
+  return { count, perfectCount };
 }
 
-export function autoCounterAbsorbedBullets(state: EngineState): number {
+export function autoCounterAbsorbedBullets(state: EngineState): ReleaseResult {
   let count = 0;
+  let perfectCount = 0;
   const enemyById = new Map(state.enemies.map((e) => [e.id, e]));
   const cos = Math.cos(state.aimAngle);
   const sin = Math.sin(state.aimAngle);
@@ -232,11 +247,12 @@ export function autoCounterAbsorbedBullets(state: EngineState): number {
     }
     b.state = "reflected";
     count++;
+    if (b.isPerfect) perfectCount++;
   }
   if (count > 0) {
     emitBurst(state, state.playerX, state.playerY, BURSTS.reflect(count, state.aimAngle));
   }
-  return count;
+  return { count, perfectCount };
 }
 
 export function cleanupBullets(state: EngineState): void {

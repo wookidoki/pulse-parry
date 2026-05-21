@@ -32,6 +32,10 @@ export const PARTICLE_DRAG_PER_SEC = 1.8;
 
 export const TAP_THRESHOLD_MS = 200;
 
+export const PERFECT_PARRY_WINDOW_MS = 100;
+export const MASH_COOLDOWN_MS = 120;
+export const SCORE_PERFECT_BONUS = 25;
+
 export const HIT_STOP_MS_PLAYER_HIT = 60;
 export const HIT_STOP_MS_ENEMY_KILL = 95;
 export const HIT_STOP_MS_REFLECT_HIT = 35;
