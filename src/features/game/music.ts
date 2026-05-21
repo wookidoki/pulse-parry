@@ -1,6 +1,6 @@
 const STAGE_TRACKS: string[] = [
-  "/audio/stage2_pulse.ogg",
-  "/audio/stage3_factory.ogg",
+  "/audio/stage1_breach.mp3",
+  "/audio/stage2_coldrain.mp3",
   "/audio/stage3_overdrive.ogg",
   "/audio/stage4_chaos.ogg",
   "/audio/boss_electric.ogg",
