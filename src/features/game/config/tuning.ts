@@ -55,8 +55,6 @@ export const SCOREPOP_LIFE_MS = 800;
 export const SCREEN_FLASH_LIFE_MS = 220;
 
 export const NEAR_MISS_RADIUS = 22;
-export const SLOWMO_NEAR_MISS_MS = 340;
-export const SLOWMO_NEAR_MISS_SCALE = 0.32;
 
 export const CAMERA_ZOOM_PUNCH = 1.06;
 export const CAMERA_ZOOM_LERP_PER_SEC = 12;

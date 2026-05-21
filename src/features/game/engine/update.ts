@@ -78,8 +78,6 @@ export function createEngineState(nowMs: number): EngineState {
     shake: 0,
     bgPulse: 0,
     hitStopMsLeft: 0,
-    timeScale: 1,
-    slowmoMsLeft: 0,
     cameraZoom: 1,
     parryCooldownMsLeft: 0,
     audioKickThisFrame: false,
@@ -275,11 +273,6 @@ function processHitStop(state: EngineState, dt: number): boolean {
   return true;
 }
 
-function updateTimeScale(state: EngineState): void {
-  state.timeScale = 1;
-  state.slowmoMsLeft = 0;
-}
-
 function updateCameraZoom(state: EngineState, dt: number): void {
   const target = state.hitStopMsLeft > 0 ? CAMERA_ZOOM_PUNCH : 1;
   const lerp = Math.min(1, dt * CAMERA_ZOOM_LERP_PER_SEC);
@@ -312,7 +305,6 @@ export function update(ctx: UpdateContext): void {
 
   state.shake = Math.max(0, state.shake - dt * SHAKE_DECAY_PER_SEC);
   state.bgPulse = Math.max(0, state.bgPulse - dt * BG_PULSE_DECAY_PER_SEC);
-  updateTimeScale(state);
   updateCameraZoom(state, dt);
 
   if (processHitStop(state, dt)) {
@@ -321,8 +313,7 @@ export function update(ctx: UpdateContext): void {
     return;
   }
 
-  const physicsDt = dt * state.timeScale;
-  updatePlayerMovement(state, input, physicsDt);
+  updatePlayerMovement(state, input, dt);
   recomputeAimAngle(state, input);
 
   tickTempoCurve(state, nowMs);
@@ -338,10 +329,10 @@ export function update(ctx: UpdateContext): void {
 
   spawnEnemyIfNeeded(state, nowMs, canvasW, canvasH);
 
-  const enemyResult = updateEnemies(state, physicsDt, nowMs, canvasW, canvasH);
+  const enemyResult = updateEnemies(state, dt, nowMs, canvasW, canvasH);
   processEnemyShots(state, enemyResult.shotsFired, nowMs);
 
-  const bulletEffects = updateBullets(state, physicsDt, canvasW, canvasH, nowMs);
+  const bulletEffects = updateBullets(state, dt, canvasW, canvasH, nowMs);
   for (let i = 0; i < bulletEffects.parriedCount; i++) sfx.playParryHit();
   if (bulletEffects.damageDealt > 0) {
     applyShake(state, SHAKE_ON_PLAYER_HIT);
@@ -368,7 +359,7 @@ export function update(ctx: UpdateContext): void {
 
   handleParryRelease(state, justReleased, nowMs, ctx);
 
-  updateParticles(state, physicsDt);
+  updateParticles(state, dt);
   updateEffects(state, dt, nowMs);
 
   cleanupBullets(state);

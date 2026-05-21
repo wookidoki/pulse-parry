@@ -14,7 +14,6 @@ export interface StageConfig {
   tempoMap: TempoPoint[];
   maxEnemies: number;
   enemyKinds: EnemyKind[];
-  bulletSpeed: number;
   spawnEveryBeats: number;
   bgInner: string;
   bgOuter: string;
@@ -22,8 +21,6 @@ export interface StageConfig {
   accentCyan: string;
   isBoss: boolean;
 }
-
-export const BPM_REFERENCE = 120;
 
 export const STAGES: StageConfig[] = [
   {
@@ -39,7 +36,6 @@ export const STAGES: StageConfig[] = [
     ],
     maxEnemies: 2,
     enemyKinds: ["shooter"],
-    bulletSpeed: 270,
     spawnEveryBeats: 10,
     bgInner: "rgba(28, 240, 255, 0.10)",
     bgOuter: "rgba(255, 43, 214, 0.05)",
@@ -59,7 +55,6 @@ export const STAGES: StageConfig[] = [
     ],
     maxEnemies: 3,
     enemyKinds: ["shooter", "burster"],
-    bulletSpeed: 290,
     spawnEveryBeats: 7,
     bgInner: "rgba(247, 255, 58, 0.10)",
     bgOuter: "rgba(177, 75, 255, 0.06)",
@@ -80,7 +75,6 @@ export const STAGES: StageConfig[] = [
     ],
     maxEnemies: 4,
     enemyKinds: ["shooter", "burster", "charger"],
-    bulletSpeed: 320,
     spawnEveryBeats: 6,
     bgInner: "rgba(255, 56, 99, 0.14)",
     bgOuter: "rgba(177, 75, 255, 0.07)",
@@ -101,7 +95,6 @@ export const STAGES: StageConfig[] = [
     ],
     maxEnemies: 4,
     enemyKinds: ["shooter", "burster", "charger"],
-    bulletSpeed: 340,
     spawnEveryBeats: 5,
     bgInner: "rgba(177, 75, 255, 0.18)",
     bgOuter: "rgba(28, 240, 255, 0.08)",
@@ -122,7 +115,6 @@ export const STAGES: StageConfig[] = [
     ],
     maxEnemies: 5,
     enemyKinds: ["shooter", "burster", "charger"],
-    bulletSpeed: 360,
     spawnEveryBeats: 4,
     bgInner: "rgba(255, 56, 99, 0.22)",
     bgOuter: "rgba(255, 43, 214, 0.12)",

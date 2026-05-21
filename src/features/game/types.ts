@@ -129,8 +129,6 @@ export interface EngineState {
   shake: number;
   bgPulse: number;
   hitStopMsLeft: number;
-  timeScale: number;
-  slowmoMsLeft: number;
   cameraZoom: number;
   parryCooldownMsLeft: number;
   audioKickThisFrame: boolean;

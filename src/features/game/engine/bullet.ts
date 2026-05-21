@@ -1,5 +1,6 @@
 import type { Bullet, BulletKind, Enemy, EngineCallbacks, EngineState } from "../types";
 import { BULLET_KINDS, ENEMY_KINDS } from "../config/enemy-kinds";
+import { DIFFICULTIES } from "../config/difficulty";
 import {
   BULLET_REFLECT_SPEED,
   ENEMY_KNOCKBACK_AMOUNT,
@@ -24,11 +25,13 @@ export function createBullet(
   nowMs: number,
 ): Bullet {
   const enemyConfig = ENEMY_KINDS[enemy.kind];
+  const diffConfig = DIFFICULTIES[state.difficulty];
   const kind = enemyConfig.bulletKind;
   const dx = state.playerX - enemy.x;
   const dy = state.playerY - enemy.y;
   const distance = magnitude(dx, dy);
-  const flightMs = enemyConfig.flightBeats * state.beat.beatPeriodMs;
+  const flightBeats = enemyConfig.flightBeats * diffConfig.flightBeatsMul;
+  const flightMs = flightBeats * state.beat.beatPeriodMs;
   const speed = distance / Math.max(0.05, flightMs / 1000);
   const { ux, uy } = unitVector(dx, dy);
   return {
@@ -138,7 +141,9 @@ export function updateBullets(
       if (state.parryHeld && isInParryCone(b.x, b.y, px, py, state.aimAngle)) {
         b.state = "absorbed";
         const timeSincePress = nowMs - state.parryStartedAt;
-        b.isPerfect = timeSincePress <= PERFECT_PARRY_WINDOW_MS;
+        const perfectWindow =
+          PERFECT_PARRY_WINDOW_MS * DIFFICULTIES[state.difficulty].perfectWindowMul;
+        b.isPerfect = timeSincePress <= perfectWindow;
         effects.parriedCount += 1;
         if (b.isPerfect) effects.perfectCount += 1;
         emitBurst(state, b.x, b.y, BURSTS.parryCatch());

@@ -1,6 +1,4 @@
-type AudioCtx = AudioContext & { _master?: GainNode };
-
-let ctx: AudioCtx | null = null;
+let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let started = false;
 
@@ -11,7 +9,7 @@ export function ensureAudio(): boolean {
     const Ctor =
       window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    ctx = new Ctor() as AudioCtx;
+    ctx = new Ctor();
     masterGain = ctx.createGain();
     masterGain.gain.value = 0.6;
     masterGain.connect(ctx.destination);
@@ -74,30 +72,6 @@ function noiseBurst(durSec: number, gainPeak: number, filterFreq: number) {
   src.connect(filter).connect(g).connect(masterGain);
   src.start(t0);
   src.stop(t0 + durSec);
-}
-
-export function playKick() {
-  envOsc(180, 42, 0.18, "sine", 0.45);
-}
-
-export function playHat() {
-  noiseBurst(0.04, 0.18, 7500);
-}
-
-export function playSnare() {
-  noiseBurst(0.12, 0.28, 1800);
-  envOsc(220, 160, 0.08, "triangle", 0.2);
-}
-
-export function playBeat(beatNum: number) {
-  const inBar = beatNum % 4;
-  if (inBar === 0) {
-    playKick();
-  } else if (inBar === 2) {
-    playSnare();
-  } else {
-    playHat();
-  }
 }
 
 export function playParryHit() {

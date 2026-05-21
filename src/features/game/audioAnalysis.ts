@@ -4,6 +4,7 @@ const HISTORY_SIZE = 28;
 const MIN_INTERVAL_MS = 110;
 const KICK_THRESHOLD_MULT = 1.35;
 const KICK_MIN_ENERGY = 95;
+const FFT_BUFFER = new Uint8Array(128);
 
 let lastKickAtMs = -10000;
 let recentIntervals: number[] = [];
@@ -34,11 +35,10 @@ export function hasAnalyser(key: number): boolean {
 export function tickKickDetection(currentIndex: number, nowMs: number): boolean {
   const analyser = analysers.get(currentIndex);
   if (!analyser) return false;
-  const buf = new Uint8Array(analyser.frequencyBinCount);
-  analyser.getByteFrequencyData(buf);
+  analyser.getByteFrequencyData(FFT_BUFFER);
 
   let bass = 0;
-  for (let i = 1; i < 6; i++) bass += buf[i];
+  for (let i = 1; i < 6; i++) bass += FFT_BUFFER[i];
   bass /= 5;
 
   bassHistory.push(bass);

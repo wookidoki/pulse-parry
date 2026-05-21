@@ -1,6 +1,7 @@
 import type { Enemy, EngineState, EnemyKind } from "../types";
 import type { StageConfig } from "../config/stages";
 import { ENEMY_KINDS } from "../config/enemy-kinds";
+import { DIFFICULTIES } from "../config/difficulty";
 import {
   ENEMY_ORBIT_DRIFT_RAD_PER_SEC,
   ENEMY_ORBIT_FACTOR,
@@ -47,8 +48,9 @@ export function createEnemy(
   const kind = pickEnemyKind(stage);
   const config = ENEMY_KINDS[kind];
   const r = orbitRadius(canvasW, canvasH);
+  const id = state.nextEnemyId++;
   return {
-    id: state.nextEnemyId++,
+    id,
     x: Math.cos(angle) * r,
     y: Math.sin(angle) * r,
     kind,
@@ -65,7 +67,7 @@ export function createEnemy(
     knockbackX: 0,
     knockbackY: 0,
     hitFlashMsLeft: 0,
-    beatOffsetFraction: (state.nextEnemyId % 4) * 0.25,
+    beatOffsetFraction: ((id - 1) % 4) * 0.25,
   };
 }
 
@@ -73,10 +75,13 @@ export function shouldSpawnEnemy(
   state: EngineState,
   stage: StageConfig,
 ): boolean {
-  const alive = state.enemies.filter(
-    (e) => e.state === "alive" || e.state === "spawning",
-  ).length;
-  if (alive >= stage.maxEnemies) return false;
+  let alive = 0;
+  for (const e of state.enemies) {
+    if (e.state === "alive" || e.state === "spawning") alive += 1;
+  }
+  const diffConfig = DIFFICULTIES[state.difficulty];
+  const maxEnemies = Math.max(1, stage.maxEnemies + diffConfig.enemyCountDelta);
+  if (alive >= maxEnemies) return false;
   const beatsSinceLastSpawn = state.beat.currentBeat - state.lastEnemySpawnBeat;
   return state.enemies.length === 0 || beatsSinceLastSpawn >= stage.spawnEveryBeats;
 }
@@ -140,11 +145,9 @@ function maybeStartTelegraph(enemy: Enemy, state: EngineState): void {
   if (!fireEvent) return;
   const config = ENEMY_KINDS[enemy.kind];
   if (state.beat.currentBeat - enemy.lastShotBeat < config.beatsPerShot) return;
+  const baseTelegraph = Math.min(TELEGRAPH_MS, state.beat.beatPeriodMs * 0.55);
   const offsetMs = enemy.beatOffsetFraction * state.beat.beatPeriodMs;
-  enemy.telegraphMsLeft = Math.min(
-    TELEGRAPH_MS + offsetMs,
-    state.beat.beatPeriodMs * 0.55 + offsetMs,
-  );
+  enemy.telegraphMsLeft = baseTelegraph + offsetMs;
   enemy.lastShotBeat = state.beat.currentBeat;
 }
 
