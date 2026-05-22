@@ -13,7 +13,28 @@
   width: 100%;
   max-width: 1200px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.tutorialBtn {
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--neon-yellow);
+  background: rgba(247, 255, 58, 0.08);
+  border: 1px solid rgba(247, 255, 58, 0.45);
+  border-radius: 4px;
+  text-decoration: none;
+  transition: 0.15s;
+}
+
+.tutorialBtn:hover {
+  background: rgba(247, 255, 58, 0.2);
+  border-color: rgba(247, 255, 58, 0.85);
+  box-shadow: 0 0 14px rgba(247, 255, 58, 0.4);
 }
 
 .localeToggle {

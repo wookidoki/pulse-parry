@@ -106,6 +106,10 @@ export function createEngineState(
     dashDirX: 0,
     dashDirY: 0,
     dashWasPressed: false,
+    bladeSwingMsLeft: 0,
+    bladeSwingDurationMs: 0,
+    bladeSwingFromAngle: 0,
+    bladeSwingToAngle: 0,
     characterId,
     modifierId,
     hazards: [],
@@ -273,6 +277,7 @@ function handleParryRelease(
     applyHitStop(state, HIT_STOP_MS_PARRY);
     sfx.playReflect();
     sfx.playSlashWoosh();
+    triggerBladeSwing(state, isCharged);
     const slashColor = result.perfectCount > 0
       ? "#ffffff"
       : isCharged
@@ -349,6 +354,17 @@ function updateCameraZoom(state: EngineState, dt: number): void {
   state.cameraZoom += (target - state.cameraZoom) * lerp;
 }
 
+function triggerBladeSwing(state: EngineState, isCharged: boolean): void {
+  const char = CHARACTERS[state.characterId];
+  const duration = isCharged ? 340 : 240;
+  const cone = char.coneAngleRad;
+  const sign = Math.random() < 0.5 ? -1 : 1;
+  state.bladeSwingMsLeft = duration;
+  state.bladeSwingDurationMs = duration;
+  state.bladeSwingFromAngle = state.aimAngle + sign * cone * 1.1;
+  state.bladeSwingToAngle = state.aimAngle - sign * cone * 1.1;
+}
+
 function processDashTrigger(state: EngineState, input: PlayerInput): void {
   state.dashActiveMsLeft = Math.max(0, state.dashActiveMsLeft);
   state.dashCooldownMsLeft = Math.max(0, state.dashCooldownMsLeft);
@@ -405,6 +421,7 @@ export function update(ctx: UpdateContext): void {
 
   state.shake = Math.max(0, state.shake - dt * SHAKE_DECAY_PER_SEC);
   state.bgPulse = Math.max(0, state.bgPulse - dt * BG_PULSE_DECAY_PER_SEC);
+  state.bladeSwingMsLeft = Math.max(0, state.bladeSwingMsLeft - dt * 1000);
   updateCameraZoom(state, dt);
 
   if (processHitStop(state, dt)) {

@@ -1,0 +1,175 @@
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 24px 40px;
+  gap: 24px;
+}
+
+.topBar {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 12px rgba(28, 240, 255, 0.7);
+}
+
+.skipBtn {
+  padding: 6px 14px;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: rgba(240, 246, 255, 0.55);
+  background: transparent;
+  border: 1px solid rgba(240, 246, 255, 0.25);
+  border-radius: 4px;
+  text-decoration: none;
+  transition: 0.15s;
+}
+
+.skipBtn:hover {
+  background: rgba(240, 246, 255, 0.08);
+  color: var(--fg);
+}
+
+.progressRow {
+  display: flex;
+  gap: 8px;
+}
+
+.progressDot {
+  width: 28px;
+  height: 4px;
+  background: rgba(240, 246, 255, 0.15);
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: 0.18s;
+}
+
+.progressDotDone {
+  background: rgba(28, 240, 255, 0.55);
+}
+
+.progressDotActive {
+  background: var(--neon-yellow);
+  box-shadow: 0 0 12px rgba(247, 255, 58, 0.7);
+  transform: scaleY(1.6);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 32px 32px;
+  background: rgba(5, 3, 10, 0.7);
+  border: 1px solid rgba(28, 240, 255, 0.3);
+  border-radius: 12px;
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+  gap: 16px;
+  min-height: 320px;
+}
+
+.glyph {
+  font-size: 96px;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.stepLabel {
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: rgba(240, 246, 255, 0.45);
+}
+
+.stepTitle {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: var(--fg);
+  text-shadow: 0 0 12px rgba(28, 240, 255, 0.45);
+}
+
+.stepDesc {
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(240, 246, 255, 0.75);
+  max-width: 480px;
+}
+
+.actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.navBtn,
+.nextBtn,
+.finishBtn {
+  padding: 12px 28px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.15s;
+  text-decoration: none;
+}
+
+.navBtn {
+  background: rgba(28, 240, 255, 0.08);
+  border: 1px solid rgba(28, 240, 255, 0.35);
+  color: var(--fg);
+}
+
+.navBtn:hover:not(:disabled) {
+  background: rgba(28, 240, 255, 0.18);
+}
+
+.navBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.nextBtn {
+  background: var(--neon-cyan);
+  border: 1px solid var(--neon-cyan);
+  color: var(--bg);
+  box-shadow: 0 0 18px rgba(28, 240, 255, 0.55);
+}
+
+.nextBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 28px rgba(28, 240, 255, 0.8);
+}
+
+.finishBtn {
+  background: var(--neon-yellow);
+  border: 1px solid var(--neon-yellow);
+  color: var(--bg);
+  box-shadow: 0 0 18px rgba(247, 255, 58, 0.55);
+}
+
+.finishBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 32px rgba(247, 255, 58, 0.85);
+}

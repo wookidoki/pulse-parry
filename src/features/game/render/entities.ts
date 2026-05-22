@@ -581,23 +581,61 @@ function drawLightsaberBlade(
   nowMs: number,
 ): void {
   const char = CHARACTERS[state.characterId];
-  const cos = Math.cos(state.aimAngle);
-  const sin = Math.sin(state.aimAngle);
+
+  const swingActive = state.bladeSwingMsLeft > 0;
+  const swingProgress = swingActive
+    ? 1 - state.bladeSwingMsLeft / Math.max(1, state.bladeSwingDurationMs)
+    : 0;
+  const easeOut = 1 - Math.pow(1 - swingProgress, 2.6);
+  const swingAngle = swingActive
+    ? lerpAngle(state.bladeSwingFromAngle, state.bladeSwingToAngle, easeOut)
+    : state.aimAngle;
+
+  const length = swingActive
+    ? char.bladeLengthParry * 1.15
+    : state.parryHeld
+      ? char.bladeLengthParry + Math.sin(nowMs / 60) * 4
+      : char.bladeLengthIdle;
+
+  if (swingActive) {
+    drawSwingTrail(
+      c,
+      state.bladeSwingFromAngle,
+      state.bladeSwingToAngle,
+      easeOut,
+      length,
+      char.bladeColor,
+    );
+  }
+
+  drawBladeAt(c, swingAngle, length, char.bladeColor, state.parryHeld || swingActive, nowMs);
+}
+
+function lerpAngle(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+function drawBladeAt(
+  c: CanvasRenderingContext2D,
+  angle: number,
+  length: number,
+  bladeColor: string,
+  intense: boolean,
+  nowMs: number,
+): void {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
   const innerX = cos * BLADE_INNER_OFFSET;
   const innerY = sin * BLADE_INNER_OFFSET;
-  const length = state.parryHeld
-    ? char.bladeLengthParry + Math.sin(nowMs / 60) * 4
-    : char.bladeLengthIdle;
   const tipX = cos * (BLADE_INNER_OFFSET + length);
   const tipY = sin * (BLADE_INNER_OFFSET + length);
-  const bladeColor = state.parryHeld ? PALETTE.yellow : char.bladeColor;
 
   c.save();
   c.lineCap = "round";
-  c.shadowColor = bladeColor;
-  c.shadowBlur = state.parryHeld ? 28 : 18;
-  c.strokeStyle = bladeColor;
-  c.lineWidth = state.parryHeld ? 8 : 5;
+  c.shadowColor = intense ? PALETTE.yellow : bladeColor;
+  c.shadowBlur = intense ? 28 : 18;
+  c.strokeStyle = intense ? PALETTE.yellow : bladeColor;
+  c.lineWidth = intense ? 8 : 5;
   c.beginPath();
   c.moveTo(innerX, innerY);
   c.lineTo(tipX, tipY);
@@ -605,19 +643,54 @@ function drawLightsaberBlade(
 
   c.shadowBlur = 0;
   c.strokeStyle = "rgba(255, 255, 255, 0.95)";
-  c.lineWidth = state.parryHeld ? 3 : 2;
+  c.lineWidth = intense ? 3 : 2;
   c.beginPath();
   c.moveTo(innerX, innerY);
   c.lineTo(tipX, tipY);
   c.stroke();
 
-  if (state.parryHeld) {
+  if (intense) {
     c.fillStyle = `rgba(255, 255, 255, ${0.6 + Math.sin(nowMs / 50) * 0.2})`;
     c.shadowColor = bladeColor;
     c.shadowBlur = 16;
     c.beginPath();
     c.arc(tipX, tipY, 4, 0, Math.PI * 2);
     c.fill();
+  }
+  c.restore();
+}
+
+function drawSwingTrail(
+  c: CanvasRenderingContext2D,
+  fromAngle: number,
+  toAngle: number,
+  progress: number,
+  length: number,
+  color: string,
+): void {
+  const ghosts = 6;
+  c.save();
+  c.lineCap = "round";
+  for (let i = 0; i < ghosts; i++) {
+    const ratio = i / ghosts;
+    const ghostProgress = progress * (1 - ratio * 0.6);
+    if (ghostProgress < 0) continue;
+    const ghostAngle = lerpAngle(fromAngle, toAngle, ghostProgress);
+    const cos = Math.cos(ghostAngle);
+    const sin = Math.sin(ghostAngle);
+    const innerX = cos * BLADE_INNER_OFFSET;
+    const innerY = sin * BLADE_INNER_OFFSET;
+    const tipX = cos * (BLADE_INNER_OFFSET + length);
+    const tipY = sin * (BLADE_INNER_OFFSET + length);
+    const alpha = (1 - ratio) * 0.45;
+    c.shadowColor = color;
+    c.shadowBlur = 18 * (1 - ratio);
+    c.strokeStyle = withAlpha(color, alpha);
+    c.lineWidth = 6 - ratio * 4;
+    c.beginPath();
+    c.moveTo(innerX, innerY);
+    c.lineTo(tipX, tipY);
+    c.stroke();
   }
   c.restore();
 }

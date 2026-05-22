@@ -51,6 +51,9 @@ export function StageSelect() {
       <MenuBackground />
       <main className={styles.page}>
         <header className={styles.topBar}>
+          <Link href="/tutorial" className={styles.tutorialBtn}>
+            {t("tutorial", locale)}
+          </Link>
           <button className={styles.localeToggle} onClick={toggleLocale}>
             {locale === "ko" ? "EN" : "KO"}
           </button>

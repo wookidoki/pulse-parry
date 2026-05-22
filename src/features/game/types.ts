@@ -183,6 +183,10 @@ export interface EngineState {
   dashDirX: number;
   dashDirY: number;
   dashWasPressed: boolean;
+  bladeSwingMsLeft: number;
+  bladeSwingDurationMs: number;
+  bladeSwingFromAngle: number;
+  bladeSwingToAngle: number;
   characterId: import("./config/characters").CharacterId;
   modifierId: import("./config/modifiers").RunModifierId;
   hazards: Hazard[];
