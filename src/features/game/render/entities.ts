@@ -13,6 +13,7 @@ import {
 } from "../config/tuning";
 import { CHARACTERS } from "../config/characters";
 import { magnitude, unitVector } from "../engine/geometry";
+import { drawEnemySprite } from "./enemy-sprites";
 
 export function drawMovementRing(
   c: CanvasRenderingContext2D,
@@ -102,6 +103,8 @@ function drawCore(
   const styles = flashStyles(e);
   const beat = Math.sin(nowMs / 240) * 0.08 + 1;
   const rot = nowMs * 0.0004;
+  const spriteColor = e.hitFlashMsLeft > 0 ? "#ffffff" : config.color;
+  drawEnemySprite(c, "core", x, y, baseR * 0.85, spriteColor, 0.78, 36 + e.pulse * 26);
 
   c.save();
   c.translate(x, y);
@@ -172,6 +175,8 @@ function drawOmnic(
   const rotation = nowMs * 0.0006;
   const styles = flashStyles(e);
   const visorPulse = 0.7 + Math.sin(nowMs / 180) * 0.3;
+  const spriteColor = e.hitFlashMsLeft > 0 ? "#ffffff" : config.color;
+  drawEnemySprite(c, "omnic", x, y, radius, spriteColor, 0.9, 18 + e.pulse * 18);
 
   c.save();
   c.translate(x, y);
@@ -245,6 +250,8 @@ function drawVirus(
   const jitterX = Math.sin(nowMs * 0.022) * 1.8;
   const jitterY = Math.cos(nowMs * 0.024) * 1.8;
   const glitchOffset = Math.floor(nowMs / 120) % 4;
+  const spriteColor = e.hitFlashMsLeft > 0 ? "#ffffff" : config.color;
+  drawEnemySprite(c, "virus", x + jitterX, y + jitterY, radius, spriteColor, 0.88, 18 + e.pulse * 18);
 
   c.save();
   c.translate(x + jitterX, y + jitterY);
@@ -318,6 +325,8 @@ function drawDrone(
   const rotation = nowMs * 0.0003;
   const propRotation = nowMs * 0.012;
   const styles = flashStyles(e);
+  const spriteColor = e.hitFlashMsLeft > 0 ? "#ffffff" : config.color;
+  drawEnemySprite(c, "drone", x, y, radius * 0.95, spriteColor, 0.85, 22 + e.pulse * 18);
 
   c.save();
   c.translate(x, y);

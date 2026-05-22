@@ -5,6 +5,14 @@ Inline SVG silhouettes adapted from Game-Icons.net:
 - Ninja Mask (Lorc)         → CYBER NINJA
 - Cyborg Face (Delapouite)  → DIGITAL MONK
 - Hood (Lorc)               → NETRUNNER
+
+═══ ENEMY SPRITES ═══
+/assets/enemies/*.svg from Game-Icons.net:
+- Robot Helmet (Delapouite)  → OMNIC
+- Virus (Lorc)               → VIRUS
+- Spider Bot (Delapouite)    → DRONE
+- Alien Stare (Lorc)         → THE CORE (boss)
+
 Source: https://game-icons.net/
 License: CC BY 3.0
   Attribution required — Game-Icons.net / Lorc / Delapouite

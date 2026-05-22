@@ -117,6 +117,7 @@ export function createEngineState(
     nextHazardAtMs: nowMs + 18000,
     countdownMsLeft: 3300,
     countdownLastSecond: 4,
+    perfectFlashMsLeft: 0,
   };
 }
 
@@ -335,6 +336,7 @@ function handleParryRelease(
       cb.onCombo(result.perfectCount);
       spawnScreenFlash(state, "#ffffff", 0.45);
       applyHitStop(state, HIT_STOP_MS_PARRY * 1.6);
+      state.perfectFlashMsLeft = 280;
       spawnScorePop(
         state,
         state.playerX,
@@ -453,6 +455,7 @@ export function update(ctx: UpdateContext): void {
   state.shake = Math.max(0, state.shake - dt * SHAKE_DECAY_PER_SEC);
   state.bgPulse = Math.max(0, state.bgPulse - dt * BG_PULSE_DECAY_PER_SEC);
   state.bladeSwingMsLeft = Math.max(0, state.bladeSwingMsLeft - dt * 1000);
+  state.perfectFlashMsLeft = Math.max(0, state.perfectFlashMsLeft - dt * 1000);
   updateCameraZoom(state, dt);
 
   if (processHitStop(state, dt)) {

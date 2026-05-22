@@ -74,6 +74,47 @@ export function drawComboFlowEdges(
   c.restore();
 }
 
+export function drawChromaticBurst(
+  c: CanvasRenderingContext2D,
+  state: EngineState,
+  w: number,
+  h: number,
+): void {
+  if (state.perfectFlashMsLeft <= 0) return;
+  const t = state.perfectFlashMsLeft / 280;
+  const intensity = Math.min(1, t);
+  const easeOut = 1 - Math.pow(1 - intensity, 2);
+
+  const edge = w * 0.18 * easeOut;
+  c.save();
+
+  const leftGrad = c.createLinearGradient(0, 0, edge * 1.4, 0);
+  leftGrad.addColorStop(0, `rgba(28, 240, 255, ${0.35 * easeOut})`);
+  leftGrad.addColorStop(1, "rgba(28, 240, 255, 0)");
+  c.fillStyle = leftGrad;
+  c.fillRect(0, 0, edge * 1.4, h);
+
+  const rightGrad = c.createLinearGradient(w - edge * 1.4, 0, w, 0);
+  rightGrad.addColorStop(0, "rgba(255, 56, 99, 0)");
+  rightGrad.addColorStop(1, `rgba(255, 56, 99, ${0.35 * easeOut})`);
+  c.fillStyle = rightGrad;
+  c.fillRect(w - edge * 1.4, 0, edge * 1.4, h);
+
+  const topGrad = c.createLinearGradient(0, 0, 0, edge);
+  topGrad.addColorStop(0, `rgba(255, 255, 255, ${0.18 * easeOut})`);
+  topGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+  c.fillStyle = topGrad;
+  c.fillRect(0, 0, w, edge);
+
+  const bottomGrad = c.createLinearGradient(0, h - edge, 0, h);
+  bottomGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
+  bottomGrad.addColorStop(1, `rgba(255, 255, 255, ${0.18 * easeOut})`);
+  c.fillStyle = bottomGrad;
+  c.fillRect(0, h - edge, w, edge);
+
+  c.restore();
+}
+
 export function drawPauseOverlay(c: CanvasRenderingContext2D, w: number, h: number): void {
   c.fillStyle = "rgba(5, 3, 10, 0.6)";
   c.fillRect(0, 0, w, h);

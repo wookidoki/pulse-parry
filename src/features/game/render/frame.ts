@@ -22,6 +22,7 @@ import {
 import { drawHazards } from "./hazards";
 import { drawCountdown } from "./countdown";
 import {
+  drawChromaticBurst,
   drawComboFlowEdges,
   drawPauseOverlay,
   drawVignette,
@@ -78,6 +79,7 @@ export function render(
   drawScreenFlashes(c, state, w, h);
   drawStageProgress(c, state, w, nowMs);
   drawBossHpBar(c, state, w, nowMs);
+  drawChromaticBurst(c, state, w, h);
   drawCountdown(c, state, w, h);
 
   if (hud.paused) drawPauseOverlay(c, w, h);

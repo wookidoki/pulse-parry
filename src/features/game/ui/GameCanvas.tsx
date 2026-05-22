@@ -12,6 +12,7 @@ import {
   setupAudioAnalysis,
 } from "../music";
 import { useHud } from "../state";
+import { preloadEnemySprites } from "../render/enemy-sprites";
 import type { Difficulty, EngineState, PlayerInput } from "../types";
 import { CHARACTERS, type CharacterId } from "../config/characters";
 import { MODIFIERS, type RunModifierId } from "../config/modifiers";
@@ -77,6 +78,7 @@ export function GameCanvas({
     const char = CHARACTERS[characterId];
     const mod = MODIFIERS[modifierId];
     start(char.maxHp + mod.startHpDelta);
+    preloadEnemySprites();
   }, [start, characterId, modifierId]);
 
   useEffect(() => {

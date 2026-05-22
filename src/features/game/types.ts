@@ -181,6 +181,7 @@ export interface EngineState {
   bossPhase: number;
   countdownMsLeft: number;
   countdownLastSecond: number;
+  perfectFlashMsLeft: number;
   dashActiveMsLeft: number;
   dashCooldownMsLeft: number;
   dashDirX: number;

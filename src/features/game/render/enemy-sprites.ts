@@ -1,0 +1,72 @@
+import type { EnemyRace } from "../types";
+
+interface SpriteCache {
+  silhouette: HTMLImageElement | null;
+  tinted: Map<string, HTMLCanvasElement>;
+}
+
+const SVG_URLS: Record<EnemyRace, string> = {
+  omnic: "/assets/enemies/omnic.svg",
+  virus: "/assets/enemies/virus.svg",
+  drone: "/assets/enemies/drone.svg",
+  core: "/assets/enemies/core.svg",
+};
+
+const cache: Map<EnemyRace, SpriteCache> = new Map();
+let initialized = false;
+
+export function preloadEnemySprites(): void {
+  if (initialized || typeof window === "undefined") return;
+  initialized = true;
+  for (const race of ["omnic", "virus", "drone", "core"] as EnemyRace[]) {
+    const img = new Image();
+    img.src = SVG_URLS[race];
+    cache.set(race, { silhouette: img, tinted: new Map() });
+  }
+}
+
+const SPRITE_SIZE = 128;
+
+function getTinted(race: EnemyRace, color: string): HTMLCanvasElement | null {
+  const entry = cache.get(race);
+  if (!entry) return null;
+  const img = entry.silhouette;
+  if (!img || !img.complete || img.naturalWidth === 0) return null;
+  const existing = entry.tinted.get(color);
+  if (existing) return existing;
+  const canvas = document.createElement("canvas");
+  canvas.width = SPRITE_SIZE;
+  canvas.height = SPRITE_SIZE;
+  const c = canvas.getContext("2d");
+  if (!c) return null;
+  c.clearRect(0, 0, SPRITE_SIZE, SPRITE_SIZE);
+  c.drawImage(img, 0, 0, SPRITE_SIZE, SPRITE_SIZE);
+  c.globalCompositeOperation = "source-in";
+  c.fillStyle = color;
+  c.fillRect(0, 0, SPRITE_SIZE, SPRITE_SIZE);
+  c.globalCompositeOperation = "source-over";
+  entry.tinted.set(color, canvas);
+  return canvas;
+}
+
+export function drawEnemySprite(
+  c: CanvasRenderingContext2D,
+  race: EnemyRace,
+  cx: number,
+  cy: number,
+  radius: number,
+  color: string,
+  opacity: number,
+  glowAmount: number,
+): boolean {
+  const tinted = getTinted(race, color);
+  if (!tinted) return false;
+  const size = radius * 2.4;
+  c.save();
+  c.globalAlpha = opacity;
+  c.shadowColor = color;
+  c.shadowBlur = glowAmount;
+  c.drawImage(tinted, cx - size / 2, cy - size / 2, size, size);
+  c.restore();
+  return true;
+}
