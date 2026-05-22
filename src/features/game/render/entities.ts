@@ -52,17 +52,29 @@ export function drawEnemies(
 ): void {
   for (const e of state.enemies) {
     c.save();
+    const drawX = e.x + e.knockbackX;
+    const drawY = e.y + e.knockbackY;
+
     if (e.state === "spawning") {
       c.globalAlpha = (nowMs - e.stateEnteredAt) / ENEMY_SPAWN_DELAY_MS;
     } else if (e.state === "dying") {
-      c.globalAlpha = Math.max(0, 1 - (nowMs - e.stateEnteredAt) / ENEMY_DEATH_MS);
+      const t = Math.min(1, (nowMs - e.stateEnteredAt) / ENEMY_DEATH_MS);
+      c.globalAlpha = Math.max(0, 1 - t);
+      // Scale + spin death animation
+      const dyingScale = 1 + t * 0.6 - t * t * 1.2;
+      const dyingRot = t * Math.PI * 0.6;
+      c.translate(drawX, drawY);
+      c.rotate(dyingRot);
+      c.scale(dyingScale, dyingScale);
+      c.translate(-drawX, -drawY);
     }
-    const drawX = e.x + e.knockbackX;
-    const drawY = e.y + e.knockbackY;
+
     drawEnemyByRace(c, e, drawX, drawY, nowMs);
-    drawEnemyHpRing(c, e, drawX, drawY);
-    if (e.telegraphMsLeft > 0) drawTelegraphBeam(c, e, drawX, drawY);
-    drawRaceLabel(c, e, drawX, drawY, nowMs);
+    if (e.state !== "dying") {
+      drawEnemyHpRing(c, e, drawX, drawY);
+      if (e.telegraphMsLeft > 0) drawTelegraphBeam(c, e, drawX, drawY);
+      drawRaceLabel(c, e, drawX, drawY, nowMs);
+    }
     c.restore();
   }
 }
@@ -633,26 +645,69 @@ export function drawPlayer(
   state: EngineState,
   nowMs: number,
 ): void {
+  const char = CHARACTERS[state.characterId];
   const pulse = 0.85 + Math.sin(nowMs / 220) * 0.1 + state.bgPulse * 0.2;
   const dashing = state.dashActiveMsLeft > 0;
+  const auraColor = dashing ? "#ffffff" : char.accentColor;
+  const hexRot = nowMs * 0.0006;
+
   c.save();
-  c.shadowColor = dashing ? "#ffffff" : PALETTE.cyan;
-  c.shadowBlur = (dashing ? 36 : 22) * pulse;
-  c.fillStyle = dashing ? "#ffffff" : PALETTE.cyan;
-  c.beginPath();
-  c.arc(0, 0, PLAYER_RADIUS * 0.4, 0, Math.PI * 2);
-  c.fill();
-  c.shadowBlur = 0;
-  c.strokeStyle = dashing ? "rgba(255, 255, 255, 1)" : "rgba(28, 240, 255, 0.9)";
-  c.lineWidth = dashing ? 3 : 2;
-  c.beginPath();
-  c.arc(0, 0, PLAYER_RADIUS, 0, Math.PI * 2);
+
+  // Hex energy field (rotating)
+  c.shadowColor = auraColor;
+  c.shadowBlur = (dashing ? 32 : 16) * pulse;
+  c.strokeStyle = withAlpha(auraColor, 0.55);
+  c.lineWidth = 1.5;
+  c.save();
+  c.rotate(hexRot);
+  drawPolygon(c, 6, PLAYER_RADIUS + 4);
   c.stroke();
-  c.strokeStyle = "rgba(255, 56, 99, 0.15)";
+  c.restore();
+
+  // Counter-rotating inner hex
+  c.lineWidth = 1;
+  c.strokeStyle = withAlpha(auraColor, 0.32);
+  c.save();
+  c.rotate(-hexRot * 1.4);
+  drawPolygon(c, 6, PLAYER_RADIUS - 2);
+  c.stroke();
+  c.restore();
+
+  // Core diamond (body)
+  c.shadowBlur = (dashing ? 38 : 22) * pulse;
+  c.fillStyle = withAlpha(auraColor, 0.18);
+  c.beginPath();
+  c.moveTo(0, -PLAYER_RADIUS * 0.45);
+  c.lineTo(PLAYER_RADIUS * 0.4, 0);
+  c.lineTo(0, PLAYER_RADIUS * 0.55);
+  c.lineTo(-PLAYER_RADIUS * 0.4, 0);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = withAlpha(auraColor, 0.9);
+  c.lineWidth = 1.5;
+  c.stroke();
+
+  // Head dot (above body)
+  c.fillStyle = dashing ? "#ffffff" : auraColor;
+  c.shadowBlur = 18;
+  c.beginPath();
+  c.arc(0, -PLAYER_RADIUS * 0.68, 2.5, 0, Math.PI * 2);
+  c.fill();
+
+  // Inner glow core
+  c.shadowBlur = 0;
+  c.fillStyle = dashing ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.75)";
+  c.beginPath();
+  c.arc(0, 0, 2 + pulse * 0.8, 0, Math.PI * 2);
+  c.fill();
+
+  // Hit zone (subtle)
+  c.strokeStyle = "rgba(255, 56, 99, 0.13)";
   c.lineWidth = 1;
   c.beginPath();
   c.arc(0, 0, HIT_RADIUS, 0, Math.PI * 2);
   c.stroke();
+
   c.restore();
 
   drawLightsaberBlade(c, state, nowMs);
