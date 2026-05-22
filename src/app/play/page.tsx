@@ -6,6 +6,11 @@ import {
   PauseOverlay,
   StageBanner,
 } from "@/features/game";
+import {
+  BossCutscene,
+  DeathCutscene,
+  IntroCutscene,
+} from "@/features/game/ui/Cutscenes";
 import type { Difficulty } from "@/features/game/types";
 import type { CharacterId } from "@/features/game/config/characters";
 import type { RunModifierId } from "@/features/game/config/modifiers";
@@ -54,6 +59,9 @@ export default async function PlayPage({ searchParams }: PageProps) {
       <StageBanner />
       <ComboMilestone />
       <PauseOverlay />
+      <IntroCutscene />
+      <BossCutscene />
+      <DeathCutscene />
       <EndOverlay />
     </>
   );

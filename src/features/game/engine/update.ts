@@ -227,13 +227,17 @@ function spawnEnemyIfNeeded(
   nowMs: number,
   canvasW: number,
   canvasH: number,
+  cb: EngineCallbacks,
 ): void {
   const stage = currentStage(state.stageIndex);
   if (!shouldSpawnEnemy(state, stage)) return;
   const enemy = createEnemy(state, nowMs, canvasW, canvasH, stage);
   state.enemies.push(enemy);
   state.lastEnemySpawnBeat = state.beat.currentBeat;
-  if (enemy.kind === "boss") state.bossSpawned = true;
+  if (enemy.kind === "boss") {
+    state.bossSpawned = true;
+    cb.onBossAppear();
+  }
 }
 
 
@@ -494,7 +498,7 @@ export function update(ctx: UpdateContext): void {
 
   const { justReleased } = handleParryInputTransitions(state, input, nowMs, dt);
 
-  spawnEnemyIfNeeded(state, nowMs, canvasW, canvasH);
+  spawnEnemyIfNeeded(state, nowMs, canvasW, canvasH, ctx);
   spawnHealIfNeeded(state, nowMs, canvasW, canvasH, ctx.currentComboHint);
   tickBossPhase(state);
 

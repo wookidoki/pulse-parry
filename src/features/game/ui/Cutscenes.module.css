@@ -1,0 +1,387 @@
+.cutscene {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: cutsceneFade 0.3s ease-out;
+}
+
+@keyframes cutsceneFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 3px,
+      rgba(0, 0, 0, 0.2) 3px,
+      rgba(0, 0, 0, 0.2) 4px
+    );
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* ============ INTRO ============ */
+.warpField {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(28, 240, 255, 0.18), rgba(5, 3, 10, 0.95) 60%);
+  overflow: hidden;
+}
+
+.warpLine {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200vmax;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(28, 240, 255, 0.65) 50%,
+    transparent 60%
+  );
+  transform-origin: 0 0;
+  animation: warpStreak 1.6s linear infinite;
+  opacity: 0;
+}
+
+@keyframes warpStreak {
+  0% {
+    transform: rotate(var(--angle, 0deg)) scaleX(0.2);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--angle, 0deg)) scaleX(1);
+    opacity: 0;
+  }
+}
+
+.introContent {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  animation: introZoom 2.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes introZoom {
+  0% {
+    transform: scale(2.4);
+    filter: blur(28px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1);
+    filter: blur(0);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.96);
+    opacity: 0.7;
+    filter: blur(2px);
+  }
+}
+
+.stageNum {
+  font-size: 14px;
+  letter-spacing: 0.8em;
+  color: rgba(247, 255, 58, 0.85);
+  text-shadow: 0 0 16px rgba(247, 255, 58, 0.7);
+  font-family: var(--font-geist-mono, monospace);
+}
+
+.stageName {
+  font-size: clamp(48px, 9vw, 96px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--neon-cyan);
+  text-shadow:
+    0 0 24px rgba(28, 240, 255, 0.95),
+    0 0 64px rgba(28, 240, 255, 0.55);
+  margin: 0;
+}
+
+.tagline {
+  font-size: 13px;
+  color: rgba(240, 246, 255, 0.7);
+  letter-spacing: 0.15em;
+  max-width: 600px;
+  margin: 0;
+}
+
+.diveText {
+  margin-top: 24px;
+  font-size: 11px;
+  letter-spacing: 0.6em;
+  color: rgba(28, 240, 255, 0.55);
+  font-family: var(--font-geist-mono, monospace);
+  animation: diveBlink 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes diveBlink {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+
+/* ============ BOSS ============ */
+.bossGlitch {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 56, 99, 0.32), rgba(5, 3, 10, 0.95) 70%);
+  animation: bossPulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes bossPulse {
+  from {
+    background:
+      radial-gradient(circle at 50% 50%, rgba(255, 56, 99, 0.32), rgba(5, 3, 10, 0.95) 70%);
+  }
+  to {
+    background:
+      radial-gradient(circle at 50% 50%, rgba(255, 56, 99, 0.55), rgba(5, 3, 10, 0.95) 60%);
+  }
+}
+
+.bossWarning {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px 0;
+}
+
+.bossBar {
+  display: block;
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 56, 99, 0.85) 50%,
+    transparent 100%
+  );
+  animation: bossBarSweep 0.8s ease-in-out infinite;
+}
+
+@keyframes bossBarSweep {
+  0%, 100% { transform: translateX(-20%); opacity: 0.3; }
+  50% { transform: translateX(20%); opacity: 1; }
+}
+
+.bossContent {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  animation: bossEntrance 2.6s ease-out;
+}
+
+@keyframes bossEntrance {
+  0% {
+    transform: scale(3) rotateZ(-4deg);
+    opacity: 0;
+    filter: blur(20px);
+  }
+  15% {
+    transform: scale(1) rotateZ(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+  85% {
+    transform: scale(1) rotateZ(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0.5;
+  }
+}
+
+.bossAlert {
+  font-size: 14px;
+  letter-spacing: 0.5em;
+  color: var(--neon-red);
+  text-shadow: 0 0 14px rgba(255, 56, 99, 0.85);
+  font-family: var(--font-geist-mono, monospace);
+  animation: bossAlertBlink 0.25s steps(2) infinite;
+}
+
+@keyframes bossAlertBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.3; }
+}
+
+.bossTitle {
+  font-size: clamp(64px, 11vw, 128px);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: var(--neon-red);
+  text-shadow:
+    0 0 28px rgba(255, 56, 99, 1),
+    0 0 64px rgba(255, 56, 99, 0.7),
+    0 0 100px rgba(255, 56, 99, 0.4);
+  margin: 0;
+  animation: bossGlitchShift 0.18s steps(2) infinite;
+}
+
+@keyframes bossGlitchShift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-3px, 1px); }
+  50% { transform: translate(2px, -2px); }
+  75% { transform: translate(-1px, 2px); }
+}
+
+.bossSubtitle {
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  color: rgba(255, 196, 204, 0.85);
+  margin: 0;
+  text-shadow: 0 0 12px rgba(255, 56, 99, 0.5);
+}
+
+/* ============ DEATH ============ */
+.deathOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 56, 99, 0.4),
+    rgba(5, 0, 0, 0.95) 65%
+  );
+  animation: deathFade 1.9s ease-in;
+}
+
+@keyframes deathFade {
+  0% { background: radial-gradient(circle at 50% 50%, rgba(255, 56, 99, 0.05), rgba(5, 0, 0, 0.4) 50%); }
+  30% { background: radial-gradient(circle at 50% 50%, rgba(255, 56, 99, 0.5), rgba(5, 0, 0, 0.92) 60%); }
+  100% { background: radial-gradient(circle at 50% 50%, rgba(255, 56, 99, 0.25), rgba(0, 0, 0, 1) 70%); }
+}
+
+.deathCracks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.deathCrack {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 70vmax;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 56, 99, 0.7) 50%,
+    rgba(255, 255, 255, 0.4) 60%,
+    transparent 100%
+  );
+  transform-origin: 0 0;
+  animation: deathCrackGrow 1.2s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes deathCrackGrow {
+  0% {
+    opacity: 0;
+    height: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+    height: 70vmax;
+  }
+}
+
+.deathContent {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  animation: deathContentReveal 1.9s ease-out;
+}
+
+@keyframes deathContentReveal {
+  0% {
+    opacity: 0;
+    transform: scale(1.5);
+    filter: blur(12px);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0.9;
+  }
+}
+
+.deathLabel {
+  font-size: 12px;
+  letter-spacing: 0.6em;
+  color: rgba(255, 56, 99, 0.85);
+  font-family: var(--font-geist-mono, monospace);
+}
+
+.deathTitle {
+  font-size: clamp(40px, 8vw, 80px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--neon-red);
+  text-shadow:
+    0 0 24px rgba(255, 56, 99, 1),
+    0 0 48px rgba(255, 56, 99, 0.6);
+  margin: 0;
+  animation: deathGlitch 0.3s steps(2) infinite;
+}
+
+@keyframes deathGlitch {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-2px, 0); }
+  50% { transform: translate(2px, -1px); }
+  75% { transform: translate(0, 1px); }
+}
+
+.deathHint {
+  font-size: 11px;
+  letter-spacing: 0.45em;
+  color: rgba(240, 246, 255, 0.4);
+  margin: 0;
+  font-family: var(--font-geist-mono, monospace);
+  animation: diveBlink 0.4s ease-in-out infinite alternate;
+}

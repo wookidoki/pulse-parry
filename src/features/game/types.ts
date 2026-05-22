@@ -216,9 +216,18 @@ export interface EngineCallbacks {
   onVictory: () => void;
   onParries: (total: number, perfect: number) => void;
   onEnemyKilled: (n: number) => void;
+  onBossAppear: () => void;
 }
 
-export type GameStatus = "menu" | "playing" | "paused" | "gameover" | "victory";
+export type GameStatus =
+  | "menu"
+  | "intro"
+  | "playing"
+  | "paused"
+  | "bossCutscene"
+  | "dying"
+  | "gameover"
+  | "victory";
 
 export type Difficulty = "easy" | "normal" | "hard";
 

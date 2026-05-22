@@ -22,6 +22,10 @@ interface HudActions {
   togglePause: () => void;
   setMusicVolume: (v: number) => void;
   setSfxVolume: (v: number) => void;
+  completeIntro: () => void;
+  startBossCutscene: () => void;
+  completeBossCutscene: () => void;
+  finalizeDeath: () => void;
 }
 
 const VOLUME_STORAGE_KEY = "pulse-parry-volumes";
@@ -100,7 +104,7 @@ export const useHud = create<HudState & HudActions>((set) => ({
         ...INITIAL,
         musicVolume: s.musicVolume,
         sfxVolume: s.sfxVolume,
-        status: "playing",
+        status: "intro",
         hp,
         maxHp: hp,
         playStartMs: Date.now(),
@@ -115,8 +119,7 @@ export const useHud = create<HudState & HudActions>((set) => ({
         hp,
         combo: 0,
         damageTaken: s.damageTaken + amount,
-        status: hp === 0 ? "gameover" : s.status,
-        playEndMs: hp === 0 ? Date.now() : s.playEndMs,
+        status: hp === 0 ? "dying" : s.status,
       };
     }),
   heal: (amount) =>
@@ -176,4 +179,14 @@ export const useHud = create<HudState & HudActions>((set) => ({
       persistVolumes(s.musicVolume, next);
       return { sfxVolume: next };
     }),
+  completeIntro: () =>
+    set((s) => (s.status === "intro" ? { status: "playing" } : s)),
+  startBossCutscene: () =>
+    set((s) => (s.status === "playing" ? { status: "bossCutscene" } : s)),
+  completeBossCutscene: () =>
+    set((s) => (s.status === "bossCutscene" ? { status: "playing" } : s)),
+  finalizeDeath: () =>
+    set((s) =>
+      s.status === "dying" ? { status: "gameover", playEndMs: Date.now() } : s,
+    ),
 }));

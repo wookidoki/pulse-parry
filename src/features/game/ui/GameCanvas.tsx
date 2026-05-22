@@ -70,6 +70,7 @@ export function GameCanvas({
   const setStage = useHud((s) => s.setStage);
   const victory = useHud((s) => s.victory);
   const togglePause = useHud((s) => s.togglePause);
+  const startBossCutscene = useHud((s) => s.startBossCutscene);
   const musicVolume = useHud((s) => s.musicVolume);
   const sfxVolume = useHud((s) => s.sfxVolume);
   const stageIndex = useHud((s) => s.stageIndex);
@@ -231,6 +232,7 @@ export function GameCanvas({
           onVictory: victory,
           onParries: bumpParries,
           onEnemyKilled: bumpEnemiesKilled,
+          onBossAppear: startBossCutscene,
         });
       }
 
@@ -253,7 +255,7 @@ export function GameCanvas({
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startStage, difficulty, characterId, modifierId]);
+  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, startStage, difficulty, characterId, modifierId]);
 
   return <canvas ref={canvasRef} className={styles.canvas} />;
 }
