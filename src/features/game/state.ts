@@ -6,7 +6,7 @@ import { unlockStage } from "./progress";
 
 interface HudActions {
   reset: () => void;
-  start: () => void;
+  start: (maxHp?: number) => void;
   damage: (amount: number) => void;
   heal: (amount: number) => void;
   addScore: (n: number) => void;
@@ -48,8 +48,17 @@ export const useHud = create<HudState & HudActions>((set) => ({
   ...INITIAL,
   reset: () =>
     set((s) => ({ ...INITIAL, volume: s.volume })),
-  start: () =>
-    set((s) => ({ ...INITIAL, volume: s.volume, status: "playing" })),
+  start: (maxHp?: number) =>
+    set((s) => {
+      const hp = maxHp ?? INITIAL.maxHp;
+      return {
+        ...INITIAL,
+        volume: s.volume,
+        status: "playing",
+        hp,
+        maxHp: hp,
+      };
+    }),
   damage: (amount) =>
     set((s) => {
       if (s.status !== "playing") return s;

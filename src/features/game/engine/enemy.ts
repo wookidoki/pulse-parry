@@ -2,6 +2,7 @@ import type { Enemy, EngineState, EnemyKind } from "../types";
 import type { StageConfig } from "../config/stages";
 import { ENEMY_KINDS, type EnemyKindConfig } from "../config/enemy-kinds";
 import { DIFFICULTIES } from "../config/difficulty";
+import { MODIFIERS } from "../config/modifiers";
 import {
   ENEMY_ORBIT_DRIFT_RAD_PER_SEC,
   ENEMY_ORBIT_FACTOR,
@@ -121,12 +122,22 @@ export function shouldSpawnEnemy(
     if (e.state === "alive" || e.state === "spawning") alive += 1;
   }
   const diffConfig = DIFFICULTIES[state.difficulty];
+  const modConfig = MODIFIERS[state.modifierId];
   const maxEnemies = stage.isBoss
     ? 1
-    : Math.max(1, stage.maxEnemies + diffConfig.enemyCountDelta);
+    : Math.max(
+        1,
+        Math.round(
+          (stage.maxEnemies + diffConfig.enemyCountDelta) * modConfig.spawnRateMul,
+        ),
+      );
   if (alive >= maxEnemies) return false;
   const beatsSinceLastSpawn = state.beat.currentBeat - state.lastEnemySpawnBeat;
-  return state.enemies.length === 0 || beatsSinceLastSpawn >= stage.spawnEveryBeats;
+  const effectiveSpawnBeats = Math.max(
+    1,
+    stage.spawnEveryBeats / modConfig.spawnRateMul,
+  );
+  return state.enemies.length === 0 || beatsSinceLastSpawn >= effectiveSpawnBeats;
 }
 
 export interface EnemyShot {
@@ -203,7 +214,12 @@ function maybeStartTelegraph(enemy: Enemy, state: EngineState): void {
   const fireEvent = state.beat.isBeatTick || state.audioKickThisFrame;
   if (!fireEvent) return;
   const config = getEffectiveConfig(enemy);
-  if (state.beat.currentBeat - enemy.lastShotBeat < config.beatsPerShot) return;
+  const modConfig = MODIFIERS[state.modifierId];
+  const effectiveBeatsPerShot = Math.max(
+    1,
+    config.beatsPerShot / modConfig.enemyFireRateMul,
+  );
+  if (state.beat.currentBeat - enemy.lastShotBeat < effectiveBeatsPerShot) return;
   const baseTelegraph = Math.min(TELEGRAPH_MS, state.beat.beatPeriodMs * 0.55);
   const offsetMs = enemy.beatOffsetFraction * state.beat.beatPeriodMs;
   enemy.telegraphMsLeft = baseTelegraph + offsetMs;

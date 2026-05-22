@@ -19,6 +19,7 @@ import {
   drawShockwaves,
   drawSlashes,
 } from "./effects";
+import { drawHazards } from "./hazards";
 import {
   drawComboFlowEdges,
   drawPauseOverlay,
@@ -53,6 +54,7 @@ export function render(
   c.scale(state.cameraZoom, state.cameraZoom);
 
   drawMovementRing(c, nowMs);
+  drawHazards(c, state, w, h, nowMs);
   drawParticles(c, state);
   drawShockwaves(c, state, nowMs);
   drawEnemies(c, state, nowMs);

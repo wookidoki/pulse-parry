@@ -2,14 +2,15 @@ import type { EngineCallbacks, EngineState, PlayerInput } from "../types";
 import { FINAL_STAGE_INDEX, STAGES, currentStage } from "../config/stages";
 import { getDetectedBpm, tickKickDetection } from "../audioAnalysis";
 import { getCurrentTrackIndex } from "../music";
+import { CHARACTERS, type CharacterId } from "../config/characters";
+import { MODIFIERS, type RunModifierId } from "../config/modifiers";
+import { maybeSpawnHazard, updateHazards } from "./hazards";
 import {
   BG_PULSE_DECAY_PER_SEC,
   CAMERA_ZOOM_LERP_PER_SEC,
   CAMERA_ZOOM_PUNCH,
   CHARGE_THRESHOLD_MS,
-  DASH_COOLDOWN_MS,
   DASH_DURATION_MS,
-  DASH_SPEED,
   HIT_STOP_MS_ENEMY_KILL,
   HIT_STOP_MS_PARRY,
   HIT_STOP_MS_PLAYER_HIT,
@@ -18,7 +19,6 @@ import {
   HEAL_BULLET_SPEED,
   HEAL_COMBO_MILESTONES,
   HEAL_SPAWN_INTERVAL_MS,
-  PARRY_HALF_CONE_RAD,
   PLAYER_MAX_DIST,
   PLAYER_MOVE_SPEED,
   SCORE_CHARGED_BONUS,
@@ -66,6 +66,8 @@ export function createEngineState(
   nowMs: number,
   startStage = 0,
   difficulty: EngineState["difficulty"] = "normal",
+  characterId: CharacterId = "ninja",
+  modifierId: RunModifierId = "none",
 ): EngineState {
   const safeStage = Math.max(0, Math.min(STAGES.length - 1, startStage));
   const stage = STAGES[safeStage];
@@ -104,6 +106,10 @@ export function createEngineState(
     dashDirX: 0,
     dashDirY: 0,
     dashWasPressed: false,
+    characterId,
+    modifierId,
+    hazards: [],
+    nextHazardAtMs: nowMs + 18000,
   };
 }
 
@@ -199,6 +205,7 @@ function spawnEnemyIfNeeded(
   if (enemy.kind === "boss") state.bossSpawned = true;
 }
 
+
 function spawnHealIfNeeded(
   state: EngineState,
   nowMs: number,
@@ -245,7 +252,8 @@ function handleParryRelease(
   if (!justReleased) return;
   state.parryCooldownMsLeft = MASH_COOLDOWN_MS;
   const heldMs = nowMs - state.parryStartedAt;
-  const isTap = heldMs < TAP_THRESHOLD_MS;
+  const modConfig = MODIFIERS[state.modifierId];
+  const isTap = heldMs < TAP_THRESHOLD_MS && !modConfig.forcedHold;
   const isCharged = heldMs >= CHARGE_THRESHOLD_MS;
 
   if (isCharged) {
@@ -272,7 +280,7 @@ function handleParryRelease(
         : isTap
           ? PALETTE.yellow
           : PALETTE.cyan;
-    spawnSlash(state, state.aimAngle, PARRY_HALF_CONE_RAD, nowMs, slashColor);
+    spawnSlash(state, state.aimAngle, CHARACTERS[state.characterId].coneAngleRad, nowMs, slashColor);
 
     if (isCharged) {
       cb.onScore(SCORE_CHARGED_BONUS * result.count);
@@ -350,22 +358,25 @@ function processDashTrigger(state: EngineState, input: PlayerInput): void {
   if (!justPressed) return;
   if (state.dashActiveMsLeft > 0 || state.dashCooldownMsLeft > 0) return;
 
+  const char = CHARACTERS[state.characterId];
   const dx = input.rawMouseX - state.playerX;
   const dy = input.rawMouseY - state.playerY;
   const mag = Math.hypot(dx, dy) || 1;
   state.dashDirX = dx / mag;
   state.dashDirY = dy / mag;
   state.dashActiveMsLeft = DASH_DURATION_MS;
-  state.dashCooldownMsLeft = DASH_COOLDOWN_MS;
+  state.dashCooldownMsLeft = char.dashCooldownMs;
 }
 
 function updatePlayerMovement(state: EngineState, input: PlayerInput, dt: number): void {
   state.dashActiveMsLeft = Math.max(0, state.dashActiveMsLeft - dt * 1000);
   state.dashCooldownMsLeft = Math.max(0, state.dashCooldownMsLeft - dt * 1000);
 
+  const char = CHARACTERS[state.characterId];
+
   if (state.dashActiveMsLeft > 0) {
-    state.playerX += state.dashDirX * DASH_SPEED * dt;
-    state.playerY += state.dashDirY * DASH_SPEED * dt;
+    state.playerX += state.dashDirX * char.dashSpeed * dt;
+    state.playerY += state.dashDirY * char.dashSpeed * dt;
   } else {
     const mx = (input.moveRight ? 1 : 0) - (input.moveLeft ? 1 : 0);
     const my = (input.moveDown ? 1 : 0) - (input.moveUp ? 1 : 0);
@@ -405,6 +416,16 @@ export function update(ctx: UpdateContext): void {
   processDashTrigger(state, input);
   updatePlayerMovement(state, input, dt);
   recomputeAimAngle(state, input);
+
+  maybeSpawnHazard(state, nowMs);
+  const hazardInfo = updateHazards(state, nowMs);
+  if (hazardInfo.damaged) {
+    applyShake(state, SHAKE_ON_PLAYER_HIT);
+    applyHitStop(state, HIT_STOP_MS_PLAYER_HIT);
+    spawnScreenFlash(state, PALETTE.red, 0.55);
+    sfx.playPlayerHit();
+    ctx.onDamage(1);
+  }
 
   tickTempoCurve(state, nowMs);
   tickBeat(state.beat, nowMs);

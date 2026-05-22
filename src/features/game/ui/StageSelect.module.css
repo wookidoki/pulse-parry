@@ -5,12 +5,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 32px 24px;
-  gap: 24px;
+  padding: 24px 24px 40px;
+  gap: 18px;
   overflow-y: auto;
   background:
-    radial-gradient(circle at 50% 30%, rgba(255, 43, 214, 0.18), transparent 60%),
-    radial-gradient(circle at 50% 80%, rgba(28, 240, 255, 0.12), transparent 60%),
+    radial-gradient(circle at 50% 25%, rgba(255, 43, 214, 0.16), transparent 55%),
+    radial-gradient(circle at 50% 85%, rgba(28, 240, 255, 0.12), transparent 60%),
     var(--bg);
 }
 
@@ -25,16 +25,36 @@
   pointer-events: none;
 }
 
+.localeToggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--fg);
+  background: rgba(28, 240, 255, 0.1);
+  border: 1px solid rgba(28, 240, 255, 0.4);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.localeToggle:hover {
+  background: rgba(28, 240, 255, 0.2);
+}
+
 .header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   z-index: 1;
 }
 
 .title {
-  font-size: clamp(40px, 7vw, 80px);
+  font-size: clamp(36px, 6vw, 64px);
   font-weight: 900;
   letter-spacing: -0.04em;
   line-height: 0.95;
@@ -59,54 +79,166 @@
 }
 
 .subtitle {
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.4em;
   color: rgba(240, 246, 255, 0.55);
 }
 
-.difficultyRow {
+.section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 1;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.sectionLabel {
+  font-size: 10px;
+  letter-spacing: 0.45em;
+  color: rgba(240, 246, 255, 0.55);
+}
+
+.charRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.charCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px;
+  background: rgba(5, 3, 10, 0.6);
+  border: 2px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.15s;
+  text-align: center;
+}
+
+.charCard:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.charCardActive {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 24px currentColor;
+}
+
+.charPortrait {
+  width: 64px;
+  height: 70px;
+  margin-bottom: 6px;
+}
+
+.charName {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.charTagline {
+  font-size: 11px;
+  color: rgba(240, 246, 255, 0.6);
+  margin-bottom: 8px;
+  min-height: 28px;
+}
+
+.charStats {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.statBar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  z-index: 1;
+  gap: 6px;
 }
 
-.diffLabel {
+.statLabel {
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: rgba(240, 246, 255, 0.4);
+  width: 38px;
+  text-align: right;
+}
+
+.statTrack {
+  flex: 1;
+  height: 4px;
+  background: rgba(240, 246, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.statFill {
+  height: 100%;
+  transition: width 0.2s;
+}
+
+.charAbility {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: rgba(240, 246, 255, 0.7);
+  border-top: 1px solid rgba(240, 246, 255, 0.15);
+  padding-top: 6px;
+  margin-top: 4px;
+  width: 100%;
+}
+
+.modRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.modBtn {
+  padding: 6px 14px;
   font-size: 11px;
-  letter-spacing: 0.4em;
-  color: rgba(240, 246, 255, 0.5);
-}
-
-.diffBtn {
-  padding: 8px 16px;
-  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.3em;
-  color: rgba(240, 246, 255, 0.6);
-  background: rgba(28, 240, 255, 0.06);
-  border: 1px solid rgba(28, 240, 255, 0.25);
+  letter-spacing: 0.2em;
+  color: rgba(240, 246, 255, 0.55);
+  background: rgba(28, 240, 255, 0.05);
+  border: 1px solid rgba(28, 240, 255, 0.2);
   border-radius: 4px;
   cursor: pointer;
   transition: 0.15s;
 }
 
-.diffBtn:hover {
-  background: rgba(28, 240, 255, 0.14);
-  border-color: rgba(28, 240, 255, 0.5);
+.modBtn:hover {
+  background: rgba(28, 240, 255, 0.12);
   color: var(--fg);
 }
 
-.diffBtnActive {
+.modBtnActive {
   background: var(--neon-yellow);
   color: var(--bg);
   border-color: var(--neon-yellow);
   box-shadow: 0 0 16px rgba(247, 255, 58, 0.5);
 }
 
+.modDescription {
+  font-size: 10px;
+  color: rgba(240, 246, 255, 0.5);
+  letter-spacing: 0.1em;
+  text-align: center;
+  min-height: 14px;
+}
+
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
   width: 100%;
   max-width: 1100px;
   z-index: 1;
@@ -116,16 +248,16 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 18px;
+  gap: 6px;
+  padding: 14px;
   background: rgba(5, 3, 10, 0.55);
   border: 1px solid rgba(28, 240, 255, 0.3);
   border-radius: 8px;
   text-decoration: none;
   color: inherit;
   cursor: pointer;
-  transition: 0.18s;
-  min-height: 160px;
+  transition: 0.15s;
+  min-height: 140px;
 }
 
 .card:hover {
@@ -166,13 +298,13 @@
 }
 
 .cardIdx {
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.3em;
   color: rgba(240, 246, 255, 0.45);
 }
 
 .cardBadge {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 900;
   letter-spacing: 0.3em;
   color: var(--neon-red);
@@ -183,7 +315,7 @@
 }
 
 .cardName {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 900;
   letter-spacing: -0.02em;
   color: var(--neon-cyan);
@@ -197,7 +329,7 @@
 }
 
 .cardTagline {
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1.5;
   color: rgba(240, 246, 255, 0.65);
   flex: 1;
@@ -206,14 +338,14 @@
 .cardMeta {
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.2em;
   color: rgba(240, 246, 255, 0.4);
   font-family: var(--font-geist-mono, monospace);
 }
 
 .cardBest {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.2em;
   color: var(--neon-yellow);
@@ -227,7 +359,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.4em;
   color: rgba(240, 246, 255, 0.7);
@@ -237,20 +369,9 @@
 }
 
 .hints {
-  font-size: 11px;
+  font-size: 10px;
   color: rgba(240, 246, 255, 0.5);
   letter-spacing: 0.05em;
   text-align: center;
   z-index: 1;
-}
-
-.hints kbd {
-  display: inline-block;
-  padding: 1px 6px;
-  margin: 0 2px;
-  background: rgba(28, 240, 255, 0.1);
-  border: 1px solid rgba(28, 240, 255, 0.4);
-  border-radius: 3px;
-  color: var(--neon-cyan);
-  font-size: 10px;
 }

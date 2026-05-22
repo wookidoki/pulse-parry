@@ -183,6 +183,19 @@ export interface EngineState {
   dashDirX: number;
   dashDirY: number;
   dashWasPressed: boolean;
+  characterId: import("./config/characters").CharacterId;
+  modifierId: import("./config/modifiers").RunModifierId;
+  hazards: Hazard[];
+  nextHazardAtMs: number;
+}
+
+export interface Hazard {
+  id: number;
+  kind: "laserSweep";
+  state: "telegraph" | "active" | "fading";
+  startedAtMs: number;
+  angle: number;
+  width: number;
 }
 
 export interface EngineCallbacks {

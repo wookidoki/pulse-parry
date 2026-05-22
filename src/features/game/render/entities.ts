@@ -11,6 +11,7 @@ import {
   PLAYER_RADIUS,
   TELEGRAPH_MS,
 } from "../config/tuning";
+import { CHARACTERS } from "../config/characters";
 import { magnitude, unitVector } from "../engine/geometry";
 
 export function drawMovementRing(
@@ -527,8 +528,6 @@ function drawBulletTrail(
 }
 
 const BLADE_INNER_OFFSET = PLAYER_RADIUS + 4;
-const BLADE_LENGTH_IDLE = 38;
-const BLADE_LENGTH_PARRY = 64;
 
 export function drawPlayer(
   c: CanvasRenderingContext2D,
@@ -581,16 +580,17 @@ function drawLightsaberBlade(
   state: EngineState,
   nowMs: number,
 ): void {
+  const char = CHARACTERS[state.characterId];
   const cos = Math.cos(state.aimAngle);
   const sin = Math.sin(state.aimAngle);
   const innerX = cos * BLADE_INNER_OFFSET;
   const innerY = sin * BLADE_INNER_OFFSET;
   const length = state.parryHeld
-    ? BLADE_LENGTH_PARRY + Math.sin(nowMs / 60) * 4
-    : BLADE_LENGTH_IDLE;
+    ? char.bladeLengthParry + Math.sin(nowMs / 60) * 4
+    : char.bladeLengthIdle;
   const tipX = cos * (BLADE_INNER_OFFSET + length);
   const tipY = sin * (BLADE_INNER_OFFSET + length);
-  const bladeColor = state.parryHeld ? PALETTE.yellow : PALETTE.cyan;
+  const bladeColor = state.parryHeld ? PALETTE.yellow : char.bladeColor;
 
   c.save();
   c.lineCap = "round";

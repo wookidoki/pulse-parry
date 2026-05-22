@@ -13,6 +13,8 @@ import {
 } from "../music";
 import { useHud } from "../state";
 import type { Difficulty, EngineState, PlayerInput } from "../types";
+import { CHARACTERS, type CharacterId } from "../config/characters";
+import { MODIFIERS, type RunModifierId } from "../config/modifiers";
 import { render } from "../render/frame";
 import styles from "./GameCanvas.module.css";
 
@@ -32,9 +34,16 @@ const MOVE_KEYS: Record<string, keyof Pick<PlayerInput, "moveUp" | "moveDown" | 
 interface GameCanvasProps {
   startStage?: number;
   difficulty?: Difficulty;
+  characterId?: CharacterId;
+  modifierId?: RunModifierId;
 }
 
-export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvasProps) {
+export function GameCanvas({
+  startStage = 0,
+  difficulty = "normal",
+  characterId = "ninja",
+  modifierId = "none",
+}: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<EngineState | null>(null);
   const inputRef = useRef<PlayerInput>({
@@ -63,8 +72,10 @@ export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvas
   const status = useHud((s) => s.status);
 
   useEffect(() => {
-    start();
-  }, [start]);
+    const char = CHARACTERS[characterId];
+    const mod = MODIFIERS[modifierId];
+    start(char.maxHp + mod.startHpDelta);
+  }, [start, characterId, modifierId]);
 
   useEffect(() => {
     setMasterVolume(volume);
@@ -178,7 +189,7 @@ export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvas
     window.addEventListener("blur", handleBlur);
 
     const startTime = performance.now();
-    engineRef.current = createEngineState(0, startStage, difficulty);
+    engineRef.current = createEngineState(0, startStage, difficulty, characterId, modifierId);
     setStage(startStage);
     let prevTime = startTime;
 
@@ -194,6 +205,7 @@ export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvas
       const hudState = useHud.getState();
 
       if (hudState.status === "playing") {
+        const scoreMul = MODIFIERS[engine.modifierId].scoreMul;
         update({
           state: engine,
           input: inputRef.current,
@@ -202,7 +214,7 @@ export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvas
           canvasW: w,
           canvasH: h,
           currentComboHint: hudState.combo,
-          onScore: addScore,
+          onScore: (n) => addScore(Math.round(n * scoreMul)),
           onCombo: bumpCombo,
           onComboBreak: breakCombo,
           onDamage: damage,
@@ -231,7 +243,7 @@ export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvas
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [addScore, bumpCombo, breakCombo, damage, heal, setStage, victory, togglePause, startStage, difficulty]);
+  }, [addScore, bumpCombo, breakCombo, damage, heal, setStage, victory, togglePause, startStage, difficulty, characterId, modifierId]);
 
   return <canvas ref={canvasRef} className={styles.canvas} />;
 }

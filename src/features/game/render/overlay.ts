@@ -1,9 +1,6 @@
 import type { EngineState } from "../types";
 import { STAGES, currentStage } from "../config/stages";
-import {
-  PARRY_HALF_CONE_RAD,
-  PARRY_RANGE,
-} from "../config/tuning";
+import { CHARACTERS } from "../config/characters";
 import { bpmAt } from "../engine/tempo";
 
 export function drawAimLine(
@@ -27,13 +24,14 @@ export function drawParryCone(
   nowMs: number,
 ): void {
   if (!state.parryHeld) return;
-  const startA = state.aimAngle - PARRY_HALF_CONE_RAD;
-  const endA = state.aimAngle + PARRY_HALF_CONE_RAD;
+  const char = CHARACTERS[state.characterId];
+  const startA = state.aimAngle - char.coneAngleRad;
+  const endA = state.aimAngle + char.coneAngleRad;
   const pulse = 0.5 + Math.sin(nowMs / 80) * 0.1;
   c.fillStyle = `rgba(247, 255, 58, ${0.12 * pulse})`;
   c.beginPath();
   c.moveTo(0, 0);
-  c.arc(0, 0, PARRY_RANGE, startA, endA);
+  c.arc(0, 0, char.parryRange, startA, endA);
   c.closePath();
   c.fill();
   c.save();
@@ -42,7 +40,7 @@ export function drawParryCone(
   c.shadowColor = "rgba(247, 255, 58, 0.9)";
   c.shadowBlur = 16;
   c.beginPath();
-  c.arc(0, 0, PARRY_RANGE, startA, endA);
+  c.arc(0, 0, char.parryRange, startA, endA);
   c.stroke();
   c.restore();
 }

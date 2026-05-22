@@ -1,15 +1,13 @@
 import type { Bullet, BulletKind, Enemy, EngineCallbacks, EngineState } from "../types";
 import { BULLET_KINDS, ENEMY_KINDS } from "../config/enemy-kinds";
 import { DIFFICULTIES } from "../config/difficulty";
+import { CHARACTERS } from "../config/characters";
+import { MODIFIERS } from "../config/modifiers";
 import {
-  BULLET_REFLECT_SPEED,
   ENEMY_KNOCKBACK_AMOUNT,
   ENEMY_RADIUS,
   HIT_RADIUS,
   NEAR_MISS_RADIUS,
-  PARRY_HALF_CONE_RAD,
-  PARRY_RANGE,
-  PERFECT_PARRY_WINDOW_MS,
   SCORE_ENEMY_KILL,
   SCORE_REFLECT_HIT,
 } from "../config/tuning";
@@ -27,13 +25,15 @@ export function createBullet(
 ): Bullet {
   const enemyConfig = ENEMY_KINDS[enemy.kind];
   const diffConfig = DIFFICULTIES[state.difficulty];
-  const kind = enemyConfig.bulletKind;
+  const modConfig = MODIFIERS[state.modifierId];
+  const kind: BulletKind = modConfig.bulletKindOverride ?? enemyConfig.bulletKind;
   const dx = state.playerX - enemy.x;
   const dy = state.playerY - enemy.y;
   const distance = magnitude(dx, dy);
   const flightBeats = enemyConfig.flightBeats * diffConfig.flightBeatsMul;
   const flightMs = flightBeats * state.beat.beatPeriodMs;
-  const speed = distance / Math.max(0.05, flightMs / 1000);
+  const speed =
+    (distance / Math.max(0.05, flightMs / 1000)) * modConfig.bulletSpeedMul;
   const baseAngle = Math.atan2(dy, dx);
   const finalAngle = baseAngle + angleOffset;
   const ux = Math.cos(finalAngle);
@@ -92,13 +92,15 @@ function isInParryCone(
   px: number,
   py: number,
   aimAngle: number,
+  parryRange: number,
+  parryHalfCone: number,
 ): boolean {
   const dx = bx - px;
   const dy = by - py;
   const dist = magnitude(dx, dy);
-  if (dist > PARRY_RANGE || dist < 4) return false;
+  if (dist > parryRange || dist < 4) return false;
   const angle = angleBetween(dx, dy);
-  return Math.abs(normalizeAngle(angle - aimAngle)) <= PARRY_HALF_CONE_RAD;
+  return Math.abs(normalizeAngle(angle - aimAngle)) <= parryHalfCone;
 }
 
 function speedMulForBeat(beatPhase: number): number {
@@ -166,6 +168,8 @@ export function updateBullets(
   const beatPhase = state.beat.beatPhase;
   const px = state.playerX;
   const py = state.playerY;
+  const char = CHARACTERS[state.characterId];
+  const modConfig = MODIFIERS[state.modifierId];
 
   for (const b of state.bullets) {
     if (b.state === "dead") continue;
@@ -176,7 +180,16 @@ export function updateBullets(
       const distToPlayer = magnitude(b.x - px, b.y - py);
       if (distToPlayer < b.minDist) b.minDist = distToPlayer;
       const inCone =
-        state.parryHeld && isInParryCone(b.x, b.y, px, py, state.aimAngle);
+        state.parryHeld &&
+        isInParryCone(
+          b.x,
+          b.y,
+          px,
+          py,
+          state.aimAngle,
+          char.parryRange,
+          char.coneAngleRad,
+        );
       if (b.kind === "heal") {
         if (inCone) {
           b.state = "dead";
@@ -189,7 +202,9 @@ export function updateBullets(
         b.state = "absorbed";
         const timeSincePress = nowMs - state.parryStartedAt;
         const perfectWindow =
-          PERFECT_PARRY_WINDOW_MS * DIFFICULTIES[state.difficulty].perfectWindowMul;
+          char.perfectWindowMs *
+          DIFFICULTIES[state.difficulty].perfectWindowMul *
+          modConfig.perfectWindowMul;
         b.isPerfect = timeSincePress <= perfectWindow;
         effects.parriedCount += 1;
         if (b.isPerfect) effects.perfectCount += 1;
@@ -216,7 +231,7 @@ export function updateBullets(
         }
       }
     } else if (b.state === "absorbed") {
-      const targetR = PARRY_RANGE * 0.5;
+      const targetR = char.parryRange * 0.5;
       const dx = b.x - px;
       const dy = b.y - py;
       const d = magnitude(dx, dy) || 1;
@@ -234,7 +249,11 @@ export function updateBullets(
         if (dd >= ENEMY_RADIUS + radius) continue;
 
         const baseDamage = b.kind === "heavy" ? 2 : 1;
-        const damage = baseDamage + (b.isCharged ? 1 : 0);
+        const charged = b.isCharged ? 1 : 0;
+        const damage = Math.max(
+          1,
+          Math.round((baseDamage + charged) * char.reflectDamageMul),
+        );
         e.hp -= damage;
         e.pulse = 1;
         e.hitFlashMsLeft = 120;
@@ -273,13 +292,14 @@ export interface ReleaseResult {
 export function reflectAbsorbedBullets(state: EngineState): ReleaseResult {
   let count = 0;
   let perfectCount = 0;
+  const char = CHARACTERS[state.characterId];
   const cos = Math.cos(state.aimAngle);
   const sin = Math.sin(state.aimAngle);
   for (const b of state.bullets) {
     if (b.state !== "absorbed") continue;
     b.state = "reflected";
-    b.vx = cos * BULLET_REFLECT_SPEED;
-    b.vy = sin * BULLET_REFLECT_SPEED;
+    b.vx = cos * char.reflectSpeed;
+    b.vy = sin * char.reflectSpeed;
     count++;
     if (b.isPerfect) perfectCount++;
   }
@@ -292,6 +312,7 @@ export function reflectAbsorbedBullets(state: EngineState): ReleaseResult {
 export function autoCounterAbsorbedBullets(state: EngineState): ReleaseResult {
   let count = 0;
   let perfectCount = 0;
+  const char = CHARACTERS[state.characterId];
   const enemyById = new Map(state.enemies.map((e) => [e.id, e]));
   const cos = Math.cos(state.aimAngle);
   const sin = Math.sin(state.aimAngle);
@@ -300,11 +321,11 @@ export function autoCounterAbsorbedBullets(state: EngineState): ReleaseResult {
     const owner = enemyById.get(b.ownerEnemyId);
     if (owner && owner.state === "alive") {
       const { ux, uy } = unitVector(owner.x - b.x, owner.y - b.y);
-      b.vx = ux * BULLET_REFLECT_SPEED;
-      b.vy = uy * BULLET_REFLECT_SPEED;
+      b.vx = ux * char.reflectSpeed;
+      b.vy = uy * char.reflectSpeed;
     } else {
-      b.vx = cos * BULLET_REFLECT_SPEED;
-      b.vy = sin * BULLET_REFLECT_SPEED;
+      b.vx = cos * char.reflectSpeed;
+      b.vy = sin * char.reflectSpeed;
     }
     b.state = "reflected";
     count++;
