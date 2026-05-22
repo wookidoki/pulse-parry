@@ -105,6 +105,7 @@ export function createEngineState(
     lastHealMilestone: 0,
     bossSpawned: false,
     bossPhase: 0,
+    bossPhaseZoomMsLeft: 0,
     dashActiveMsLeft: 0,
     dashCooldownMsLeft: 0,
     dashDirX: 0,
@@ -135,6 +136,8 @@ function tickBossPhase(state: EngineState, cb: EngineCallbacks): void {
     state.bossPhase = phase;
     setBossPhase(phase);
     cb.onBossPhaseChange(phase);
+    state.bossPhaseZoomMsLeft = 520;
+    applyShake(state, 18);
   }
 }
 
@@ -399,7 +402,13 @@ function processHitStop(state: EngineState, dt: number): boolean {
 }
 
 function updateCameraZoom(state: EngineState, dt: number): void {
-  const target = state.hitStopMsLeft > 0 ? CAMERA_ZOOM_PUNCH : 1;
+  let target = state.hitStopMsLeft > 0 ? CAMERA_ZOOM_PUNCH : 1;
+  state.bossPhaseZoomMsLeft = Math.max(0, state.bossPhaseZoomMsLeft - dt * 1000);
+  if (state.bossPhaseZoomMsLeft > 0) {
+    const progress = 1 - state.bossPhaseZoomMsLeft / 520;
+    const wave = Math.sin(progress * Math.PI);
+    target = Math.max(target, 1 + 0.14 * wave);
+  }
   const lerp = Math.min(1, dt * CAMERA_ZOOM_LERP_PER_SEC);
   state.cameraZoom += (target - state.cameraZoom) * lerp;
 }
@@ -444,6 +453,8 @@ function updatePlayerMovement(state: EngineState, input: PlayerInput, dt: number
   if (state.dashActiveMsLeft > 0) {
     state.playerX += state.dashDirX * char.dashSpeed * dt;
     state.playerY += state.dashDirY * char.dashSpeed * dt;
+    const dashAngle = Math.atan2(state.dashDirY, state.dashDirX);
+    emitBurst(state, state.playerX, state.playerY, BURSTS.dashTrail(char.accentColor, dashAngle));
   } else {
     const mx = (input.moveRight ? 1 : 0) - (input.moveLeft ? 1 : 0);
     const my = (input.moveDown ? 1 : 0) - (input.moveUp ? 1 : 0);

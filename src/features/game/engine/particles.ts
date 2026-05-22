@@ -66,6 +66,17 @@ export const BURSTS = {
     speedMax: 220,
     lifeMs: 500,
   }),
+  dashTrail: (color: string, angle: number): BurstSpec => ({
+    count: 4,
+    color,
+    speedMin: 20,
+    speedMax: 80,
+    lifeMs: 260,
+    angle: angle + Math.PI,
+    spreadRad: Math.PI * 0.5,
+    sizeMin: 1.5,
+    sizeMax: 3,
+  }),
 };
 
 export function emitBurst(

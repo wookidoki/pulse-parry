@@ -188,6 +188,7 @@ export interface EngineState {
   lastHealMilestone: number;
   bossSpawned: boolean;
   bossPhase: number;
+  bossPhaseZoomMsLeft: number;
   countdownMsLeft: number;
   countdownLastSecond: number;
   perfectFlashMsLeft: number;
