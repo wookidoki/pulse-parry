@@ -123,7 +123,7 @@ export function createEngineState(
   };
 }
 
-function tickBossPhase(state: EngineState): void {
+function tickBossPhase(state: EngineState, cb: EngineCallbacks): void {
   if (!state.bossSpawned) return;
   const boss = state.enemies.find((e) => e.kind === "boss" && e.state !== "dead");
   if (!boss) return;
@@ -132,6 +132,7 @@ function tickBossPhase(state: EngineState): void {
   if (phase !== state.bossPhase) {
     state.bossPhase = phase;
     setBossPhase(phase);
+    cb.onBossPhaseChange(phase);
   }
 }
 
@@ -515,7 +516,7 @@ export function update(ctx: UpdateContext): void {
 
   spawnEnemyIfNeeded(state, nowMs, canvasW, canvasH, ctx);
   spawnHealIfNeeded(state, nowMs, canvasW, canvasH, ctx.currentComboHint);
-  tickBossPhase(state);
+  tickBossPhase(state, ctx);
 
   const enemyResult = updateEnemies(state, dt, nowMs, canvasW, canvasH);
   processEnemyShots(state, enemyResult.shotsFired, nowMs);

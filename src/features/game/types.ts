@@ -224,6 +224,7 @@ export interface EngineCallbacks {
   onParries: (total: number, perfect: number) => void;
   onEnemyKilled: (n: number) => void;
   onBossAppear: () => void;
+  onBossPhaseChange: (phase: number) => void;
 }
 
 export type GameStatus =
@@ -246,6 +247,8 @@ export interface ComboMilestone {
 
 export interface HudState {
   status: GameStatus;
+  bossPhase: number;
+  bossPhaseAlertKey: number;
   hp: number;
   maxHp: number;
   score: number;

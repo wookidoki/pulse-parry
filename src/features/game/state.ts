@@ -27,6 +27,7 @@ interface HudActions {
   completeBossCutscene: () => void;
   finalizeDeath: () => void;
   finalizeVictory: () => void;
+  triggerBossPhaseAlert: (phase: number) => void;
 }
 
 const VOLUME_STORAGE_KEY = "pulse-parry-volumes";
@@ -66,6 +67,8 @@ const STORED = loadStoredVolumes();
 
 const INITIAL: HudState = {
   status: "menu",
+  bossPhase: 0,
+  bossPhaseAlertKey: 0,
   hp: 3,
   maxHp: 3,
   score: 0,
@@ -196,4 +199,9 @@ export const useHud = create<HudState & HudActions>((set) => ({
         ? { status: "victory", playEndMs: Date.now() }
         : s,
     ),
+  triggerBossPhaseAlert: (phase) =>
+    set((s) => ({
+      bossPhase: phase,
+      bossPhaseAlertKey: s.bossPhaseAlertKey + 1,
+    })),
 }));

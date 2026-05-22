@@ -8,9 +8,14 @@ Inline SVG silhouettes adapted from Game-Icons.net:
 
 ═══ ENEMY SPRITES ═══
 /assets/enemies/*.svg from Game-Icons.net:
-- Robot Helmet (Delapouite)  → OMNIC
-- Virus (Lorc)               → VIRUS
-- Spider Bot (Delapouite)    → DRONE
+- Robot Helmet (Delapouite)  → OMNIC.shooter
+- Crosshair (Delapouite)     → OMNIC.sniper
+- Cluster Bomb (Lorc)        → OMNIC.spreader
+- Ghost (Lorc)               → OMNIC.phantom
+- Virus (Lorc)               → VIRUS.burster
+- Spiral Shell (Lorc)        → VIRUS.spiraler
+- Spider Bot (Delapouite)    → DRONE.charger
+- Burning Meteor (Lorc)      → DRONE.mortar
 - Alien Stare (Lorc)         → THE CORE (boss)
 
 Source: https://game-icons.net/

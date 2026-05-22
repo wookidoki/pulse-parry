@@ -13,6 +13,7 @@ import {
   VictoryCutscene,
 } from "@/features/game/ui/Cutscenes";
 import { PracticeHud } from "@/features/game/ui/PracticeHud";
+import { BossPhaseAlert } from "@/features/game/ui/BossPhaseAlert";
 import type { Difficulty } from "@/features/game/types";
 import type { CharacterId } from "@/features/game/config/characters";
 import type { RunModifierId } from "@/features/game/config/modifiers";
@@ -68,6 +69,7 @@ export default async function PlayPage({ searchParams }: PageProps) {
       <BossCutscene />
       <DeathCutscene />
       <VictoryCutscene />
+      <BossPhaseAlert />
       <PracticeHud active={tutorialMode} />
       <EndOverlay />
     </>
