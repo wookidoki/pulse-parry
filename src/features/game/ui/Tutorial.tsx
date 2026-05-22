@@ -82,9 +82,19 @@ export function Tutorial() {
             {t("tutPrev", locale)}
           </Button>
           {isLast ? (
-            <ButtonLink variant="primary" size="md" bracket href="/">
-              {t("tutFinish", locale)}
-            </ButtonLink>
+            <>
+              <ButtonLink variant="secondary" size="md" href="/">
+                {t("tutFinish", locale)}
+              </ButtonLink>
+              <ButtonLink
+                variant="primary"
+                size="md"
+                bracket
+                href="/play?stage=0&char=ninja&mod=none&diff=easy&tutorial=1"
+              >
+                {locale === "ko" ? "▶ 연습 시작" : "▶ PRACTICE"}
+              </ButtonLink>
+            </>
           ) : (
             <Button
               variant="primary"

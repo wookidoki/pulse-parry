@@ -121,6 +121,11 @@ export function shouldSpawnEnemy(
   for (const e of state.enemies) {
     if (e.state === "alive" || e.state === "spawning") alive += 1;
   }
+  if (state.tutorialMode) {
+    if (alive >= 1) return false;
+    const beats = state.beat.currentBeat - state.lastEnemySpawnBeat;
+    return state.enemies.length === 0 || beats >= 8;
+  }
   const diffConfig = DIFFICULTIES[state.difficulty];
   const modConfig = MODIFIERS[state.modifierId];
   const maxEnemies = stage.isBoss

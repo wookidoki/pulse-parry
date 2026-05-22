@@ -12,6 +12,7 @@ import {
   IntroCutscene,
   VictoryCutscene,
 } from "@/features/game/ui/Cutscenes";
+import { PracticeHud } from "@/features/game/ui/PracticeHud";
 import type { Difficulty } from "@/features/game/types";
 import type { CharacterId } from "@/features/game/config/characters";
 import type { RunModifierId } from "@/features/game/config/modifiers";
@@ -22,6 +23,7 @@ interface PageProps {
     diff?: string;
     char?: string;
     mod?: string;
+    tutorial?: string;
   }>;
 }
 
@@ -48,6 +50,7 @@ function parseModifier(v: string | undefined): RunModifierId {
 export default async function PlayPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const stageIdx = Math.max(0, Math.min(4, parseInt(params.stage ?? "0", 10) || 0));
+  const tutorialMode = params.tutorial === "1";
   return (
     <>
       <GameCanvas
@@ -55,6 +58,7 @@ export default async function PlayPage({ searchParams }: PageProps) {
         difficulty={parseDifficulty(params.diff)}
         characterId={parseCharacter(params.char)}
         modifierId={parseModifier(params.mod)}
+        tutorialMode={tutorialMode}
       />
       <Hud />
       <StageBanner />
@@ -64,6 +68,7 @@ export default async function PlayPage({ searchParams }: PageProps) {
       <BossCutscene />
       <DeathCutscene />
       <VictoryCutscene />
+      <PracticeHud active={tutorialMode} />
       <EndOverlay />
     </>
   );

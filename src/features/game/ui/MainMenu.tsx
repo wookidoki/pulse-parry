@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { STAGES, tempoRangeOf } from "../config/stages";
 import { CHARACTERS, CHARACTER_ORDER, type CharacterId } from "../config/characters";
@@ -54,6 +55,7 @@ function readBestScores(difficulty: Difficulty): Record<number, number> {
 
 export function MainMenu() {
   useMenuBgm();
+  const router = useRouter();
   const [view, setView] = useState<View>("title");
   const [locale, setLocale] = useState<Locale>(() => loadLocale());
   const [characterId, setCharacterId] = useState<CharacterId>("ninja");
@@ -62,6 +64,14 @@ export function MainMenu() {
   const [unlockedStage] = useState<number>(() =>
     typeof window === "undefined" ? 0 : loadProgress().unlockedStage,
   );
+  const [transitioning, setTransitioning] = useState(false);
+
+  const launchGame = (href: string) => {
+    click();
+    setTransitioning(true);
+    stopMenuBgm();
+    window.setTimeout(() => router.push(href), 480);
+  };
 
   const toggleLocale = () => {
     click();
@@ -107,6 +117,7 @@ export function MainMenu() {
               modifierId={modifierId}
               setModifierId={setModifierId}
               unlockedStage={unlockedStage}
+              onLaunch={launchGame}
               onBack={() => setView("character")}
             />
           )}
@@ -120,6 +131,7 @@ export function MainMenu() {
           </span>
         </div>
       </main>
+      {transitioning && <div className={styles.transitionOverlay} aria-hidden />}
     </>
   );
 }
@@ -281,6 +293,7 @@ function StageView({
   setModifierId,
   unlockedStage,
   onBack,
+  onLaunch,
 }: {
   locale: Locale;
   characterId: CharacterId;
@@ -290,6 +303,7 @@ function StageView({
   setModifierId: (id: RunModifierId) => void;
   unlockedStage: number;
   onBack: () => void;
+  onLaunch: (href: string) => void;
 }) {
   const [bests, setBests] = useState<Record<number, number>>(() => readBestScores(difficulty));
   const [selectedStage, setSelectedStage] = useState<number>(
@@ -402,15 +416,18 @@ function StageView({
       </div>
       <p className={styles.modDescription}>{MODIFIERS[modifierId].description[locale]}</p>
 
-      <ButtonLink
+      <Button
         variant="primary"
         size="lg"
         bracket
-        href={`/play?stage=${selectedStage}&diff=${difficulty}&char=${characterId}&mod=${modifierId}`}
-        onClick={click}
+        onClick={() =>
+          onLaunch(
+            `/play?stage=${selectedStage}&diff=${difficulty}&char=${characterId}&mod=${modifierId}`,
+          )
+        }
       >
         ▶ {t("startGame", locale)}
-      </ButtonLink>
+      </Button>
     </div>
   );
 }

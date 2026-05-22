@@ -195,6 +195,7 @@ export interface EngineState {
   modifierId: import("./config/modifiers").RunModifierId;
   hazards: Hazard[];
   nextHazardAtMs: number;
+  tutorialMode: boolean;
 }
 
 export type HazardKind = "laserSweep" | "missile" | "shockwave";

@@ -37,6 +37,7 @@ interface GameCanvasProps {
   difficulty?: Difficulty;
   characterId?: CharacterId;
   modifierId?: RunModifierId;
+  tutorialMode?: boolean;
 }
 
 export function GameCanvas({
@@ -44,6 +45,7 @@ export function GameCanvas({
   difficulty = "normal",
   characterId = "ninja",
   modifierId = "none",
+  tutorialMode = false,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<EngineState | null>(null);
@@ -198,7 +200,7 @@ export function GameCanvas({
     window.addEventListener("blur", handleBlur);
 
     const startTime = performance.now();
-    engineRef.current = createEngineState(0, startStage, difficulty, characterId, modifierId);
+    engineRef.current = createEngineState(0, startStage, difficulty, characterId, modifierId, tutorialMode);
     setStage(startStage);
     let prevTime = startTime;
 
@@ -255,7 +257,7 @@ export function GameCanvas({
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, startStage, difficulty, characterId, modifierId]);
+  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, startStage, difficulty, characterId, modifierId, tutorialMode]);
 
   return <canvas ref={canvasRef} className={styles.canvas} />;
 }

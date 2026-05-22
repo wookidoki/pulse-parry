@@ -10,6 +10,30 @@
   overflow: hidden;
 }
 
+.transitionOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: radial-gradient(circle at 50% 50%, rgba(28, 240, 255, 0.95), rgba(5, 3, 10, 0.95) 70%);
+  animation: transitionFlash 0.48s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes transitionFlash {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  40% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
 .cornerTop {
   position: fixed;
   top: 18px;

@@ -68,6 +68,7 @@ export function createEngineState(
   difficulty: EngineState["difficulty"] = "normal",
   characterId: CharacterId = "ninja",
   modifierId: RunModifierId = "none",
+  tutorialMode = false,
 ): EngineState {
   const safeStage = Math.max(0, Math.min(STAGES.length - 1, startStage));
   const stage = STAGES[safeStage];
@@ -115,6 +116,7 @@ export function createEngineState(
     modifierId,
     hazards: [],
     nextHazardAtMs: nowMs + 18000,
+    tutorialMode,
     countdownMsLeft: 2300,
     countdownLastSecond: 3,
     perfectFlashMsLeft: 0,
@@ -477,7 +479,7 @@ export function update(ctx: UpdateContext): void {
   updatePlayerMovement(state, input, dt);
   recomputeAimAngle(state, input);
 
-  maybeSpawnHazard(state, nowMs);
+  if (!state.tutorialMode) maybeSpawnHazard(state, nowMs);
   const hazardInfo = updateHazards(state, nowMs);
   if (hazardInfo.damaged) {
     applyShake(state, SHAKE_ON_PLAYER_HIT);
