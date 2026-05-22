@@ -171,29 +171,62 @@ function drawOmnic(
   const radius = ENEMY_RADIUS;
   const rotation = nowMs * 0.0006;
   const styles = flashStyles(e);
+  const visorPulse = 0.7 + Math.sin(nowMs / 180) * 0.3;
 
   c.save();
   c.translate(x, y);
-  c.rotate(rotation);
+
   c.shadowColor = config.glowColor;
-  c.shadowBlur = 16 + e.pulse * 18;
+  c.shadowBlur = 20 + e.pulse * 22;
+  c.save();
+  c.rotate(rotation);
   c.fillStyle = styles.bgFill;
   c.strokeStyle = styles.stroke;
   c.lineWidth = 2.5;
   drawPolygon(c, 6, radius);
   c.fill();
   c.stroke();
+  c.restore();
 
   c.shadowBlur = 0;
+  c.save();
+  c.rotate(-rotation * 0.6);
   c.strokeStyle = styles.stroke;
   c.lineWidth = 1;
-  drawPolygon(c, 6, radius * 0.6);
+  drawPolygon(c, 6, radius * 0.62);
+  c.stroke();
+  c.restore();
+
+  c.shadowColor = config.glowColor;
+  c.shadowBlur = 12 * visorPulse;
+  c.strokeStyle = styles.fill;
+  c.lineWidth = 2;
+  c.beginPath();
+  c.moveTo(-radius * 0.55, -2);
+  c.lineTo(radius * 0.55, -2);
   c.stroke();
 
-  c.fillStyle = styles.fill;
+  c.shadowBlur = 0;
+  c.fillStyle = `rgba(${parseColorRgb(config.color)}, ${0.7 * visorPulse})`;
+  c.fillRect(-radius * 0.55, -3, radius * 1.1, 2);
+
+  c.shadowColor = "#ffffff";
+  c.shadowBlur = 8;
+  c.fillStyle = "#ffffff";
   c.beginPath();
-  c.arc(0, 0, 4 + e.pulse * 3, 0, Math.PI * 2);
+  c.arc(0, -2, 1.5, 0, Math.PI * 2);
   c.fill();
+
+  c.shadowBlur = 14;
+  c.fillStyle = styles.fill;
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2 + rotation;
+    const cornerX = Math.cos(a) * radius * 0.92;
+    const cornerY = Math.sin(a) * radius * 0.92;
+    c.beginPath();
+    c.arc(cornerX, cornerY, 1.8 + e.pulse * 1.2, 0, Math.PI * 2);
+    c.fill();
+  }
   c.restore();
 }
 
@@ -205,42 +238,70 @@ function drawVirus(
   nowMs: number,
 ): void {
   const config = ENEMY_KINDS[e.kind];
-  const radius = ENEMY_RADIUS * 0.9;
+  const radius = ENEMY_RADIUS * 0.95;
   const rotation = nowMs * 0.002;
+  const counterRot = nowMs * -0.0028;
   const styles = flashStyles(e);
-  const jitterX = Math.sin(nowMs * 0.018) * 1.5;
-  const jitterY = Math.cos(nowMs * 0.021) * 1.5;
+  const jitterX = Math.sin(nowMs * 0.022) * 1.8;
+  const jitterY = Math.cos(nowMs * 0.024) * 1.8;
+  const glitchOffset = Math.floor(nowMs / 120) % 4;
 
   c.save();
   c.translate(x + jitterX, y + jitterY);
   c.shadowColor = config.glowColor;
-  c.shadowBlur = 18 + e.pulse * 22;
+  c.shadowBlur = 20 + e.pulse * 22;
 
   c.save();
   c.rotate(rotation);
   c.fillStyle = styles.bgFill;
   c.strokeStyle = styles.stroke;
-  c.lineWidth = 2;
+  c.lineWidth = 2.5;
   drawStar(c, 3, radius, radius * 0.45);
   c.fill();
   c.stroke();
   c.restore();
 
   c.shadowBlur = 0;
+  c.save();
+  c.rotate(counterRot);
+  c.strokeStyle = withAlpha(config.color, 0.65);
+  c.lineWidth = 1.4;
+  drawStar(c, 3, radius * 0.5, radius * 0.22);
+  c.stroke();
+  c.restore();
+
+  c.strokeStyle = withAlpha(config.color, 0.4);
+  c.lineWidth = 1;
+  for (let i = 0; i < 3; i++) {
+    const baseY = -radius * 0.4 + i * radius * 0.4 + glitchOffset;
+    const w1 = radius * (0.6 + (i % 2) * 0.3);
+    c.beginPath();
+    c.moveTo(-w1, baseY);
+    c.lineTo(w1, baseY);
+    c.stroke();
+  }
+
+  c.shadowColor = config.glowColor;
+  c.shadowBlur = 12;
   c.fillStyle = styles.fill;
-  for (let i = 0; i < 4; i++) {
-    const a = rotation * 1.6 + (i / 4) * Math.PI * 2;
-    const orbitR = radius * 1.35;
+  for (let i = 0; i < 5; i++) {
+    const a = rotation * 1.6 + (i / 5) * Math.PI * 2;
+    const orbitR = radius * 1.45;
     const sx = Math.cos(a) * orbitR;
     const sy = Math.sin(a) * orbitR;
     c.beginPath();
-    c.arc(sx, sy, 2 + e.pulse * 1.5, 0, Math.PI * 2);
+    c.arc(sx, sy, 2 + e.pulse * 1.8, 0, Math.PI * 2);
     c.fill();
   }
 
+  c.shadowBlur = 14;
+  c.fillStyle = "#ffffff";
+  c.beginPath();
+  c.arc(0, 0, 1.8, 0, Math.PI * 2);
+  c.fill();
   c.fillStyle = styles.fill;
   c.beginPath();
-  c.arc(0, 0, 3 + e.pulse * 3, 0, Math.PI * 2);
+  c.arc(0, 0, 4 + e.pulse * 3, 0, Math.PI * 2);
   c.fill();
   c.restore();
 }
@@ -253,36 +314,65 @@ function drawDrone(
   nowMs: number,
 ): void {
   const config = ENEMY_KINDS[e.kind];
-  const radius = ENEMY_RADIUS * 1.18;
+  const radius = ENEMY_RADIUS * 1.2;
   const rotation = nowMs * 0.0003;
+  const propRotation = nowMs * 0.012;
   const styles = flashStyles(e);
 
   c.save();
   c.translate(x, y);
   c.rotate(rotation);
+
   c.shadowColor = config.glowColor;
-  c.shadowBlur = 20 + e.pulse * 18;
+  c.shadowBlur = 24 + e.pulse * 20;
   c.fillStyle = styles.bgFill;
   c.strokeStyle = styles.stroke;
-  c.lineWidth = 2.5;
+  c.lineWidth = 3;
   drawPolygon(c, 4, radius);
   c.fill();
   c.stroke();
 
   c.shadowBlur = 0;
-  c.strokeStyle = `rgba(${parseColorRgb(config.color)}, 0.5)`;
+  c.strokeStyle = withAlpha(config.color, 0.45);
   c.lineWidth = 1;
-  for (const ang of [0, Math.PI / 2]) {
+  drawPolygon(c, 4, radius * 0.62);
+  c.stroke();
+
+  c.save();
+  c.rotate(propRotation);
+  c.strokeStyle = withAlpha(config.color, 0.7);
+  c.lineWidth = 2;
+  c.beginPath();
+  c.moveTo(-radius * 0.5, 0);
+  c.lineTo(radius * 0.5, 0);
+  c.moveTo(0, -radius * 0.5);
+  c.lineTo(0, radius * 0.5);
+  c.stroke();
+  c.restore();
+
+  c.shadowColor = config.glowColor;
+  c.shadowBlur = 10;
+  c.strokeStyle = styles.stroke;
+  c.lineWidth = 2;
+  for (const ang of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
+    const tipX = Math.cos(ang) * radius * 1.55;
+    const tipY = Math.sin(ang) * radius * 1.55;
     c.beginPath();
-    c.moveTo(Math.cos(ang) * radius * 1.1, Math.sin(ang) * radius * 1.1);
-    c.lineTo(Math.cos(ang) * radius * 1.5, Math.sin(ang) * radius * 1.5);
+    c.moveTo(Math.cos(ang) * radius * 1.05, Math.sin(ang) * radius * 1.05);
+    c.lineTo(tipX, tipY);
     c.stroke();
+
+    c.fillStyle = styles.fill;
     c.beginPath();
-    c.moveTo(Math.cos(ang + Math.PI) * radius * 1.1, Math.sin(ang + Math.PI) * radius * 1.1);
-    c.lineTo(Math.cos(ang + Math.PI) * radius * 1.5, Math.sin(ang + Math.PI) * radius * 1.5);
-    c.stroke();
+    c.arc(tipX, tipY, 2.2 + e.pulse * 1.2, 0, Math.PI * 2);
+    c.fill();
   }
 
+  c.shadowBlur = 14;
+  c.fillStyle = "#ffffff";
+  c.beginPath();
+  c.arc(0, 0, 2.5, 0, Math.PI * 2);
+  c.fill();
   c.fillStyle = styles.fill;
   c.beginPath();
   c.arc(0, 0, 5 + e.pulse * 4, 0, Math.PI * 2);

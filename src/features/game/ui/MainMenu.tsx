@@ -9,9 +9,16 @@ import { MODIFIERS, MODIFIER_ORDER, type RunModifierId } from "../config/modifie
 import { loadProgress, getBestScore } from "../progress";
 import type { Difficulty } from "../types";
 import { loadLocale, saveLocale, t, type Locale } from "../i18n";
+import { ensureAudio, playUiClick, resumeAudio } from "../audio";
 import { MenuBackground } from "./MenuBackground";
 import { CharacterPortrait } from "./CharacterPortrait";
 import styles from "./MainMenu.module.css";
+
+function click() {
+  ensureAudio();
+  resumeAudio();
+  playUiClick();
+}
 
 type View = "title" | "character" | "stage" | "credits";
 
@@ -33,6 +40,7 @@ export function MainMenu() {
   );
 
   const toggleLocale = () => {
+    click();
     const next: Locale = locale === "ko" ? "en" : "ko";
     setLocale(next);
     saveLocale(next);
@@ -112,13 +120,13 @@ function TitleView({
       <p className={styles.subtitle}>{t("subtitle", locale)}</p>
 
       <nav className={styles.menu}>
-        <button className={styles.menuItemPrimary} onClick={onPlay}>
+        <button className={styles.menuItemPrimary} onClick={() => { click(); onPlay(); }}>
           ▶ {hasSave ? t("continueText", locale) : t("newGame", locale)}
         </button>
         <Link href="/tutorial" className={styles.menuItem}>
           {t("tutorial", locale)}
         </Link>
-        <button className={styles.menuItem} onClick={onCredits}>
+        <button className={styles.menuItem} onClick={() => { click(); onCredits(); }}>
           {t("credits", locale)}
         </button>
       </nav>
@@ -154,7 +162,7 @@ function CharacterView({
   return (
     <div className={`${styles.view} ${styles.characterView}`}>
       <header className={styles.viewHeader}>
-        <button className={styles.backBtn} onClick={onBack}>
+        <button className={styles.backBtn} onClick={() => { click(); onBack(); }}>
           ◀ {t("backToTitle", locale)}
         </button>
         <span className={styles.stepLabel}>
@@ -201,7 +209,7 @@ function CharacterView({
         ))}
       </div>
 
-      <button className={styles.primaryBtn} onClick={onNext}>
+      <button className={styles.primaryBtn} onClick={() => { click(); onNext(); }}>
         {t("next", locale)} ▶
       </button>
     </div>
@@ -243,7 +251,7 @@ function StageView({
   return (
     <div className={`${styles.view} ${styles.stageView}`}>
       <header className={styles.viewHeader}>
-        <button className={styles.backBtn} onClick={onBack}>
+        <button className={styles.backBtn} onClick={() => { click(); onBack(); }}>
           ◀ {t("backToCharacter", locale)}
         </button>
         <span className={styles.stepLabel}>
@@ -335,7 +343,7 @@ function CreditsView({ locale, onBack }: { locale: Locale; onBack: () => void })
   return (
     <div className={`${styles.view} ${styles.creditsView}`}>
       <header className={styles.viewHeader}>
-        <button className={styles.backBtn} onClick={onBack}>
+        <button className={styles.backBtn} onClick={() => { click(); onBack(); }}>
           ◀ {t("backToTitle", locale)}
         </button>
         <span className={styles.stepLabel}>{t("credits", locale)}</span>
