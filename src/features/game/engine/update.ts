@@ -46,6 +46,7 @@ import {
 } from "./bullet";
 import {
   createEnemy,
+  createShard,
   shouldSpawnEnemy,
   updateEnemies,
   type EnemyShot,
@@ -561,6 +562,34 @@ export function update(ctx: UpdateContext): void {
     }
     emitBurst(state, kill.x, kill.y, BURSTS.enemyDie());
     sfx.playEnemyDie();
+
+    if (kill.kind === "splitter") {
+      state.enemies.push(
+        createShard(state, nowMs, kill.x, kill.y, 0, Math.PI * 0.55),
+      );
+      state.enemies.push(
+        createShard(state, nowMs, kill.x, kill.y, 0, -Math.PI * 0.55),
+      );
+    }
+  }
+
+  for (const det of enemyResult.bomberDetonations) {
+    applyShake(state, 22);
+    applyHitStop(state, 90);
+    spawnScreenFlash(state, "#ffffff", 0.45);
+    spawnScreenFlash(state, PALETTE.red, 0.4);
+    spawnShockwave(state, det.x, det.y, nowMs, PALETTE.red);
+    spawnShockwave(state, det.x, det.y, nowMs + 50, "#ffffff");
+    emitBurst(state, det.x, det.y, BURSTS.enemyDie());
+    sfx.playMissileExplode();
+    if (det.hitPlayer) {
+      ctx.onDamage(1);
+    }
+    const bomberEnemy = state.enemies.find((e) => e.id === det.enemyId);
+    if (bomberEnemy && bomberEnemy.state !== "dying" && bomberEnemy.state !== "dead") {
+      bomberEnemy.state = "dying";
+      bomberEnemy.stateEnteredAt = nowMs;
+    }
   }
   if (bulletEffects.nearMisses > 0) {
     spawnScreenFlash(state, PALETTE.cyan, 0.22);

@@ -7,7 +7,10 @@ export type EnemyKind =
   | "spreader"
   | "spiraler"
   | "phantom"
-  | "mortar";
+  | "mortar"
+  | "bomber"
+  | "splitter"
+  | "shard";
 export type EnemyRace = "omnic" | "virus" | "drone" | "core";
 export type EnemyState = "spawning" | "alive" | "dying" | "dead";
 
@@ -21,6 +24,9 @@ export const KIND_RACE: Record<EnemyKind, EnemyRace> = {
   spiraler: "virus",
   phantom: "omnic",
   mortar: "drone",
+  bomber: "drone",
+  splitter: "virus",
+  shard: "virus",
 };
 
 export const KIND_LABEL: Record<EnemyKind, string> = {
@@ -33,6 +39,9 @@ export const KIND_LABEL: Record<EnemyKind, string> = {
   spiraler: "VIRUS.SPIRALER",
   phantom: "OMNIC.PHANTOM",
   mortar: "DRONE.MORTAR",
+  bomber: "DRONE.BOMBER",
+  splitter: "VIRUS.SPLITTER",
+  shard: "VIRUS.SHARD",
 };
 
 export const RACE_LABEL: Record<EnemyRace, string> = {

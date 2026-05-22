@@ -155,6 +155,7 @@ export interface EnemyShot {
 export interface EnemyTickResult {
   shotsFired: EnemyShot[];
   teleported: { enemyId: number; oldX: number; oldY: number }[];
+  bomberDetonations: BomberDetonation[];
 }
 
 function tryFireMainShot(
@@ -249,6 +250,16 @@ function maybeTeleportPhantom(
   enemy.pulse = 1;
 }
 
+const BOMBER_SPEED = 60;
+const BOMBER_DETONATE_RADIUS = 80;
+
+export interface BomberDetonation {
+  enemyId: number;
+  x: number;
+  y: number;
+  hitPlayer: boolean;
+}
+
 export function updateEnemies(
   state: EngineState,
   dt: number,
@@ -256,7 +267,7 @@ export function updateEnemies(
   canvasW: number,
   canvasH: number,
 ): EnemyTickResult {
-  const result: EnemyTickResult = { shotsFired: [], teleported: [] };
+  const result: EnemyTickResult = { shotsFired: [], teleported: [], bomberDetonations: [] };
   const r = orbitRadius(canvasW, canvasH);
   const bossRadius = r * 1.1;
 
@@ -272,10 +283,32 @@ export function updateEnemies(
       continue;
     }
 
-    e.orbitAngle += ENEMY_ORBIT_DRIFT_RAD_PER_SEC * dt;
-    const orbR = e.kind === "boss" ? bossRadius : r;
-    e.x = Math.cos(e.orbitAngle) * orbR;
-    e.y = Math.sin(e.orbitAngle) * orbR;
+    const isBomber = e.kind === "bomber";
+
+    if (isBomber && e.state === "alive") {
+      const dx = state.playerX - e.x;
+      const dy = state.playerY - e.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      e.x += (dx / dist) * BOMBER_SPEED * dt;
+      e.y += (dy / dist) * BOMBER_SPEED * dt;
+      e.orbitAngle = Math.atan2(e.y, e.x);
+
+      if (dist <= BOMBER_DETONATE_RADIUS) {
+        result.bomberDetonations.push({
+          enemyId: e.id,
+          x: e.x,
+          y: e.y,
+          hitPlayer: state.dashActiveMsLeft <= 0,
+        });
+        e.hp = 0;
+      }
+    } else {
+      e.orbitAngle += ENEMY_ORBIT_DRIFT_RAD_PER_SEC * dt;
+      const orbR = e.kind === "boss" ? bossRadius : r;
+      e.x = Math.cos(e.orbitAngle) * orbR;
+      e.y = Math.sin(e.orbitAngle) * orbR;
+    }
+
     e.pulse = Math.max(0, e.pulse - dt * 3);
     const decay = Math.max(0, 1 - dt * KNOCKBACK_DECAY_PER_SEC);
     e.knockbackX *= decay;
@@ -286,11 +319,45 @@ export function updateEnemies(
 
     maybeTeleportPhantom(e, state, canvasW, canvasH, result);
 
+    if (isBomber) continue;
+
     if (tryFireMainShot(e, nowMs, dt, state.beat.beatPeriodMs, result)) continue;
     if (tryFireBurstShot(e, nowMs, state.beat.beatPeriodMs, result)) continue;
     maybeStartTelegraph(e, state);
   }
   return result;
+}
+
+export function createShard(
+  state: EngineState,
+  nowMs: number,
+  x: number,
+  y: number,
+  baseAngle: number,
+  angleOffset: number,
+): Enemy {
+  const id = state.nextEnemyId++;
+  const r = Math.hypot(x, y);
+  return {
+    id,
+    x,
+    y,
+    kind: "shard",
+    hp: ENEMY_KINDS.shard.hp,
+    maxHp: ENEMY_KINDS.shard.hp,
+    state: "alive",
+    stateEnteredAt: nowMs,
+    lastShotBeat: state.beat.currentBeat,
+    telegraphMsLeft: 0,
+    pulse: 1,
+    orbitAngle: r > 0 ? baseAngle + angleOffset : Math.random() * Math.PI * 2,
+    burstShotsRemaining: 0,
+    burstNextShotAtMs: 0,
+    knockbackX: Math.cos(angleOffset) * 80,
+    knockbackY: Math.sin(angleOffset) * 80,
+    hitFlashMsLeft: 0,
+    beatOffsetFraction: ((id - 1) % 4) * 0.25,
+  };
 }
 
 export function killEnemy(enemy: Enemy, nowMs: number): void {

@@ -103,6 +103,36 @@ export const ENEMY_KINDS: Record<EnemyKind, EnemyKindConfig> = {
     color: PALETTE.purple,
     glowColor: PALETTE.purple,
   },
+  bomber: {
+    hp: 2,
+    beatsPerShot: 999,
+    bulletKind: "normal",
+    flightBeats: 2,
+    burstShots: 1,
+    burstIntervalBeatFraction: 0,
+    color: PALETTE.red,
+    glowColor: PALETTE.red,
+  },
+  splitter: {
+    hp: 3,
+    beatsPerShot: 5,
+    bulletKind: "rapid",
+    flightBeats: 2.2,
+    burstShots: 2,
+    burstIntervalBeatFraction: 0.18,
+    color: PALETTE.cyan,
+    glowColor: PALETTE.cyan,
+  },
+  shard: {
+    hp: 1,
+    beatsPerShot: 3,
+    bulletKind: "rapid",
+    flightBeats: 1.6,
+    burstShots: 1,
+    burstIntervalBeatFraction: 0,
+    color: PALETTE.cyan,
+    glowColor: PALETTE.cyan,
+  },
 };
 
 export interface BulletKindConfig {

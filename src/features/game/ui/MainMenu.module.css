@@ -14,23 +14,68 @@
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: radial-gradient(circle at 50% 50%, rgba(28, 240, 255, 0.95), rgba(5, 3, 10, 0.95) 70%);
-  animation: transitionFlash 0.48s cubic-bezier(0.4, 0, 0.6, 1) forwards;
   pointer-events: none;
+  overflow: hidden;
 }
 
-@keyframes transitionFlash {
+.transitionOverlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(28, 240, 255, 0.92), rgba(5, 3, 10, 0.98) 80%);
+  animation: transitionRadial 0.7s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+.transitionOverlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 60px,
+      rgba(28, 240, 255, 0.45) 60px,
+      rgba(28, 240, 255, 0.45) 62px
+    );
+  animation: transitionStreaks 0.7s linear forwards;
+  mix-blend-mode: screen;
+}
+
+@keyframes transitionRadial {
   0% {
     opacity: 0;
-    transform: scale(0.85);
+    transform: scale(0.6);
+    filter: blur(20px);
   }
-  40% {
-    opacity: 0.9;
+  35% {
+    opacity: 1;
     transform: scale(1.05);
+    filter: blur(0);
+  }
+  70% {
+    transform: scale(1.2);
+    filter: brightness(1.5);
   }
   100% {
     opacity: 1;
-    transform: scale(1.2);
+    transform: scale(1.6);
+    filter: brightness(1);
+  }
+}
+
+@keyframes transitionStreaks {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.2) translateX(-50%);
+  }
+  30% {
+    opacity: 0.8;
+    transform: scaleX(1) translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(8) translateX(80%);
   }
 }
 

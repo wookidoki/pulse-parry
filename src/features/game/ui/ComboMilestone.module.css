@@ -9,7 +9,68 @@
   pointer-events: none;
   z-index: 7;
   opacity: 0;
-  animation: slam 1.4s ease-out forwards;
+  animation: slam 1.7s ease-out forwards;
+}
+
+.container::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.18) 0%,
+    transparent 40%
+  );
+  animation: flashRing 0.5s ease-out forwards;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.level1::before {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(28, 240, 255, 0.22) 0%,
+    transparent 45%
+  );
+}
+
+.level2::before {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(247, 255, 58, 0.28) 0%,
+    transparent 48%
+  );
+}
+
+.level3::before {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 43, 214, 0.32) 0%,
+    transparent 55%
+  );
+}
+
+.level4::before {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 56, 99, 0.36) 0%,
+    transparent 60%
+  );
+}
+
+.level5::before {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 43, 214, 0.3) 30%,
+    transparent 70%
+  );
+}
+
+@keyframes flashRing {
+  0% { opacity: 0; transform: scale(0.4); }
+  30% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.6); }
 }
 
 .number {

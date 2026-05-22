@@ -70,7 +70,7 @@ export function MainMenu() {
     click();
     setTransitioning(true);
     stopMenuBgm();
-    window.setTimeout(() => router.push(href), 480);
+    window.setTimeout(() => router.push(href), 680);
   };
 
   const toggleLocale = () => {
