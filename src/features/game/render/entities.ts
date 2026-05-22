@@ -536,16 +536,17 @@ export function drawPlayer(
   nowMs: number,
 ): void {
   const pulse = 0.85 + Math.sin(nowMs / 220) * 0.1 + state.bgPulse * 0.2;
+  const dashing = state.dashActiveMsLeft > 0;
   c.save();
-  c.shadowColor = PALETTE.cyan;
-  c.shadowBlur = 22 * pulse;
-  c.fillStyle = PALETTE.cyan;
+  c.shadowColor = dashing ? "#ffffff" : PALETTE.cyan;
+  c.shadowBlur = (dashing ? 36 : 22) * pulse;
+  c.fillStyle = dashing ? "#ffffff" : PALETTE.cyan;
   c.beginPath();
   c.arc(0, 0, PLAYER_RADIUS * 0.4, 0, Math.PI * 2);
   c.fill();
   c.shadowBlur = 0;
-  c.strokeStyle = "rgba(28, 240, 255, 0.9)";
-  c.lineWidth = 2;
+  c.strokeStyle = dashing ? "rgba(255, 255, 255, 1)" : "rgba(28, 240, 255, 0.9)";
+  c.lineWidth = dashing ? 3 : 2;
   c.beginPath();
   c.arc(0, 0, PLAYER_RADIUS, 0, Math.PI * 2);
   c.stroke();
@@ -557,6 +558,22 @@ export function drawPlayer(
   c.restore();
 
   drawLightsaberBlade(c, state, nowMs);
+  drawDashCooldown(c, state);
+}
+
+function drawDashCooldown(c: CanvasRenderingContext2D, state: EngineState): void {
+  if (state.dashCooldownMsLeft <= 0 && state.dashActiveMsLeft <= 0) return;
+  const total = 1400;
+  const cooldownFrac = Math.max(0, state.dashCooldownMsLeft / total);
+  const r = PLAYER_RADIUS + 5;
+  const arc = (1 - cooldownFrac) * Math.PI * 2;
+  c.save();
+  c.strokeStyle = state.dashActiveMsLeft > 0 ? "#ffffff" : "rgba(28, 240, 255, 0.4)";
+  c.lineWidth = 2;
+  c.beginPath();
+  c.arc(0, 0, r, -Math.PI / 2, -Math.PI / 2 + arc);
+  c.stroke();
+  c.restore();
 }
 
 function drawLightsaberBlade(

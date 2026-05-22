@@ -7,6 +7,9 @@ import {
   CAMERA_ZOOM_LERP_PER_SEC,
   CAMERA_ZOOM_PUNCH,
   CHARGE_THRESHOLD_MS,
+  DASH_COOLDOWN_MS,
+  DASH_DURATION_MS,
+  DASH_SPEED,
   HIT_STOP_MS_ENEMY_KILL,
   HIT_STOP_MS_PARRY,
   HIT_STOP_MS_PLAYER_HIT,
@@ -96,6 +99,11 @@ export function createEngineState(
     lastHealSpawnAtMs: nowMs,
     lastHealMilestone: 0,
     bossSpawned: false,
+    dashActiveMsLeft: 0,
+    dashCooldownMsLeft: 0,
+    dashDirX: 0,
+    dashDirY: 0,
+    dashWasPressed: false,
   };
 }
 
@@ -333,14 +341,41 @@ function updateCameraZoom(state: EngineState, dt: number): void {
   state.cameraZoom += (target - state.cameraZoom) * lerp;
 }
 
+function processDashTrigger(state: EngineState, input: PlayerInput): void {
+  state.dashActiveMsLeft = Math.max(0, state.dashActiveMsLeft);
+  state.dashCooldownMsLeft = Math.max(0, state.dashCooldownMsLeft);
+
+  const justPressed = input.dashPressed && !state.dashWasPressed;
+  state.dashWasPressed = input.dashPressed;
+  if (!justPressed) return;
+  if (state.dashActiveMsLeft > 0 || state.dashCooldownMsLeft > 0) return;
+
+  const dx = input.rawMouseX - state.playerX;
+  const dy = input.rawMouseY - state.playerY;
+  const mag = Math.hypot(dx, dy) || 1;
+  state.dashDirX = dx / mag;
+  state.dashDirY = dy / mag;
+  state.dashActiveMsLeft = DASH_DURATION_MS;
+  state.dashCooldownMsLeft = DASH_COOLDOWN_MS;
+}
+
 function updatePlayerMovement(state: EngineState, input: PlayerInput, dt: number): void {
-  const mx = (input.moveRight ? 1 : 0) - (input.moveLeft ? 1 : 0);
-  const my = (input.moveDown ? 1 : 0) - (input.moveUp ? 1 : 0);
-  if (mx !== 0 || my !== 0) {
-    const mag = Math.hypot(mx, my);
-    state.playerX += (mx / mag) * PLAYER_MOVE_SPEED * dt;
-    state.playerY += (my / mag) * PLAYER_MOVE_SPEED * dt;
+  state.dashActiveMsLeft = Math.max(0, state.dashActiveMsLeft - dt * 1000);
+  state.dashCooldownMsLeft = Math.max(0, state.dashCooldownMsLeft - dt * 1000);
+
+  if (state.dashActiveMsLeft > 0) {
+    state.playerX += state.dashDirX * DASH_SPEED * dt;
+    state.playerY += state.dashDirY * DASH_SPEED * dt;
+  } else {
+    const mx = (input.moveRight ? 1 : 0) - (input.moveLeft ? 1 : 0);
+    const my = (input.moveDown ? 1 : 0) - (input.moveUp ? 1 : 0);
+    if (mx !== 0 || my !== 0) {
+      const mag = Math.hypot(mx, my);
+      state.playerX += (mx / mag) * PLAYER_MOVE_SPEED * dt;
+      state.playerY += (my / mag) * PLAYER_MOVE_SPEED * dt;
+    }
   }
+
   const dist = Math.hypot(state.playerX, state.playerY);
   if (dist > PLAYER_MAX_DIST) {
     state.playerX *= PLAYER_MAX_DIST / dist;
@@ -367,6 +402,7 @@ export function update(ctx: UpdateContext): void {
     return;
   }
 
+  processDashTrigger(state, input);
   updatePlayerMovement(state, input, dt);
   recomputeAimAngle(state, input);
 

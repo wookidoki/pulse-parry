@@ -45,6 +45,7 @@ export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvas
     moveDown: false,
     moveLeft: false,
     moveRight: false,
+    dashPressed: false,
   });
   const rafRef = useRef<number | null>(null);
 
@@ -116,6 +117,9 @@ export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvas
       inputRef.current.rawMouseX = e.clientX - window.innerWidth / 2;
       inputRef.current.rawMouseY = e.clientY - window.innerHeight / 2;
     };
+    const isDashKey = (code: string) =>
+      code === "ShiftLeft" || code === "ShiftRight" || code === "KeyQ";
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space") {
         e.preventDefault();
@@ -126,6 +130,11 @@ export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvas
         e.preventDefault();
         togglePause();
         inputRef.current.parryHeld = false;
+        return;
+      }
+      if (isDashKey(e.code)) {
+        e.preventDefault();
+        inputRef.current.dashPressed = true;
         return;
       }
       const moveKey = MOVE_KEYS[e.code];
@@ -140,6 +149,11 @@ export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvas
         inputRef.current.parryHeld = false;
         return;
       }
+      if (isDashKey(e.code)) {
+        e.preventDefault();
+        inputRef.current.dashPressed = false;
+        return;
+      }
       const moveKey = MOVE_KEYS[e.code];
       if (moveKey) {
         e.preventDefault();
@@ -152,6 +166,7 @@ export function GameCanvas({ startStage = 0, difficulty = "normal" }: GameCanvas
       inputRef.current.moveDown = false;
       inputRef.current.moveLeft = false;
       inputRef.current.moveRight = false;
+      inputRef.current.dashPressed = false;
     };
 
     window.addEventListener("resize", resize);

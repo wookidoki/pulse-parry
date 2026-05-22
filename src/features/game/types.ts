@@ -146,6 +146,7 @@ export interface PlayerInput {
   moveDown: boolean;
   moveLeft: boolean;
   moveRight: boolean;
+  dashPressed: boolean;
 }
 
 export interface EngineState {
@@ -177,6 +178,11 @@ export interface EngineState {
   lastHealSpawnAtMs: number;
   lastHealMilestone: number;
   bossSpawned: boolean;
+  dashActiveMsLeft: number;
+  dashCooldownMsLeft: number;
+  dashDirX: number;
+  dashDirY: number;
+  dashWasPressed: boolean;
 }
 
 export interface EngineCallbacks {

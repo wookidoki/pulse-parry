@@ -90,7 +90,7 @@ export function StageSelect() {
 
       <div className={styles.hints}>
         <p>
-          <kbd>WASD</kbd> 회피 · <kbd>MOUSE</kbd> 조준 · <kbd>SPACE</kbd> 누름=막기 / 놓음=반격 · <kbd>꾹</kbd>=차지 / <kbd>딱</kbd>=PERFECT · <kbd>ESC</kbd> 일시정지
+          <kbd>WASD</kbd> 회피 · <kbd>SHIFT</kbd> 대시 · <kbd>MOUSE</kbd> 조준 · <kbd>SPACE</kbd> 막기 / 놓음=반격 · <kbd>꾹</kbd>=차지 · <kbd>딱</kbd>=PERFECT · <kbd>ESC</kbd> 일시정지
         </p>
       </div>
     </main>

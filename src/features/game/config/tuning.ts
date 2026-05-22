@@ -2,6 +2,9 @@ export const PLAYER_RADIUS = 14;
 export const HIT_RADIUS = 22;
 export const PLAYER_MAX_DIST = 180;
 export const PLAYER_MOVE_SPEED = 300;
+export const DASH_DURATION_MS = 160;
+export const DASH_COOLDOWN_MS = 1400;
+export const DASH_SPEED = 760;
 
 export const PARRY_HALF_CONE_RAD = (50 * Math.PI) / 180;
 export const PARRY_RANGE = 140;

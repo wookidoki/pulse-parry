@@ -196,8 +196,12 @@ export function updateBullets(
         emitBurst(state, b.x, b.y, BURSTS.parryCatch());
       } else if (distToPlayer <= HIT_RADIUS + radius) {
         b.state = "dead";
-        effects.damageDealt += damageOf(b.kind);
-        emitBurst(state, b.x, b.y, BURSTS.playerHit());
+        if (state.dashActiveMsLeft > 0) {
+          emitBurst(state, b.x, b.y, BURSTS.parryCatch());
+        } else {
+          effects.damageDealt += damageOf(b.kind);
+          emitBurst(state, b.x, b.y, BURSTS.playerHit());
+        }
       } else {
         const towardPlayerX = px - b.x;
         const towardPlayerY = py - b.y;
