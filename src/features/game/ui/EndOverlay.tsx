@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useHud } from "../state";
 import { recordScore } from "../progress";
 import { initialLocale, t, type Locale } from "../i18n";
 import type { Difficulty } from "../types";
+import { Button, ButtonLink } from "./Button";
 import styles from "./EndOverlay.module.css";
 
 interface RankInfo {
@@ -120,18 +120,25 @@ export function EndOverlay() {
         )}
 
         <div className={styles.actionRow}>
-          <button
-            className={styles.retryBtn}
+          <Button
+            variant={isVictory ? "primary" : "danger"}
+            size="md"
+            bracket
             onClick={() => {
               reset();
               window.location.reload();
             }}
           >
             {t("retry", locale)}
-          </button>
-          <Link href="/" className={styles.menuBtn} onClick={() => reset()}>
+          </Button>
+          <ButtonLink
+            variant="secondary"
+            size="md"
+            href="/"
+            onClick={() => reset()}
+          >
             {t("stageSelect", locale)}
-          </Link>
+          </ButtonLink>
         </div>
       </div>
     </div>

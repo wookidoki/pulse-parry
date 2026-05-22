@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useHud } from "../state";
 import { initialLocale, t, type Locale } from "../i18n";
+import { Button, ButtonLink } from "./Button";
 import styles from "./PauseOverlay.module.css";
 
 export function PauseOverlay() {
@@ -37,21 +37,22 @@ export function PauseOverlay() {
         </div>
 
         <div className={styles.actions}>
-          <button className={styles.primaryBtn} onClick={resume}>
+          <Button variant="primary" size="md" bracket onClick={resume}>
             {t("resume", locale)}
-          </button>
-          <button
-            className={styles.secondaryBtn}
+          </Button>
+          <Button
+            variant="secondary"
+            size="md"
             onClick={() => {
               reset();
               window.location.reload();
             }}
           >
             {t("restart", locale)}
-          </button>
-          <Link href="/" className={styles.secondaryBtn}>
+          </Button>
+          <ButtonLink variant="secondary" size="md" href="/">
             {t("mainMenu", locale)}
-          </Link>
+          </ButtonLink>
         </div>
 
         <p className={styles.hint}>

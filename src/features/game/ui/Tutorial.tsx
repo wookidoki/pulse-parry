@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { initialLocale, t, type Locale, type I18nKey } from "../i18n";
 import { MenuBackground } from "./MenuBackground";
+import { Button, ButtonLink } from "./Button";
 import styles from "./Tutorial.module.css";
 
 interface StepDef {
@@ -39,9 +39,9 @@ export function Tutorial() {
       <main className={styles.page}>
         <header className={styles.topBar}>
           <h1 className={styles.title}>{t("tutTitle", locale)}</h1>
-          <Link href="/" className={styles.skipBtn}>
+          <ButtonLink variant="ghost" size="sm" href="/">
             {t("tutSkip", locale)}
-          </Link>
+          </ButtonLink>
         </header>
 
         <div className={styles.progressRow}>
@@ -73,24 +73,27 @@ export function Tutorial() {
         </section>
 
         <div className={styles.actions}>
-          <button
-            className={styles.navBtn}
+          <Button
+            variant="secondary"
+            size="md"
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={isFirst}
           >
             {t("tutPrev", locale)}
-          </button>
+          </Button>
           {isLast ? (
-            <Link href="/" className={styles.finishBtn}>
+            <ButtonLink variant="primary" size="md" bracket href="/">
               {t("tutFinish", locale)}
-            </Link>
+            </ButtonLink>
           ) : (
-            <button
-              className={styles.nextBtn}
+            <Button
+              variant="primary"
+              size="md"
+              bracket
               onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
             >
               {t("tutNext", locale)}
-            </button>
+            </Button>
           )}
         </div>
       </main>
