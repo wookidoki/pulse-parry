@@ -180,6 +180,34 @@ export function playEnemyShootHeavy() {
   playSample("laserHeavy", { gain: 0.55, pitch: PITCH_VAR() });
 }
 
+// ───────── Race-specific shoot variants ─────────
+export function playOmnicShoot() {
+  playSample("laserSmall", { gain: 0.42, pitch: 0.95 + Math.random() * 0.15 });
+  envOsc(880, 660, 0.04, "square", 0.04);
+}
+
+export function playVirusShoot() {
+  playSample("laserSmall", { gain: 0.35, pitch: 1.3 + Math.random() * 0.2 });
+  noiseBurst(0.05, 0.08, 4200);
+  envOsc(1320, 880, 0.05, "sawtooth", 0.05);
+}
+
+export function playDroneShoot() {
+  playSample("laserSmall", { gain: 0.4, pitch: 0.75 + Math.random() * 0.1 });
+  envOsc(420, 220, 0.08, "sawtooth", 0.07);
+}
+
+export function playDroneShootHeavy() {
+  playSample("laserHeavy", { gain: 0.58, pitch: 0.85 + Math.random() * 0.12 });
+  envOsc(180, 60, 0.18, "sine", 0.12);
+}
+
+export function playBossShoot() {
+  playSample("laserHeavy", { gain: 0.65, pitch: 0.65 + Math.random() * 0.1 });
+  playSample("explodeDeep", { gain: 0.25, pitch: 0.95, delayMs: 20 });
+  envOsc(140, 80, 0.2, "sawtooth", 0.14);
+}
+
 export function playEnemyDie() {
   playSample("explode", { gain: 0.6, pitch: PITCH_VAR() });
   playSample("explodeDeep", { gain: 0.5, pitch: 0.9 + Math.random() * 0.2, delayMs: 30 });

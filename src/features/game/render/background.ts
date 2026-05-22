@@ -14,26 +14,97 @@ export function drawBackground(
 ): void {
   const stage = currentStage(state.stageIndex);
   const pulseEnv = state.bgPulse;
+  const bossActive = state.bossSpawned;
+  const bossPhase = state.bossPhase;
 
   c.fillStyle = PALETTE.bg;
   c.fillRect(0, 0, w, h);
 
   const cx = w / 2;
   const cy = h / 2;
+
+  // Phase-aware inner/outer colors during boss
+  let innerColor = stage.bgInner;
+  let outerColor = stage.bgOuter;
+  if (bossActive) {
+    if (bossPhase === 1) {
+      innerColor = "rgba(255, 56, 99, 0.20)";
+      outerColor = "rgba(255, 56, 99, 0.10)";
+    } else if (bossPhase >= 2) {
+      const flicker = 0.5 + Math.sin(nowMs / 90) * 0.3;
+      innerColor = `rgba(255, 56, 99, ${0.32 * flicker})`;
+      outerColor = `rgba(255, 56, 99, 0.18)`;
+    }
+  }
+
   const radial = c.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.7);
-  radial.addColorStop(0, stage.bgInner);
-  radial.addColorStop(0.5, stage.bgOuter);
+  radial.addColorStop(0, innerColor);
+  radial.addColorStop(0.5, outerColor);
   radial.addColorStop(1, "rgba(5, 3, 10, 0)");
   c.globalAlpha = 0.6 + pulseEnv * 0.4;
   c.fillStyle = radial;
   c.fillRect(0, 0, w, h);
   c.globalAlpha = 1;
 
-  drawRhythmStreaks(c, w, h, nowMs, state.beat.beatPhase, state.stageIndex);
+  // BPM-aware streak intensity
+  const bpmIntensity = Math.max(0.6, Math.min(1.6, state.beat.bpm / 120));
+  drawRhythmStreaks(c, w, h, nowMs, state.beat.beatPhase, state.stageIndex, bpmIntensity);
   drawDriftingGrid(c, w, h, nowMs);
   drawCityscape(c, w, h, nowMs, state.stageIndex);
   drawParallaxRadialLines(c, cx, cy, nowMs, state.stageIndex, pulseEnv);
   drawBeatRing(c, cx, cy, state.beat.beatPhase);
+
+  // Boss-only effects
+  if (bossActive && bossPhase >= 1) {
+    drawBossVignette(c, w, h, bossPhase, nowMs);
+  }
+  if (bossActive && bossPhase >= 2) {
+    drawGlitchLines(c, w, h, nowMs);
+  }
+}
+
+function drawBossVignette(
+  c: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  phase: number,
+  nowMs: number,
+): void {
+  const cx = w / 2;
+  const cy = h / 2;
+  const pulse = 0.55 + Math.sin(nowMs / (phase >= 2 ? 110 : 220)) * 0.45;
+  const intensity = phase >= 2 ? 0.55 * pulse : 0.32 * pulse;
+  const grad = c.createRadialGradient(
+    cx,
+    cy,
+    Math.min(w, h) * 0.2,
+    cx,
+    cy,
+    Math.max(w, h) * 0.7,
+  );
+  grad.addColorStop(0, "rgba(255, 56, 99, 0)");
+  grad.addColorStop(1, `rgba(255, 56, 99, ${intensity})`);
+  c.fillStyle = grad;
+  c.fillRect(0, 0, w, h);
+}
+
+function drawGlitchLines(
+  c: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  nowMs: number,
+): void {
+  const seed = Math.floor(nowMs / 180);
+  const lineCount = 3 + (seed % 3);
+  c.save();
+  for (let i = 0; i < lineCount; i++) {
+    const offset = ((seed * (i + 1) * 9301) % 233280) / 233280;
+    const y = offset * h;
+    const lineH = 2 + (offset * 6);
+    c.fillStyle = `rgba(255, 56, 99, ${0.18 + offset * 0.2})`;
+    c.fillRect(0, y, w, lineH);
+  }
+  c.restore();
 }
 
 function drawRhythmStreaks(
@@ -43,9 +114,10 @@ function drawRhythmStreaks(
   nowMs: number,
   beatPhase: number,
   stageIndex: number,
+  bpmIntensity: number = 1,
 ): void {
-  const streakCount = 12 + stageIndex * 3;
-  const baseSpeed = 0.18 + stageIndex * 0.04;
+  const streakCount = Math.round((12 + stageIndex * 3) * bpmIntensity);
+  const baseSpeed = (0.18 + stageIndex * 0.04) * bpmIntensity;
   const beatBoost = (1 - beatPhase) * 0.5;
   c.save();
   c.lineCap = "round";

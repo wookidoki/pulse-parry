@@ -280,8 +280,17 @@ function processEnemyShots(
     if (!enemy) continue;
     const bullet = createBullet(state, enemy, nowMs, s.angleOffset);
     state.bullets.push(bullet);
-    if (bullet.kind === "heavy") sfx.playEnemyShootHeavy();
-    else sfx.playEnemyShoot();
+    const race = KIND_RACE[enemy.kind];
+    if (race === "core") {
+      sfx.playBossShoot();
+    } else if (race === "drone") {
+      if (bullet.kind === "heavy") sfx.playDroneShootHeavy();
+      else sfx.playDroneShoot();
+    } else if (race === "virus") {
+      sfx.playVirusShoot();
+    } else {
+      sfx.playOmnicShoot();
+    }
   }
 }
 
