@@ -26,7 +26,7 @@ export const STAGES: StageConfig[] = [
   {
     index: 0,
     name: "INFILTRATION",
-    tagline: "옴닉 보초들이 깨어난다. 박자에 맞춰 쳐내라.",
+    tagline: "옴닉 보초 + 스나이퍼. 4박 텔레그래프 무거운 일격 주의.",
     durationMs: 60000,
     tempoMap: [
       { t: 0, bpm: 118 },
@@ -35,7 +35,7 @@ export const STAGES: StageConfig[] = [
       { t: 1, bpm: 122 },
     ],
     maxEnemies: 2,
-    enemyKinds: ["shooter"],
+    enemyKinds: ["shooter", "sniper"],
     spawnEveryBeats: 10,
     bgInner: "rgba(28, 240, 255, 0.10)",
     bgOuter: "rgba(255, 43, 214, 0.05)",
@@ -46,7 +46,7 @@ export const STAGES: StageConfig[] = [
   {
     index: 1,
     name: "FACTORY",
-    tagline: "바이러스 군체가 합류한다. 점사 3연발 주의.",
+    tagline: "바이러스 점사 + 옴닉 스프레더. 산개탄 코운으로 정리.",
     durationMs: 75000,
     tempoMap: [
       { t: 0, bpm: 128 },
@@ -54,7 +54,7 @@ export const STAGES: StageConfig[] = [
       { t: 1, bpm: 130 },
     ],
     maxEnemies: 3,
-    enemyKinds: ["shooter", "burster"],
+    enemyKinds: ["shooter", "burster", "spreader"],
     spawnEveryBeats: 7,
     bgInner: "rgba(247, 255, 58, 0.10)",
     bgOuter: "rgba(177, 75, 255, 0.06)",
@@ -65,7 +65,7 @@ export const STAGES: StageConfig[] = [
   {
     index: 2,
     name: "OVERDRIVE",
-    tagline: "보안 드론 출격. 무거운 일격 — 차지 패링으로 받아쳐라.",
+    tagline: "드론 + 바이러스 스파이럴러. 회전탄막에 휘말리지 마라.",
     durationMs: 90000,
     tempoMap: [
       { t: 0, bpm: 150 },
@@ -74,7 +74,7 @@ export const STAGES: StageConfig[] = [
       { t: 1, bpm: 156 },
     ],
     maxEnemies: 4,
-    enemyKinds: ["shooter", "burster", "charger"],
+    enemyKinds: ["spreader", "burster", "charger", "spiraler"],
     spawnEveryBeats: 6,
     bgInner: "rgba(255, 56, 99, 0.14)",
     bgOuter: "rgba(177, 75, 255, 0.07)",
@@ -85,7 +85,7 @@ export const STAGES: StageConfig[] = [
   {
     index: 3,
     name: "CHAOS",
-    tagline: "옴닉도 바이러스도 드론도 함께. 신호가 일그러진다.",
+    tagline: "팬텀이 4박마다 순간이동. 박격포가 무게로 짓누른다.",
     durationMs: 105000,
     tempoMap: [
       { t: 0, bpm: 172 },
@@ -94,7 +94,7 @@ export const STAGES: StageConfig[] = [
       { t: 1, bpm: 176 },
     ],
     maxEnemies: 4,
-    enemyKinds: ["shooter", "burster", "charger"],
+    enemyKinds: ["spiraler", "phantom", "mortar", "spreader"],
     spawnEveryBeats: 5,
     bgInner: "rgba(177, 75, 255, 0.18)",
     bgOuter: "rgba(28, 240, 255, 0.08)",

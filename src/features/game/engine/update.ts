@@ -223,7 +223,7 @@ function processEnemyShots(
   for (const s of shots) {
     const enemy = enemyById.get(s.enemyId);
     if (!enemy) continue;
-    state.bullets.push(createBullet(state, enemy, nowMs));
+    state.bullets.push(createBullet(state, enemy, nowMs, s.angleOffset));
     sfx.playEnemyShoot();
   }
 }
@@ -386,6 +386,9 @@ export function update(ctx: UpdateContext): void {
 
   const enemyResult = updateEnemies(state, dt, nowMs, canvasW, canvasH);
   processEnemyShots(state, enemyResult.shotsFired, nowMs);
+  for (const tp of enemyResult.teleported) {
+    emitBurst(state, tp.oldX, tp.oldY, BURSTS.parryCatch());
+  }
 
   const bulletEffects = updateBullets(state, dt, canvasW, canvasH, nowMs);
   for (let i = 0; i < bulletEffects.parriedCount; i++) sfx.playParryHit();

@@ -1,4 +1,13 @@
-export type EnemyKind = "shooter" | "burster" | "charger" | "boss";
+export type EnemyKind =
+  | "shooter"
+  | "burster"
+  | "charger"
+  | "boss"
+  | "sniper"
+  | "spreader"
+  | "spiraler"
+  | "phantom"
+  | "mortar";
 export type EnemyRace = "omnic" | "virus" | "drone" | "core";
 export type EnemyState = "spawning" | "alive" | "dying" | "dead";
 
@@ -7,6 +16,23 @@ export const KIND_RACE: Record<EnemyKind, EnemyRace> = {
   burster: "virus",
   charger: "drone",
   boss: "core",
+  sniper: "omnic",
+  spreader: "omnic",
+  spiraler: "virus",
+  phantom: "omnic",
+  mortar: "drone",
+};
+
+export const KIND_LABEL: Record<EnemyKind, string> = {
+  shooter: "OMNIC",
+  burster: "VIRUS",
+  charger: "DRONE",
+  boss: "THE CORE",
+  sniper: "OMNIC.SNIPER",
+  spreader: "OMNIC.SPREADER",
+  spiraler: "VIRUS.SPIRALER",
+  phantom: "OMNIC.PHANTOM",
+  mortar: "DRONE.MORTAR",
 };
 
 export const RACE_LABEL: Record<EnemyRace, string> = {

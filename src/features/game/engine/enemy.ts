@@ -1,6 +1,6 @@
 import type { Enemy, EngineState, EnemyKind } from "../types";
 import type { StageConfig } from "../config/stages";
-import { ENEMY_KINDS } from "../config/enemy-kinds";
+import { ENEMY_KINDS, type EnemyKindConfig } from "../config/enemy-kinds";
 import { DIFFICULTIES } from "../config/difficulty";
 import {
   ENEMY_ORBIT_DRIFT_RAD_PER_SEC,
@@ -11,6 +11,10 @@ import {
   TELEGRAPH_MS,
 } from "../config/tuning";
 import { normalizeAngle } from "./geometry";
+
+const PHANTOM_TELEPORT_BEATS = 4;
+const SPREAD_TOTAL_RAD = 0.42;
+const SPIRAL_STEP_RAD = 0.22;
 
 function orbitRadius(canvasW: number, canvasH: number): number {
   const min = Math.min(canvasW, canvasH);
@@ -39,6 +43,37 @@ function pickSpawnAngle(state: EngineState): number {
 function pickEnemyKind(stage: StageConfig): EnemyKind {
   const list = stage.enemyKinds;
   return list[Math.floor(Math.random() * list.length)];
+}
+
+export function getEffectiveConfig(enemy: Enemy): EnemyKindConfig {
+  if (enemy.kind !== "boss") return ENEMY_KINDS[enemy.kind];
+  const base = ENEMY_KINDS.boss;
+  const hpFrac = enemy.hp / enemy.maxHp;
+  if (hpFrac <= 0.33) {
+    return { ...base, beatsPerShot: 1, burstShots: 4, burstIntervalBeatFraction: 0.18 };
+  }
+  if (hpFrac <= 0.66) {
+    return { ...base, beatsPerShot: 1, burstShots: 3, burstIntervalBeatFraction: 0.06 };
+  }
+  return base;
+}
+
+function angleOffsetForShot(
+  kind: EnemyKind,
+  shotIndex: number,
+  totalShots: number,
+): number {
+  if (totalShots <= 1) return 0;
+  if (kind === "spreader") {
+    return -SPREAD_TOTAL_RAD / 2 + (shotIndex / (totalShots - 1)) * SPREAD_TOTAL_RAD;
+  }
+  if (kind === "spiraler") {
+    return (shotIndex - (totalShots - 1) / 2) * SPIRAL_STEP_RAD;
+  }
+  if (kind === "boss") {
+    return (shotIndex - (totalShots - 1) / 2) * 0.18;
+  }
+  return 0;
 }
 
 export function createEnemy(
@@ -98,10 +133,12 @@ export interface EnemyShot {
   enemyId: number;
   x: number;
   y: number;
+  angleOffset: number;
 }
 
 export interface EnemyTickResult {
   shotsFired: EnemyShot[];
+  teleported: { enemyId: number; oldX: number; oldY: number }[];
 }
 
 function tryFireMainShot(
@@ -117,13 +154,20 @@ function tryFireMainShot(
 
   enemy.telegraphMsLeft = 0;
   enemy.pulse = 1;
-  result.shotsFired.push({ enemyId: enemy.id, x: enemy.x, y: enemy.y });
 
-  const config = ENEMY_KINDS[enemy.kind];
-  if (config.burstShots > 1) {
-    enemy.burstShotsRemaining = config.burstShots - 1;
-    enemy.burstNextShotAtMs =
-      nowMs + config.burstIntervalBeatFraction * beatPeriodMs;
+  const config = getEffectiveConfig(enemy);
+  const totalShots = Math.max(1, config.burstShots);
+  const angleOffset = angleOffsetForShot(enemy.kind, 0, totalShots);
+  result.shotsFired.push({
+    enemyId: enemy.id,
+    x: enemy.x,
+    y: enemy.y,
+    angleOffset,
+  });
+
+  if (totalShots > 1) {
+    enemy.burstShotsRemaining = totalShots - 1;
+    enemy.burstNextShotAtMs = nowMs + config.burstIntervalBeatFraction * beatPeriodMs;
   }
   return true;
 }
@@ -138,12 +182,19 @@ function tryFireBurstShot(
   if (nowMs < enemy.burstNextShotAtMs) return true;
 
   enemy.pulse = 1;
-  result.shotsFired.push({ enemyId: enemy.id, x: enemy.x, y: enemy.y });
+  const config = getEffectiveConfig(enemy);
+  const totalShots = Math.max(1, config.burstShots);
+  const shotIndex = totalShots - enemy.burstShotsRemaining;
+  const angleOffset = angleOffsetForShot(enemy.kind, shotIndex, totalShots);
+  result.shotsFired.push({
+    enemyId: enemy.id,
+    x: enemy.x,
+    y: enemy.y,
+    angleOffset,
+  });
   enemy.burstShotsRemaining -= 1;
   if (enemy.burstShotsRemaining > 0) {
-    const config = ENEMY_KINDS[enemy.kind];
-    enemy.burstNextShotAtMs =
-      nowMs + config.burstIntervalBeatFraction * beatPeriodMs;
+    enemy.burstNextShotAtMs = nowMs + config.burstIntervalBeatFraction * beatPeriodMs;
   }
   return true;
 }
@@ -151,12 +202,30 @@ function tryFireBurstShot(
 function maybeStartTelegraph(enemy: Enemy, state: EngineState): void {
   const fireEvent = state.beat.isBeatTick || state.audioKickThisFrame;
   if (!fireEvent) return;
-  const config = ENEMY_KINDS[enemy.kind];
+  const config = getEffectiveConfig(enemy);
   if (state.beat.currentBeat - enemy.lastShotBeat < config.beatsPerShot) return;
   const baseTelegraph = Math.min(TELEGRAPH_MS, state.beat.beatPeriodMs * 0.55);
   const offsetMs = enemy.beatOffsetFraction * state.beat.beatPeriodMs;
   enemy.telegraphMsLeft = baseTelegraph + offsetMs;
   enemy.lastShotBeat = state.beat.currentBeat;
+}
+
+function maybeTeleportPhantom(
+  enemy: Enemy,
+  state: EngineState,
+  canvasW: number,
+  canvasH: number,
+  result: EnemyTickResult,
+): void {
+  if (enemy.kind !== "phantom") return;
+  if (!state.beat.isBeatTick) return;
+  if (state.beat.currentBeat % PHANTOM_TELEPORT_BEATS !== 0) return;
+  result.teleported.push({ enemyId: enemy.id, oldX: enemy.x, oldY: enemy.y });
+  enemy.orbitAngle = pickSpawnAngle(state);
+  const r = orbitRadius(canvasW, canvasH);
+  enemy.x = Math.cos(enemy.orbitAngle) * r;
+  enemy.y = Math.sin(enemy.orbitAngle) * r;
+  enemy.pulse = 1;
 }
 
 export function updateEnemies(
@@ -166,8 +235,9 @@ export function updateEnemies(
   canvasW: number,
   canvasH: number,
 ): EnemyTickResult {
-  const result: EnemyTickResult = { shotsFired: [] };
+  const result: EnemyTickResult = { shotsFired: [], teleported: [] };
   const r = orbitRadius(canvasW, canvasH);
+  const bossRadius = r * 1.1;
 
   for (const e of state.enemies) {
     if (e.state === "dead") continue;
@@ -182,8 +252,9 @@ export function updateEnemies(
     }
 
     e.orbitAngle += ENEMY_ORBIT_DRIFT_RAD_PER_SEC * dt;
-    e.x = Math.cos(e.orbitAngle) * r;
-    e.y = Math.sin(e.orbitAngle) * r;
+    const orbR = e.kind === "boss" ? bossRadius : r;
+    e.x = Math.cos(e.orbitAngle) * orbR;
+    e.y = Math.sin(e.orbitAngle) * orbR;
     e.pulse = Math.max(0, e.pulse - dt * 3);
     const decay = Math.max(0, 1 - dt * KNOCKBACK_DECAY_PER_SEC);
     e.knockbackX *= decay;
@@ -191,6 +262,8 @@ export function updateEnemies(
     e.hitFlashMsLeft = Math.max(0, e.hitFlashMsLeft - dt * 1000);
 
     if (e.state !== "alive") continue;
+
+    maybeTeleportPhantom(e, state, canvasW, canvasH, result);
 
     if (tryFireMainShot(e, nowMs, dt, state.beat.beatPeriodMs, result)) continue;
     if (tryFireBurstShot(e, nowMs, state.beat.beatPeriodMs, result)) continue;

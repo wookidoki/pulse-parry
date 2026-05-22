@@ -23,6 +23,7 @@ export function createBullet(
   state: EngineState,
   enemy: Enemy,
   nowMs: number,
+  angleOffset: number = 0,
 ): Bullet {
   const enemyConfig = ENEMY_KINDS[enemy.kind];
   const diffConfig = DIFFICULTIES[state.difficulty];
@@ -33,7 +34,10 @@ export function createBullet(
   const flightBeats = enemyConfig.flightBeats * diffConfig.flightBeatsMul;
   const flightMs = flightBeats * state.beat.beatPeriodMs;
   const speed = distance / Math.max(0.05, flightMs / 1000);
-  const { ux, uy } = unitVector(dx, dy);
+  const baseAngle = Math.atan2(dy, dx);
+  const finalAngle = baseAngle + angleOffset;
+  const ux = Math.cos(finalAngle);
+  const uy = Math.sin(finalAngle);
   return {
     id: state.nextBulletId++,
     x: enemy.x,
