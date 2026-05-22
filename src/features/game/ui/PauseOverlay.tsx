@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useHud } from "../state";
+import { initialLocale, t, type Locale } from "../i18n";
 import styles from "./PauseOverlay.module.css";
 
 export function PauseOverlay() {
+  const [locale] = useState<Locale>(initialLocale);
+
   const status = useHud((s) => s.status);
   const resume = useHud((s) => s.resume);
   const reset = useHud((s) => s.reset);
@@ -16,10 +20,10 @@ export function PauseOverlay() {
   return (
     <div className={styles.overlay}>
       <div className={styles.panel}>
-        <h2 className={styles.title}>PAUSED</h2>
+        <h2 className={styles.title}>{t("paused", locale)}</h2>
 
         <div className={styles.volumeRow}>
-          <label className={styles.volumeLabel}>VOLUME</label>
+          <label className={styles.volumeLabel}>{t("volume", locale)}</label>
           <input
             className={styles.slider}
             type="range"
@@ -34,7 +38,7 @@ export function PauseOverlay() {
 
         <div className={styles.actions}>
           <button className={styles.primaryBtn} onClick={resume}>
-            ▶ RESUME
+            {t("resume", locale)}
           </button>
           <button
             className={styles.secondaryBtn}
@@ -43,15 +47,15 @@ export function PauseOverlay() {
               window.location.reload();
             }}
           >
-            ↻ RESTART
+            {t("restart", locale)}
           </button>
           <Link href="/" className={styles.secondaryBtn}>
-            ⌂ MAIN MENU
+            {t("mainMenu", locale)}
           </Link>
         </div>
 
         <p className={styles.hint}>
-          <kbd>ESC</kbd> 다시 누르면 재개
+          <kbd>ESC</kbd>
         </p>
       </div>
     </div>

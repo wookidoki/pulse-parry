@@ -24,6 +24,13 @@ export const I18N_STRINGS = {
     volume: "VOLUME",
     bpmHint: "BPM",
     bossLabel: "THE CORE",
+    tutorial: "▶ 튜토리얼",
+    tutorialAvail: "처음이라면 튜토리얼부터",
+    chooseDiff: "난이도 선택",
+    chooseChar: "캐릭터 선택",
+    chooseMod: "모디파이어",
+    chooseStage: "스테이지 선택",
+    backToSelect: "← 선택",
     controlHint:
       "WASD 회피 · SHIFT 대시 · MOUSE 조준 · SPACE 막기 / 놓음=반격 · 꾹=차지 · 딱=PERFECT · ESC 일시정지",
   },
@@ -50,6 +57,13 @@ export const I18N_STRINGS = {
     volume: "VOLUME",
     bpmHint: "BPM",
     bossLabel: "THE CORE",
+    tutorial: "▶ TUTORIAL",
+    tutorialAvail: "Start here if new",
+    chooseDiff: "DIFFICULTY",
+    chooseChar: "CHARACTER",
+    chooseMod: "MODIFIER",
+    chooseStage: "STAGE",
+    backToSelect: "← BACK",
     controlHint:
       "WASD move · SHIFT dash · MOUSE aim · SPACE parry / release=reflect · HOLD=charge · QUICK=PERFECT · ESC pause",
   },
@@ -81,4 +95,9 @@ export function saveLocale(l: Locale): void {
 
 export function t(key: I18nKey, locale: Locale): string {
   return I18N_STRINGS[locale][key];
+}
+
+export function initialLocale(): Locale {
+  if (typeof window === "undefined") return "ko";
+  return loadLocale();
 }

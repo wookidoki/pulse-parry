@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useHud } from "../state";
 import { recordScore } from "../progress";
+import { initialLocale, t, type Locale } from "../i18n";
 import styles from "./EndOverlay.module.css";
 
 export function EndOverlay() {
+  const [locale] = useState<Locale>(initialLocale);
+
   const status = useHud((s) => s.status);
   const score = useHud((s) => s.score);
   const maxCombo = useHud((s) => s.maxCombo);
@@ -25,11 +28,15 @@ export function EndOverlay() {
   return (
     <div className={`${styles.overlay} ${isVictory ? styles.victory : styles.gameover}`}>
       <h2 className={isVictory ? styles.titleVictory : styles.titleGameover}>
-        {isVictory ? "SYNC COMPLETE" : "SYSTEM DOWN"}
+        {isVictory ? t("syncComplete", locale) : t("systemDown", locale)}
       </h2>
       <div className={styles.stats}>
-        <div>SCORE <span>{score.toString().padStart(6, "0")}</span></div>
-        <div>MAX COMBO <span>×{maxCombo}</span></div>
+        <div>
+          {t("score", locale)} <span>{score.toString().padStart(6, "0")}</span>
+        </div>
+        <div>
+          {t("maxCombo", locale)} <span>×{maxCombo}</span>
+        </div>
       </div>
       <div className={styles.actionRow}>
         <button
@@ -39,10 +46,10 @@ export function EndOverlay() {
             window.location.reload();
           }}
         >
-          ▶ RETRY
+          {t("retry", locale)}
         </button>
         <Link href="/" className={styles.menuBtn} onClick={() => reset()}>
-          ⌂ STAGE SELECT
+          {t("stageSelect", locale)}
         </Link>
       </div>
     </div>
