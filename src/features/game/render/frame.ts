@@ -51,9 +51,13 @@ export function render(
   const shakeX = (Math.random() - 0.5) * state.shake;
   const shakeY = (Math.random() - 0.5) * state.shake;
 
+  const beatPulse = Math.exp(-state.beat.beatPhase * 5);
+  const beatZoom = 1 + beatPulse * 0.022;
+  const effectiveZoom = state.cameraZoom * beatZoom;
+
   c.save();
   c.translate(cx + shakeX, cy + shakeY);
-  c.scale(state.cameraZoom, state.cameraZoom);
+  c.scale(effectiveZoom, effectiveZoom);
 
   drawMovementRing(c, nowMs);
   drawHazards(c, state, w, h, nowMs);

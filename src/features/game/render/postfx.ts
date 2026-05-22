@@ -17,14 +17,14 @@ export function drawVignette(
   h: number,
 ): void {
   const level = comboLevel(combo);
-  const baseStrength = 0.32 + level * 0.05;
-  const pulseStrength = state.bgPulse * (0.08 + level * 0.05);
-  const totalStrength = Math.min(0.7, baseStrength + pulseStrength);
+  const baseStrength = 0.22 + level * 0.025;
+  const pulseStrength = state.bgPulse * (0.04 + level * 0.02);
+  const totalStrength = Math.min(0.4, baseStrength + pulseStrength);
 
   const cx = w / 2;
   const cy = h / 2;
-  const innerR = Math.min(w, h) * 0.28;
-  const outerR = Math.max(w, h) * 0.78;
+  const innerR = Math.min(w, h) * 0.34;
+  const outerR = Math.max(w, h) * 0.85;
   const grad = c.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
   grad.addColorStop(0, "rgba(5, 3, 10, 0)");
   grad.addColorStop(1, `rgba(5, 3, 10, ${totalStrength})`);
@@ -44,16 +44,16 @@ export function drawComboFlowEdges(
   if (level <= 0) return;
 
   const palette: Record<number, string> = {
-    1: "rgba(28, 240, 255, 0.18)",
-    2: "rgba(247, 255, 58, 0.22)",
-    3: "rgba(255, 43, 214, 0.26)",
-    4: "rgba(255, 56, 99, 0.32)",
-    5: "rgba(255, 56, 99, 0.40)",
+    1: "rgba(28, 240, 255, 0.08)",
+    2: "rgba(247, 255, 58, 0.10)",
+    3: "rgba(255, 43, 214, 0.12)",
+    4: "rgba(255, 56, 99, 0.14)",
+    5: "rgba(255, 56, 99, 0.18)",
   };
   const color = palette[level] ?? palette[5];
-  const pulse = 0.55 + Math.sin(nowMs / 220 + state.bgPulse * 4) * 0.45;
-  const intensity = pulse * (0.4 + level * 0.18);
-  const thickness = 80 + level * 30 + state.bgPulse * 40;
+  const pulse = 0.6 + Math.sin(nowMs / 320 + state.bgPulse * 2) * 0.2;
+  const intensity = pulse * (0.32 + level * 0.08);
+  const thickness = 40 + level * 14 + state.bgPulse * 18;
 
   const grad = c.createLinearGradient(0, 0, 0, thickness);
   grad.addColorStop(0, color);
