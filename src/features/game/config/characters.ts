@@ -2,6 +2,8 @@ import { PALETTE } from "./palette";
 
 export type CharacterId = "ninja" | "monk" | "netrunner";
 
+export type BladeShape = "katana" | "staff" | "razor";
+
 export interface CharacterStats {
   id: CharacterId;
   name: { ko: string; en: string };
@@ -19,6 +21,7 @@ export interface CharacterStats {
   bladeLengthIdle: number;
   bladeLengthParry: number;
   reflectDamageMul: number;
+  bladeShape: BladeShape;
 }
 
 export const CHARACTERS: Record<CharacterId, CharacterStats> = {
@@ -39,6 +42,7 @@ export const CHARACTERS: Record<CharacterId, CharacterStats> = {
     bladeLengthIdle: 38,
     bladeLengthParry: 64,
     reflectDamageMul: 1.0,
+    bladeShape: "katana",
   },
   monk: {
     id: "monk",
@@ -57,6 +61,7 @@ export const CHARACTERS: Record<CharacterId, CharacterStats> = {
     bladeLengthIdle: 30,
     bladeLengthParry: 52,
     reflectDamageMul: 0.85,
+    bladeShape: "staff",
   },
   netrunner: {
     id: "netrunner",
@@ -75,6 +80,7 @@ export const CHARACTERS: Record<CharacterId, CharacterStats> = {
     bladeLengthIdle: 46,
     bladeLengthParry: 78,
     reflectDamageMul: 1.4,
+    bladeShape: "razor",
   },
 };
 

@@ -135,7 +135,7 @@ export interface BulletTickEffects {
   parriedCount: number;
   perfectCount: number;
   reflectHits: { x: number; y: number }[];
-  enemyKills: { x: number; y: number }[];
+  enemyKills: { x: number; y: number; kind: import("../types").EnemyKind }[];
   nearMisses: number;
   healCaught: number;
 }
@@ -264,7 +264,7 @@ export function updateBullets(
         spawnScorePop(state, e.x, e.y - 6, `+${SCORE_REFLECT_HIT}`, PALETTE.cyan, 0.8);
         if (e.hp <= 0) {
           killEnemy(e, nowMs);
-          effects.enemyKills.push({ x: e.x, y: e.y });
+          effects.enemyKills.push({ x: e.x, y: e.y, kind: e.kind });
           emitBurst(state, e.x, e.y, BURSTS.enemyDie());
           spawnScorePop(state, e.x, e.y, `+${SCORE_ENEMY_KILL}`, PALETTE.yellow, 1.2);
         }

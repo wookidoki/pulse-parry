@@ -707,7 +707,7 @@ function drawLightsaberBlade(
     );
   }
 
-  drawBladeAt(c, swingAngle, length, char.bladeColor, state.parryHeld || swingActive, nowMs);
+  drawBladeAt(c, swingAngle, length, char.bladeColor, state.parryHeld || swingActive, nowMs, char.bladeShape);
 }
 
 function lerpAngle(a: number, b: number, t: number): number {
@@ -715,6 +715,20 @@ function lerpAngle(a: number, b: number, t: number): number {
 }
 
 function drawBladeAt(
+  c: CanvasRenderingContext2D,
+  angle: number,
+  length: number,
+  bladeColor: string,
+  intense: boolean,
+  nowMs: number,
+  shape: "katana" | "staff" | "razor" = "katana",
+): void {
+  if (shape === "staff") drawStaffBlade(c, angle, length, bladeColor, intense, nowMs);
+  else if (shape === "razor") drawRazorBlade(c, angle, length, bladeColor, intense, nowMs);
+  else drawKatanaBlade(c, angle, length, bladeColor, intense, nowMs);
+}
+
+function drawKatanaBlade(
   c: CanvasRenderingContext2D,
   angle: number,
   length: number,
@@ -754,6 +768,136 @@ function drawBladeAt(
     c.shadowBlur = 16;
     c.beginPath();
     c.arc(tipX, tipY, 4, 0, Math.PI * 2);
+    c.fill();
+  }
+  c.restore();
+}
+
+function drawStaffBlade(
+  c: CanvasRenderingContext2D,
+  angle: number,
+  length: number,
+  bladeColor: string,
+  intense: boolean,
+  nowMs: number,
+): void {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const perpCos = -sin;
+  const perpSin = cos;
+  const innerX = cos * BLADE_INNER_OFFSET;
+  const innerY = sin * BLADE_INNER_OFFSET;
+  const tipX = cos * (BLADE_INNER_OFFSET + length);
+  const tipY = sin * (BLADE_INNER_OFFSET + length);
+
+  c.save();
+  c.lineCap = "round";
+  c.shadowColor = intense ? PALETTE.yellow : bladeColor;
+  c.shadowBlur = intense ? 30 : 22;
+  c.strokeStyle = intense ? PALETTE.yellow : bladeColor;
+  c.lineWidth = intense ? 12 : 9;
+  c.beginPath();
+  c.moveTo(innerX, innerY);
+  c.lineTo(tipX, tipY);
+  c.stroke();
+
+  // Crossguard near hilt (perpendicular bar)
+  const cgX = innerX + cos * length * 0.18;
+  const cgY = innerY + sin * length * 0.18;
+  const cgLen = intense ? 14 : 11;
+  c.shadowBlur = intense ? 16 : 10;
+  c.strokeStyle = intense ? PALETTE.yellow : bladeColor;
+  c.lineWidth = intense ? 5 : 3.5;
+  c.beginPath();
+  c.moveTo(cgX - perpCos * cgLen, cgY - perpSin * cgLen);
+  c.lineTo(cgX + perpCos * cgLen, cgY + perpSin * cgLen);
+  c.stroke();
+
+  // Inner white core
+  c.shadowBlur = 0;
+  c.strokeStyle = "rgba(255, 255, 255, 0.95)";
+  c.lineWidth = intense ? 4 : 3;
+  c.beginPath();
+  c.moveTo(innerX, innerY);
+  c.lineTo(tipX, tipY);
+  c.stroke();
+
+  // Spherical tip
+  c.shadowColor = bladeColor;
+  c.shadowBlur = intense ? 20 : 12;
+  c.fillStyle = "#ffffff";
+  c.beginPath();
+  c.arc(tipX, tipY, intense ? 7 + Math.sin(nowMs / 80) : 5, 0, Math.PI * 2);
+  c.fill();
+  c.restore();
+}
+
+function drawRazorBlade(
+  c: CanvasRenderingContext2D,
+  angle: number,
+  length: number,
+  bladeColor: string,
+  intense: boolean,
+  nowMs: number,
+): void {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const perpCos = -sin;
+  const perpSin = cos;
+  const innerX = cos * BLADE_INNER_OFFSET;
+  const innerY = sin * BLADE_INNER_OFFSET;
+  const tipX = cos * (BLADE_INNER_OFFSET + length);
+  const tipY = sin * (BLADE_INNER_OFFSET + length);
+  const baseWidth = intense ? 9 : 6;
+
+  c.save();
+  c.shadowColor = intense ? PALETTE.yellow : bladeColor;
+  c.shadowBlur = intense ? 28 : 18;
+
+  // Triangle base (left + right + tip)
+  const baseLeftX = innerX + perpCos * baseWidth;
+  const baseLeftY = innerY + perpSin * baseWidth;
+  const baseRightX = innerX - perpCos * baseWidth;
+  const baseRightY = innerY - perpSin * baseWidth;
+  const midPoint = 0.4;
+  const midX = innerX + cos * length * midPoint;
+  const midY = innerY + sin * length * midPoint;
+  const midLeftX = midX + perpCos * baseWidth * 0.55;
+  const midLeftY = midY + perpSin * baseWidth * 0.55;
+  const midRightX = midX - perpCos * baseWidth * 0.55;
+  const midRightY = midY - perpSin * baseWidth * 0.55;
+
+  c.fillStyle = intense ? PALETTE.yellow : bladeColor;
+  c.beginPath();
+  c.moveTo(baseLeftX, baseLeftY);
+  c.lineTo(midLeftX, midLeftY);
+  c.lineTo(tipX, tipY);
+  c.lineTo(midRightX, midRightY);
+  c.lineTo(baseRightX, baseRightY);
+  c.closePath();
+  c.fill();
+
+  c.shadowBlur = 0;
+  c.strokeStyle = "rgba(255, 255, 255, 0.95)";
+  c.lineWidth = intense ? 2 : 1.5;
+  c.beginPath();
+  c.moveTo(innerX, innerY);
+  c.lineTo(tipX, tipY);
+  c.stroke();
+
+  // Flame at tip
+  if (intense) {
+    const flameX = tipX + cos * 6;
+    const flameY = tipY + sin * 6;
+    c.shadowColor = "#ffffff";
+    c.shadowBlur = 24;
+    c.fillStyle = `rgba(255, 255, 255, ${0.7 + Math.sin(nowMs / 40) * 0.3})`;
+    c.beginPath();
+    c.arc(flameX, flameY, 5 + Math.sin(nowMs / 60) * 2, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = bladeColor;
+    c.beginPath();
+    c.arc(flameX, flameY, 3, 0, Math.PI * 2);
     c.fill();
   }
   c.restore();

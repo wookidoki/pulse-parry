@@ -1,4 +1,5 @@
 import type { EngineCallbacks, EngineState, PlayerInput } from "../types";
+import { KIND_RACE } from "../types";
 import { FINAL_STAGE_INDEX, STAGES, currentStage } from "../config/stages";
 import { getDetectedBpm, tickKickDetection } from "../audioAnalysis";
 import { getCurrentTrackIndex, setBossPhase } from "../music";
@@ -539,10 +540,26 @@ export function update(ctx: UpdateContext): void {
     ctx.onEnemyKilled(bulletEffects.enemyKills.length);
   }
   for (const kill of bulletEffects.enemyKills) {
-    applyShake(state, SHAKE_ON_ENEMY_KILL);
-    applyHitStop(state, HIT_STOP_MS_ENEMY_KILL);
-    spawnScreenFlash(state, PALETTE.yellow, 0.25);
-    spawnShockwave(state, kill.x, kill.y, nowMs, PALETTE.yellow);
+    const race = KIND_RACE[kill.kind];
+    const killColor =
+      race === "omnic"
+        ? PALETTE.magenta
+        : race === "virus"
+          ? PALETTE.cyan
+          : race === "drone"
+            ? PALETTE.purple
+            : PALETTE.red;
+    const isBoss = kill.kind === "boss";
+    applyShake(state, isBoss ? SHAKE_ON_ENEMY_KILL * 2.5 : SHAKE_ON_ENEMY_KILL);
+    applyHitStop(state, isBoss ? HIT_STOP_MS_ENEMY_KILL * 1.8 : HIT_STOP_MS_ENEMY_KILL);
+    spawnScreenFlash(state, "#ffffff", isBoss ? 0.55 : 0.32);
+    spawnScreenFlash(state, killColor, isBoss ? 0.45 : 0.28);
+    spawnShockwave(state, kill.x, kill.y, nowMs, killColor);
+    if (isBoss) {
+      spawnShockwave(state, kill.x, kill.y, nowMs + 80, "#ffffff");
+      spawnShockwave(state, kill.x, kill.y, nowMs + 160, PALETTE.yellow);
+    }
+    emitBurst(state, kill.x, kill.y, BURSTS.enemyDie());
     sfx.playEnemyDie();
   }
   if (bulletEffects.nearMisses > 0) {
