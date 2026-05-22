@@ -237,7 +237,8 @@ export interface HudState {
   stageIndex: number;
   stageName: string;
   milestone: ComboMilestone | null;
-  volume: number;
+  musicVolume: number;
+  sfxVolume: number;
   totalParries: number;
   perfectParries: number;
   damageTaken: number;

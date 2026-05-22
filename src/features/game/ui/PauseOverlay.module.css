@@ -34,6 +34,13 @@
     0 0 32px rgba(28, 240, 255, 0.4);
 }
 
+.volumeBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
 .volumeRow {
   display: flex;
   align-items: center;

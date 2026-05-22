@@ -20,8 +20,44 @@ interface HudActions {
   pause: () => void;
   resume: () => void;
   togglePause: () => void;
-  setVolume: (v: number) => void;
+  setMusicVolume: (v: number) => void;
+  setSfxVolume: (v: number) => void;
 }
+
+const VOLUME_STORAGE_KEY = "pulse-parry-volumes";
+
+function loadStoredVolumes(): { musicVolume: number; sfxVolume: number } {
+  if (typeof window === "undefined") return { musicVolume: 0.55, sfxVolume: 0.7 };
+  try {
+    const raw = localStorage.getItem(VOLUME_STORAGE_KEY);
+    if (!raw) return { musicVolume: 0.55, sfxVolume: 0.7 };
+    const parsed = JSON.parse(raw);
+    return {
+      musicVolume: clamp(Number(parsed.musicVolume) || 0.55),
+      sfxVolume: clamp(Number(parsed.sfxVolume) || 0.7),
+    };
+  } catch {
+    return { musicVolume: 0.55, sfxVolume: 0.7 };
+  }
+}
+
+function persistVolumes(musicVolume: number, sfxVolume: number): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(
+      VOLUME_STORAGE_KEY,
+      JSON.stringify({ musicVolume, sfxVolume }),
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+function clamp(v: number): number {
+  return Math.max(0, Math.min(1, v));
+}
+
+const STORED = loadStoredVolumes();
 
 const INITIAL: HudState = {
   status: "menu",
@@ -33,7 +69,8 @@ const INITIAL: HudState = {
   stageIndex: 0,
   stageName: STAGES[0].name,
   milestone: null,
-  volume: 0.6,
+  musicVolume: STORED.musicVolume,
+  sfxVolume: STORED.sfxVolume,
   totalParries: 0,
   perfectParries: 0,
   damageTaken: 0,
@@ -55,13 +92,14 @@ function nextMilestoneCrossed(prev: number, next: number): number | null {
 export const useHud = create<HudState & HudActions>((set) => ({
   ...INITIAL,
   reset: () =>
-    set((s) => ({ ...INITIAL, volume: s.volume })),
+    set((s) => ({ ...INITIAL, musicVolume: s.musicVolume, sfxVolume: s.sfxVolume })),
   start: (maxHp?: number) =>
     set((s) => {
       const hp = maxHp ?? INITIAL.maxHp;
       return {
         ...INITIAL,
-        volume: s.volume,
+        musicVolume: s.musicVolume,
+        sfxVolume: s.sfxVolume,
         status: "playing",
         hp,
         maxHp: hp,
@@ -126,5 +164,16 @@ export const useHud = create<HudState & HudActions>((set) => ({
       if (s.status === "paused") return { status: "playing" };
       return s;
     }),
-  setVolume: (v) => set({ volume: Math.max(0, Math.min(1, v)) }),
+  setMusicVolume: (v) =>
+    set((s) => {
+      const next = clamp(v);
+      persistVolumes(next, s.sfxVolume);
+      return { musicVolume: next };
+    }),
+  setSfxVolume: (v) =>
+    set((s) => {
+      const next = clamp(v);
+      persistVolumes(s.musicVolume, next);
+      return { sfxVolume: next };
+    }),
 }));

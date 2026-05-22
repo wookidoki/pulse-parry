@@ -12,28 +12,33 @@ interface CommonProps {
   size?: ButtonSize;
   bracket?: boolean;
   fullWidth?: boolean;
+  pressed?: boolean;
   children: ReactNode;
   className?: string;
+  title?: string;
 }
 
 type ButtonProps = CommonProps &
-  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "className">;
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "className" | "title">;
 
 interface ButtonLinkProps extends CommonProps {
   href: string;
   onClick?: () => void;
   prefetch?: boolean;
+  pressed?: boolean;
 }
 
 function classesFor({
   variant = "primary",
   size = "md",
   fullWidth = false,
+  pressed = false,
   className = "",
 }: {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
+  pressed?: boolean;
   className?: string;
 }): string {
   return [
@@ -41,6 +46,7 @@ function classesFor({
     styles[variant],
     styles[size],
     fullWidth ? styles.full : "",
+    pressed ? styles.pressed : "",
     className,
   ]
     .filter(Boolean)
@@ -67,13 +73,14 @@ function Content({
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant, size, bracket = false, fullWidth, children, className, ...rest },
+  { variant, size, bracket = false, fullWidth, pressed, title, children, className, ...rest },
   ref,
 ) {
   return (
     <button
       ref={ref}
-      className={classesFor({ variant, size, fullWidth, className })}
+      title={title}
+      className={classesFor({ variant, size, fullWidth, pressed, className })}
       {...rest}
     >
       <Content bracket={bracket}>{children}</Content>
@@ -86,6 +93,7 @@ export function ButtonLink({
   size,
   bracket = false,
   fullWidth,
+  pressed,
   children,
   className,
   href,
@@ -97,7 +105,7 @@ export function ButtonLink({
       href={href}
       onClick={onClick}
       prefetch={prefetch}
-      className={classesFor({ variant, size, fullWidth, className })}
+      className={classesFor({ variant, size, fullWidth, pressed, className })}
     >
       <Content bracket={bracket}>{children}</Content>
     </Link>

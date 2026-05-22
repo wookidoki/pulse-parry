@@ -364,13 +364,18 @@ function StageView({
           <span className={styles.settingLabel}>{t("chooseDiff", locale)}</span>
           <div className={styles.pillRow}>
             {DIFFICULTY_ORDER.map((d) => (
-              <button
+              <Button
                 key={d}
-                className={`${styles.pill} ${d === difficulty ? styles.pillActive : ""}`}
-                onClick={() => onSelectDifficulty(d)}
+                variant="secondary"
+                size="sm"
+                pressed={d === difficulty}
+                onClick={() => {
+                  click();
+                  onSelectDifficulty(d);
+                }}
               >
                 {DIFFICULTIES[d].label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -378,14 +383,19 @@ function StageView({
           <span className={styles.settingLabel}>{t("chooseMod", locale)}</span>
           <div className={styles.pillRow}>
             {MODIFIER_ORDER.map((id) => (
-              <button
+              <Button
                 key={id}
-                className={`${styles.pill} ${id === modifierId ? styles.pillActive : ""}`}
-                onClick={() => setModifierId(id)}
+                variant="secondary"
+                size="sm"
+                pressed={id === modifierId}
+                onClick={() => {
+                  click();
+                  setModifierId(id);
+                }}
                 title={MODIFIERS[id].description[locale]}
               >
                 {MODIFIERS[id].name[locale]}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

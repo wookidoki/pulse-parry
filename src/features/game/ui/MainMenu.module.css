@@ -477,9 +477,10 @@
 .stageCard {
   position: relative;
   padding: 14px 12px;
-  background: rgba(5, 3, 10, 0.65);
-  border: 1px solid rgba(28, 240, 255, 0.3);
-  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(28, 240, 255, 0.08), rgba(5, 3, 10, 0.85)),
+    rgba(5, 3, 10, 0.7);
+  border: 1px solid rgba(28, 240, 255, 0.35);
   cursor: pointer;
   transition: 0.18s;
   text-align: left;
@@ -488,18 +489,60 @@
   gap: 4px;
   min-height: 96px;
   color: inherit;
+  overflow: hidden;
+  isolation: isolate;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 14px) 0,
+    100% 14px,
+    100% 100%,
+    14px 100%,
+    0 calc(100% - 14px)
+  );
+  box-shadow: 0 0 0 1px rgba(28, 240, 255, 0.12) inset;
+}
+
+.stageCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+  transition: left 0.5s ease-out;
+}
+
+.stageCard:hover:not(:disabled)::before {
+  left: 100%;
 }
 
 .stageCard:hover:not(:disabled) {
-  border-color: rgba(28, 240, 255, 0.75);
-  background: rgba(28, 240, 255, 0.08);
+  border-color: rgba(28, 240, 255, 0.85);
+  background:
+    linear-gradient(135deg, rgba(28, 240, 255, 0.18), rgba(28, 240, 255, 0.04)),
+    rgba(5, 3, 10, 0.85);
   transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgba(28, 240, 255, 0.32) inset,
+    0 0 22px rgba(28, 240, 255, 0.35);
 }
 
 .stageCardSelected {
-  border-color: var(--neon-yellow) !important;
-  background: rgba(247, 255, 58, 0.1) !important;
-  box-shadow: 0 0 24px rgba(247, 255, 58, 0.45);
+  border-color: rgba(247, 255, 58, 0.95) !important;
+  background:
+    linear-gradient(135deg, rgba(247, 255, 58, 0.16), rgba(28, 240, 255, 0.06)),
+    rgba(5, 3, 10, 0.85) !important;
+  box-shadow:
+    0 0 0 1px rgba(247, 255, 58, 0.45) inset,
+    0 0 22px rgba(247, 255, 58, 0.45);
 }
 
 .stageCardLocked {
@@ -508,13 +551,30 @@
 }
 
 .stageCardBoss {
-  border-color: rgba(255, 56, 99, 0.55);
+  border-color: rgba(255, 56, 99, 0.6);
+  background:
+    linear-gradient(135deg, rgba(255, 56, 99, 0.1), rgba(5, 3, 10, 0.85)),
+    rgba(5, 3, 10, 0.75);
+}
+
+.stageCardBoss:hover:not(:disabled) {
+  border-color: rgba(255, 56, 99, 0.95);
+  background:
+    linear-gradient(135deg, rgba(255, 56, 99, 0.22), rgba(255, 56, 99, 0.04)),
+    rgba(5, 3, 10, 0.85);
+  box-shadow:
+    0 0 0 1px rgba(255, 56, 99, 0.42) inset,
+    0 0 26px rgba(255, 56, 99, 0.4);
 }
 
 .stageCardBoss.stageCardSelected {
-  border-color: var(--neon-red) !important;
-  background: rgba(255, 56, 99, 0.12) !important;
-  box-shadow: 0 0 24px rgba(255, 56, 99, 0.55);
+  border-color: rgba(255, 56, 99, 1) !important;
+  background:
+    linear-gradient(135deg, rgba(255, 56, 99, 0.28), rgba(255, 56, 99, 0.06)),
+    rgba(5, 3, 10, 0.9) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 56, 99, 0.6) inset,
+    0 0 26px rgba(255, 56, 99, 0.6);
 }
 
 .stageIdx {

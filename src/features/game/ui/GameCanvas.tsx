@@ -70,7 +70,8 @@ export function GameCanvas({
   const setStage = useHud((s) => s.setStage);
   const victory = useHud((s) => s.victory);
   const togglePause = useHud((s) => s.togglePause);
-  const volume = useHud((s) => s.volume);
+  const musicVolume = useHud((s) => s.musicVolume);
+  const sfxVolume = useHud((s) => s.sfxVolume);
   const stageIndex = useHud((s) => s.stageIndex);
   const status = useHud((s) => s.status);
 
@@ -82,9 +83,12 @@ export function GameCanvas({
   }, [start, characterId, modifierId]);
 
   useEffect(() => {
-    setMasterVolume(volume);
-    setMusicVolume(volume);
-  }, [volume]);
+    setMasterVolume(sfxVolume);
+  }, [sfxVolume]);
+
+  useEffect(() => {
+    setMusicVolume(musicVolume);
+  }, [musicVolume]);
 
   useEffect(() => {
     initMusic();
@@ -118,8 +122,8 @@ export function GameCanvas({
     resize();
 
     ensureAudio();
-    setMasterVolume(useHud.getState().volume);
-    setMusicVolume(useHud.getState().volume);
+    setMasterVolume(useHud.getState().sfxVolume);
+    setMusicVolume(useHud.getState().musicVolume);
     const gestureHandler = () => {
       resumeAudio();
       setupAudioAnalysis();

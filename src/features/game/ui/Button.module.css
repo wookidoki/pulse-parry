@@ -247,3 +247,32 @@
 .danger .bracket {
   color: #ff3863;
 }
+
+/* ===== PRESSED (selected pill / toggle on) ===== */
+.pressed.secondary,
+.pressed.primary {
+  color: #ffffff;
+  background:
+    linear-gradient(135deg, rgba(247, 255, 58, 0.18), rgba(28, 240, 255, 0.08)),
+    rgba(5, 3, 10, 0.85);
+  border-color: rgba(247, 255, 58, 0.85);
+  box-shadow:
+    0 0 0 1px rgba(247, 255, 58, 0.5) inset,
+    0 0 18px rgba(247, 255, 58, 0.5),
+    0 0 32px rgba(247, 255, 58, 0.18);
+}
+
+.pressed .bracket {
+  color: #f7ff3a;
+}
+
+.pressed.danger {
+  color: #ffffff;
+  border-color: rgba(255, 56, 99, 1);
+  background:
+    linear-gradient(135deg, rgba(255, 56, 99, 0.32), rgba(255, 56, 99, 0.08)),
+    rgba(5, 3, 10, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(255, 56, 99, 0.6) inset,
+    0 0 22px rgba(255, 56, 99, 0.5);
+}
