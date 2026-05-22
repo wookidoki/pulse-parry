@@ -1,14 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useHud } from "../state";
 import { recordScore } from "../progress";
 import { initialLocale, t, type Locale } from "../i18n";
+import type { Difficulty } from "../types";
 import styles from "./EndOverlay.module.css";
 
 export function EndOverlay() {
   const [locale] = useState<Locale>(initialLocale);
+  const searchParams = useSearchParams();
+  const diffParam = searchParams?.get("diff");
+  const difficulty: Difficulty =
+    diffParam === "easy" || diffParam === "hard" ? diffParam : "normal";
 
   const status = useHud((s) => s.status);
   const score = useHud((s) => s.score);
@@ -18,9 +24,9 @@ export function EndOverlay() {
 
   useEffect(() => {
     if (status === "victory" || status === "gameover") {
-      recordScore(stageIndex, "normal", score);
+      recordScore(stageIndex, difficulty, score);
     }
-  }, [status, stageIndex, score]);
+  }, [status, stageIndex, score, difficulty]);
 
   if (status !== "gameover" && status !== "victory") return null;
   const isVictory = status === "victory";

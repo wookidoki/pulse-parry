@@ -65,6 +65,12 @@ export function StageSelect() {
             <span className={styles.titleCyan}>PARRY</span>
           </h1>
           <p className={styles.subtitle}>{t("subtitle", locale)}</p>
+          <Link
+            href={`/play?stage=${Math.min(unlockedStage, STAGES.length - 1)}&diff=${difficulty}&char=${characterId}&mod=${modifierId}`}
+            className={styles.startBtn}
+          >
+            ▶ {t("play", locale)} — {STAGES[Math.min(unlockedStage, STAGES.length - 1)].name}
+          </Link>
         </section>
 
         <section className={styles.section}>

@@ -1,0 +1,30 @@
+PULSE PARRY — Asset Attribution
+
+═══ CHARACTERS (포트레이트) ═══
+ninja_portrait.png    ← Cyber_Faces_001.png
+monk_portrait.png     ← Cyber_Faces_002.png
+netrunner_portrait.png ← Cyber_Faces_003.png
+
+Source: "Cyberpunk Portraits" by Hyptosis
+URL: https://opengameart.org/content/cyberpunk-portraits
+License: CC0 (Public Domain)
+
+═══ BACKGROUND PARALLAX ═══
+layer1.png ~ layer5.png
+
+Source: "Cyberpunk Backgrounds Pixel Art" by CraftPix.net (Free Game Assets)
+URL: https://opengameart.org/content/cyberpunk-backgrounds-pixel-art
+License: OGA-BY 3.0
+  Attribution required — CraftPix.net 2D Game Assets
+
+═══ NOT YET USED (다음 라운드용) ═══
+3 Cyberpunk Characters (Biker/Punk/Cyborg sprite sheets)
+Source: https://opengameart.org/content/3-cyberpunk-characters
+License: OGA-BY 3.0
+
+City Parallax Background (1.2MB pack)
+Source: https://opengameart.org/content/city-parallax-background-with-buildings-pixel-art
+License: OGA-BY 3.0
+
+═══ BGM ═══
+See public/audio/LICENSE.txt

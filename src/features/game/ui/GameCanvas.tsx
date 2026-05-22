@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createEngineState, update } from "../engine/update";
 import { ensureAudio, resumeAudio, setMasterVolume } from "../audio";
+import { preloadParallax } from "../render/parallax";
 import {
   initMusic,
   pauseMusic,
@@ -75,6 +76,7 @@ export function GameCanvas({
     const char = CHARACTERS[characterId];
     const mod = MODIFIERS[modifierId];
     start(char.maxHp + mod.startHpDelta);
+    preloadParallax();
   }, [start, characterId, modifierId]);
 
   useEffect(() => {

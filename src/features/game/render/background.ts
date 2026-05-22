@@ -1,6 +1,7 @@
 import type { EngineState } from "../types";
 import { currentStage } from "../config/stages";
 import { PALETTE } from "../config/palette";
+import { drawParallaxLayers } from "./parallax";
 
 const GRID_STEP = 40;
 const RADIAL_LINE_COUNT = 18;
@@ -18,13 +19,18 @@ export function drawBackground(
   c.fillStyle = PALETTE.bg;
   c.fillRect(0, 0, w, h);
 
+  c.save();
+  c.globalAlpha = 0.55 + pulseEnv * 0.15;
+  drawParallaxLayers(c, w, h, nowMs);
+  c.restore();
+
   const cx = w / 2;
   const cy = h / 2;
   const radial = c.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.7);
   radial.addColorStop(0, stage.bgInner);
   radial.addColorStop(0.5, stage.bgOuter);
   radial.addColorStop(1, "rgba(5, 3, 10, 0)");
-  c.globalAlpha = 0.6 + pulseEnv * 0.4;
+  c.globalAlpha = 0.45 + pulseEnv * 0.35;
   c.fillStyle = radial;
   c.fillRect(0, 0, w, h);
   c.globalAlpha = 1;
