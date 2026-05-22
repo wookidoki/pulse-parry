@@ -483,8 +483,21 @@ export function update(ctx: UpdateContext): void {
     applyShake(state, SHAKE_ON_PLAYER_HIT);
     applyHitStop(state, HIT_STOP_MS_PLAYER_HIT);
     spawnScreenFlash(state, PALETTE.red, 0.55);
-    sfx.playPlayerHit();
+    if (hazardInfo.hazardKind === "missile") sfx.playMissileExplode();
+    else sfx.playPlayerHit();
     ctx.onDamage(1);
+  }
+  for (const h of state.hazards) {
+    if (h.state === "telegraph" && nowMs - h.startedAtMs < 30) {
+      if (h.kind === "missile") sfx.playMissileTelegraph();
+      else if (h.kind === "shockwave") sfx.playShockwaveTelegraph();
+    } else if (
+      h.state === "active" &&
+      nowMs - h.startedAtMs < 30 &&
+      h.kind === "shockwave"
+    ) {
+      sfx.playShockwave();
+    }
   }
 
   tickTempoCurve(state, nowMs);

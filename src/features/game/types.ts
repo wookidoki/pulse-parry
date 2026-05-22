@@ -197,13 +197,19 @@ export interface EngineState {
   nextHazardAtMs: number;
 }
 
+export type HazardKind = "laserSweep" | "missile" | "shockwave";
+
 export interface Hazard {
   id: number;
-  kind: "laserSweep";
+  kind: HazardKind;
   state: "telegraph" | "active" | "fading";
   startedAtMs: number;
   angle: number;
   width: number;
+  centerX: number;
+  centerY: number;
+  blastRadius: number;
+  currentRadius: number;
 }
 
 export interface EngineCallbacks {
@@ -225,6 +231,7 @@ export type GameStatus =
   | "playing"
   | "paused"
   | "bossCutscene"
+  | "winning"
   | "dying"
   | "gameover"
   | "victory";

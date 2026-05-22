@@ -26,6 +26,7 @@ interface HudActions {
   startBossCutscene: () => void;
   completeBossCutscene: () => void;
   finalizeDeath: () => void;
+  finalizeVictory: () => void;
 }
 
 const VOLUME_STORAGE_KEY = "pulse-parry-volumes";
@@ -153,7 +154,7 @@ export const useHud = create<HudState & HudActions>((set) => ({
     set((s) => {
       if (s.status !== "playing") return s;
       unlockStage(s.stageIndex);
-      return { status: "victory", playEndMs: Date.now() };
+      return { status: "winning" };
     }),
   setStage: (index) =>
     set({ stageIndex: index, stageName: stageNameOf(index) }),
@@ -188,5 +189,11 @@ export const useHud = create<HudState & HudActions>((set) => ({
   finalizeDeath: () =>
     set((s) =>
       s.status === "dying" ? { status: "gameover", playEndMs: Date.now() } : s,
+    ),
+  finalizeVictory: () =>
+    set((s) =>
+      s.status === "winning"
+        ? { status: "victory", playEndMs: Date.now() }
+        : s,
     ),
 }));

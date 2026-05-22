@@ -10,6 +10,7 @@ import {
   BossCutscene,
   DeathCutscene,
   IntroCutscene,
+  VictoryCutscene,
 } from "@/features/game/ui/Cutscenes";
 import type { Difficulty } from "@/features/game/types";
 import type { CharacterId } from "@/features/game/config/characters";
@@ -62,6 +63,7 @@ export default async function PlayPage({ searchParams }: PageProps) {
       <IntroCutscene />
       <BossCutscene />
       <DeathCutscene />
+      <VictoryCutscene />
       <EndOverlay />
     </>
   );

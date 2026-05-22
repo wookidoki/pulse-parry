@@ -230,3 +230,65 @@ export function playCountdownBeep(final = false) {
 export function playUiClick() {
   playSample("uiClick", { gain: 0.3, pitch: 1.4 });
 }
+
+// ───────── Cutscene SFX ─────────
+export function playIntroWarp() {
+  playSample("forceField", { gain: 0.55, pitch: 0.65 });
+  playSample("uiClick", { gain: 0.3, pitch: 1.3, delayMs: 80 });
+  playSample("explodeDeep", { gain: 0.4, pitch: 1.5, delayMs: 700 });
+  envOsc(180, 880, 1.4, "sine", 0.12);
+  envOsc(90, 220, 1.6, "triangle", 0.08);
+}
+
+export function playBossSiren() {
+  playSample("laserHeavy", { gain: 0.6, pitch: 0.55 });
+  playSample("explodeDeep", { gain: 0.8, pitch: 0.85, delayMs: 220 });
+  playSample("impact", { gain: 0.55, pitch: 0.9, delayMs: 500 });
+  playSample("impact", { gain: 0.55, pitch: 1.0, delayMs: 1000 });
+  playSample("impact", { gain: 0.55, pitch: 0.85, delayMs: 1500 });
+  envOsc(80, 60, 2.4, "sawtooth", 0.18);
+  envOsc(420, 220, 0.4, "square", 0.1);
+}
+
+export function playDeathBoom() {
+  playSample("explodeDeep", { gain: 0.85, pitch: 0.6 });
+  playSample("impact", { gain: 0.65, pitch: 0.55, delayMs: 120 });
+  playSample("explode", { gain: 0.5, pitch: 0.7, delayMs: 250 });
+  envOsc(440, 60, 1.5, "sawtooth", 0.22);
+  envOsc(220, 30, 1.7, "sine", 0.32);
+}
+
+export function playMissileTelegraph() {
+  playSample("uiClick", { gain: 0.35, pitch: 0.8 });
+  envOsc(220, 660, 0.4, "square", 0.08);
+}
+
+export function playMissileExplode() {
+  playSample("explode", { gain: 0.7, pitch: 1.0 });
+  playSample("explodeDeep", { gain: 0.55, pitch: 0.85, delayMs: 30 });
+  playSample("impact", { gain: 0.5, pitch: 0.95, delayMs: 60 });
+  envOsc(240, 60, 0.4, "sawtooth", 0.18);
+}
+
+export function playShockwaveTelegraph() {
+  playSample("forceField", { gain: 0.35, pitch: 0.7 });
+  envOsc(110, 440, 0.8, "sine", 0.1);
+}
+
+export function playShockwave() {
+  playSample("forceField", { gain: 0.55, pitch: 0.5 });
+  playSample("explodeDeep", { gain: 0.5, pitch: 0.7, delayMs: 80 });
+  envOsc(60, 30, 1.0, "sine", 0.22);
+}
+
+export function playVictoryFlourish() {
+  playSample("explode", { gain: 0.65, pitch: 1.05 });
+  playSample("forceField", { gain: 0.5, pitch: 1.4, delayMs: 100 });
+  const pitches = [1.0, 1.2, 1.5, 1.8];
+  pitches.forEach((pitch, i) => {
+    playSample("clash", { gain: 0.4, pitch, delayMs: 180 + i * 130 });
+  });
+  envOsc(440, 1320, 0.8, "triangle", 0.16);
+  envOsc(660, 1980, 0.8, "sine", 0.12);
+  envOsc(330, 990, 1.1, "sawtooth", 0.08);
+}
