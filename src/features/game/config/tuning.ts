@@ -12,8 +12,8 @@ export const PARRY_RANGE = 140;
 export const BULLET_REFLECT_SPEED = 880;
 
 export const ENEMY_RADIUS = 22;
-export const ENEMY_ORBIT_FACTOR = 0.40;
-export const ENEMY_ORBIT_MARGIN = 90;
+export const ENEMY_ORBIT_FACTOR = 0.48;
+export const ENEMY_ORBIT_MARGIN = 60;
 export const ENEMY_ORBIT_DRIFT_RAD_PER_SEC = 0.05;
 
 export const TELEGRAPH_MS = 350;

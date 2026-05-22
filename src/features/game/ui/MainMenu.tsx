@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { STAGES, tempoRangeOf } from "../config/stages";
@@ -11,15 +10,10 @@ import { loadProgress, getBestScore } from "../progress";
 import type { Difficulty } from "../types";
 import { loadLocale, saveLocale, t, type Locale } from "../i18n";
 import { MenuBackground } from "./MenuBackground";
+import { CharacterPortrait } from "./CharacterPortrait";
 import styles from "./MainMenu.module.css";
 
 type View = "title" | "character" | "stage" | "credits";
-
-const PORTRAIT_SRC: Record<CharacterId, string> = {
-  ninja: "/assets/characters/ninja_portrait.png",
-  monk: "/assets/characters/monk_portrait.png",
-  netrunner: "/assets/characters/netrunner_portrait.png",
-};
 
 function readBestScores(difficulty: Difficulty): Record<number, number> {
   if (typeof window === "undefined") return {};
@@ -173,25 +167,7 @@ function CharacterView({
         <button className={styles.arrowBtn} onClick={prev} aria-label="prev">
           ◀
         </button>
-
-        <div
-          className={styles.bigPortrait}
-          style={{
-            borderColor: char.accentColor,
-            boxShadow: `0 0 40px ${char.accentColor}, inset 0 0 50px ${char.accentColor}33`,
-          }}
-        >
-          <Image
-            src={PORTRAIT_SRC[characterId]}
-            alt={char.id}
-            width={320}
-            height={320}
-            className={styles.bigPortraitImg}
-            priority
-          />
-          <div className={styles.portraitScanlines} />
-        </div>
-
+        <CharacterPortrait characterId={characterId} active={true} size={280} />
         <button className={styles.arrowBtn} onClick={next} aria-label="next">
           ▶
         </button>

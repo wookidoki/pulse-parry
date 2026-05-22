@@ -1,7 +1,6 @@
 import type { EngineState } from "../types";
 import { currentStage } from "../config/stages";
 import { PALETTE } from "../config/palette";
-import { drawParallaxLayers } from "./parallax";
 
 const GRID_STEP = 40;
 const RADIAL_LINE_COUNT = 18;
@@ -19,26 +18,57 @@ export function drawBackground(
   c.fillStyle = PALETTE.bg;
   c.fillRect(0, 0, w, h);
 
-  c.save();
-  c.globalAlpha = 0.55 + pulseEnv * 0.15;
-  drawParallaxLayers(c, w, h, nowMs);
-  c.restore();
-
   const cx = w / 2;
   const cy = h / 2;
   const radial = c.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.7);
   radial.addColorStop(0, stage.bgInner);
   radial.addColorStop(0.5, stage.bgOuter);
   radial.addColorStop(1, "rgba(5, 3, 10, 0)");
-  c.globalAlpha = 0.45 + pulseEnv * 0.35;
+  c.globalAlpha = 0.6 + pulseEnv * 0.4;
   c.fillStyle = radial;
   c.fillRect(0, 0, w, h);
   c.globalAlpha = 1;
 
+  drawRhythmStreaks(c, w, h, nowMs, state.beat.beatPhase, state.stageIndex);
   drawDriftingGrid(c, w, h, nowMs);
   drawCityscape(c, w, h, nowMs, state.stageIndex);
   drawParallaxRadialLines(c, cx, cy, nowMs, state.stageIndex, pulseEnv);
   drawBeatRing(c, cx, cy, state.beat.beatPhase);
+}
+
+function drawRhythmStreaks(
+  c: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  nowMs: number,
+  beatPhase: number,
+  stageIndex: number,
+): void {
+  const streakCount = 12 + stageIndex * 3;
+  const baseSpeed = 0.18 + stageIndex * 0.04;
+  const beatBoost = (1 - beatPhase) * 0.5;
+  c.save();
+  c.lineCap = "round";
+  for (let i = 0; i < streakCount; i++) {
+    const seed = ((i * 9301 + 49297) % 233280) / 233280;
+    const x = seed * w;
+    const speed = baseSpeed * (0.6 + seed * 0.8) * (1 + beatBoost);
+    const cycle = h + 200;
+    const y = ((nowMs * speed + seed * cycle) % cycle) - 100;
+    const len = 60 + seed * 80;
+    const alpha = 0.06 + seed * 0.12 + beatBoost * 0.05;
+    const hue = i % 3 === 0 ? "247, 255, 58" : i % 3 === 1 ? "28, 240, 255" : "255, 43, 214";
+    c.strokeStyle = `rgba(${hue}, ${alpha})`;
+    c.lineWidth = 1 + seed * 1.5;
+    c.shadowColor = `rgba(${hue}, 0.5)`;
+    c.shadowBlur = 6;
+    c.beginPath();
+    c.moveTo(x, y);
+    c.lineTo(x, y + len);
+    c.stroke();
+  }
+  c.shadowBlur = 0;
+  c.restore();
 }
 
 function drawCityscape(
