@@ -2,12 +2,11 @@
   position: fixed;
   inset: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 32px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   z-index: 10;
+  padding: 24px;
 }
 
 .gameover {
@@ -16,70 +15,169 @@
 
 .victory {
   background:
-    radial-gradient(circle at center, rgba(28, 240, 255, 0.2), transparent 60%),
+    radial-gradient(circle at center, rgba(28, 240, 255, 0.22), transparent 60%),
     rgba(5, 3, 10, 0.85);
 }
 
-.titleGameover {
-  font-size: clamp(48px, 8vw, 96px);
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 36px 40px 32px;
+  background: rgba(5, 3, 10, 0.7);
+  border: 1px solid rgba(28, 240, 255, 0.25);
+  border-radius: 14px;
+  max-width: 560px;
+  width: 100%;
+  animation: fadeUp 0.4s ease-out;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.titleGameover,
+.titleVictory {
+  font-size: clamp(36px, 6vw, 64px);
   font-weight: 900;
   letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.titleGameover {
   color: var(--neon-red);
   text-shadow:
-    0 0 16px rgba(255, 56, 99, 0.9),
-    0 0 48px rgba(255, 56, 99, 0.5);
+    0 0 14px rgba(255, 56, 99, 0.9),
+    0 0 38px rgba(255, 56, 99, 0.5);
   animation: glitch 1.5s infinite;
 }
 
 .titleVictory {
-  font-size: clamp(48px, 8vw, 96px);
-  font-weight: 900;
-  letter-spacing: -0.03em;
   color: var(--neon-cyan);
   text-shadow:
-    0 0 16px rgba(28, 240, 255, 0.9),
-    0 0 48px rgba(28, 240, 255, 0.5);
+    0 0 14px rgba(28, 240, 255, 0.9),
+    0 0 38px rgba(28, 240, 255, 0.5);
 }
 
-.stats {
+.rankBadge {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  font-size: 18px;
-  letter-spacing: 0.3em;
-  color: rgba(240, 246, 255, 0.7);
-  text-align: center;
+  align-items: center;
+  justify-content: center;
+  width: 110px;
+  height: 110px;
+  border: 2px solid;
+  border-radius: 12px;
+  background: rgba(5, 3, 10, 0.55);
+  gap: 2px;
 }
 
-.stats span {
+.rankLabel {
+  font-size: 9px;
+  letter-spacing: 0.45em;
+  color: rgba(240, 246, 255, 0.55);
+}
+
+.rankLetter {
+  font-size: 64px;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1;
+  font-family: var(--font-geist-mono, monospace);
+}
+
+.scoreRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.scoreLabel {
+  font-size: 10px;
+  letter-spacing: 0.45em;
+  color: rgba(240, 246, 255, 0.5);
+}
+
+.scoreValue {
+  font-size: 38px;
+  font-weight: 900;
   color: var(--neon-cyan);
-  margin-left: 16px;
-  font-size: 22px;
-  text-shadow: 0 0 12px rgba(28, 240, 255, 0.6);
+  text-shadow: 0 0 14px rgba(28, 240, 255, 0.7);
+  font-family: var(--font-geist-mono, monospace);
+  letter-spacing: 0.1em;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px 22px;
+  width: 100%;
+  border-top: 1px solid rgba(28, 240, 255, 0.15);
+  border-bottom: 1px solid rgba(28, 240, 255, 0.15);
+  padding: 14px 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+}
+
+.statLabel {
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  color: rgba(240, 246, 255, 0.5);
+}
+
+.statValue {
+  font-size: 18px;
+  font-weight: 900;
+  font-family: var(--font-geist-mono, monospace);
+}
+
+.accuracyBar {
+  width: 100%;
+  height: 6px;
+  background: rgba(240, 246, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.accuracyFill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff3863, #f7ff3a, #1cf0ff);
+  transition: width 0.6s ease-out;
+  box-shadow: 0 0 12px rgba(247, 255, 58, 0.6);
 }
 
 .actionRow {
   display: flex;
   gap: 12px;
   align-items: center;
+  margin-top: 4px;
 }
 
 .retryBtn,
 .menuBtn {
   padding: 14px 36px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.3em;
   border-radius: 4px;
   transition: transform 0.1s, box-shadow 0.2s;
   text-decoration: none;
   cursor: pointer;
+  border: none;
 }
 
 .retryBtn {
   color: var(--bg);
   background: var(--neon-yellow);
-  box-shadow: 0 0 24px rgba(247, 255, 58, 0.6);
+  box-shadow: 0 0 24px rgba(247, 255, 58, 0.55);
 }
 
 .retryBtn:hover {

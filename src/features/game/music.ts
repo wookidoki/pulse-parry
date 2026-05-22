@@ -39,14 +39,21 @@ const STAGE_TRACK_POOLS: string[][] = [
   ],
 ];
 
+const MENU_TRACK_URL = "/audio/oga1_anti_matter.ogg";
+
 const CROSSFADE_MS = 700;
+const PHASE_CROSSFADE_MS = 1200;
 const MUSIC_VOLUME_FACTOR = 0.55;
+const MENU_VOLUME_FACTOR = 0.42;
 
 const stagePools: HTMLAudioElement[][] = [];
 let currentStageIdx = -1;
 let currentTrackIdx = -1;
+let menuAudio: HTMLAudioElement | null = null;
 let masterVolume = 0.5;
 let isPaused = false;
+let bossPhase = 0;
+let bossPhaseAudio: HTMLAudioElement | null = null;
 
 export function initMusic(): void {
   if (typeof window === "undefined" || stagePools.length > 0) return;
@@ -106,10 +113,65 @@ export function setMusicVolume(v: number): void {
   masterVolume = Math.max(0, Math.min(1, v));
   const cur = currentAudio();
   if (cur && !cur.paused) cur.volume = targetVolume();
+  if (menuAudio && !menuAudio.paused) menuAudio.volume = masterVolume * MENU_VOLUME_FACTOR;
+}
+
+export function playMenuBgm(): void {
+  if (typeof window === "undefined") return;
+  if (!menuAudio) {
+    menuAudio = new Audio(MENU_TRACK_URL);
+    menuAudio.loop = true;
+    menuAudio.volume = 0;
+    menuAudio.preload = "auto";
+  }
+  menuAudio.currentTime = menuAudio.currentTime || 0;
+  menuAudio.play().catch(() => {});
+  fade(menuAudio, masterVolume * MENU_VOLUME_FACTOR, CROSSFADE_MS);
+}
+
+export function stopMenuBgm(): void {
+  if (!menuAudio) return;
+  const a = menuAudio;
+  fade(a, 0, CROSSFADE_MS);
+  window.setTimeout(() => {
+    a.pause();
+  }, CROSSFADE_MS);
+}
+
+export function setBossPhase(phase: number): void {
+  if (phase === bossPhase) return;
+  const stage5 = stagePools[stagePools.length - 1];
+  if (!stage5 || stage5.length === 0) return;
+  const trackIdx = Math.min(phase, stage5.length - 1);
+  const nextTrack = stage5[trackIdx];
+  if (bossPhaseAudio === nextTrack) {
+    bossPhase = phase;
+    return;
+  }
+  const prev = bossPhaseAudio ?? currentAudio();
+  if (prev && !prev.paused) {
+    fade(prev, 0, PHASE_CROSSFADE_MS);
+    window.setTimeout(() => prev.pause(), PHASE_CROSSFADE_MS);
+  }
+  nextTrack.currentTime = 0;
+  nextTrack.volume = 0;
+  nextTrack.play().catch(() => {});
+  fade(nextTrack, targetVolume(), PHASE_CROSSFADE_MS);
+  bossPhaseAudio = nextTrack;
+  currentTrackIdx = trackIdx;
+  bossPhase = phase;
+  resetAnalysisState();
+}
+
+export function resetBossPhase(): void {
+  bossPhase = 0;
+  bossPhaseAudio = null;
 }
 
 export function playStageBgm(stageIndex: number): void {
   if (stagePools.length === 0) return;
+  stopMenuBgm();
+  resetBossPhase();
   const safeIdx = Math.min(stageIndex, stagePools.length - 1);
   if (currentStageIdx === safeIdx) return;
 
@@ -158,4 +220,5 @@ export function stopMusic(): void {
   currentStageIdx = -1;
   currentTrackIdx = -1;
   isPaused = false;
+  resetBossPhase();
 }

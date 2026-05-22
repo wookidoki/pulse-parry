@@ -10,14 +10,37 @@ import { loadProgress, getBestScore } from "../progress";
 import type { Difficulty } from "../types";
 import { loadLocale, saveLocale, t, type Locale } from "../i18n";
 import { ensureAudio, playUiClick, resumeAudio } from "../audio";
+import { initMusic, playMenuBgm, stopMenuBgm } from "../music";
 import { MenuBackground } from "./MenuBackground";
 import { CharacterPortrait } from "./CharacterPortrait";
 import styles from "./MainMenu.module.css";
+import { useEffect as useReactEffect } from "react";
 
 function click() {
   ensureAudio();
   resumeAudio();
   playUiClick();
+  playMenuBgm();
+}
+
+function useMenuBgm(): void {
+  useReactEffect(() => {
+    initMusic();
+    const onInteract = () => {
+      ensureAudio();
+      resumeAudio();
+      playMenuBgm();
+      window.removeEventListener("pointerdown", onInteract);
+      window.removeEventListener("keydown", onInteract);
+    };
+    window.addEventListener("pointerdown", onInteract);
+    window.addEventListener("keydown", onInteract);
+    return () => {
+      window.removeEventListener("pointerdown", onInteract);
+      window.removeEventListener("keydown", onInteract);
+      stopMenuBgm();
+    };
+  }, []);
 }
 
 type View = "title" | "character" | "stage" | "credits";
@@ -30,6 +53,7 @@ function readBestScores(difficulty: Difficulty): Record<number, number> {
 }
 
 export function MainMenu() {
+  useMenuBgm();
   const [view, setView] = useState<View>("title");
   const [locale, setLocale] = useState<Locale>(() => loadLocale());
   const [characterId, setCharacterId] = useState<CharacterId>("ninja");

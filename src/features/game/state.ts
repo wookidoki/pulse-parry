@@ -12,6 +12,8 @@ interface HudActions {
   addScore: (n: number) => void;
   bumpCombo: (n: number) => void;
   breakCombo: () => void;
+  bumpParries: (total: number, perfect: number) => void;
+  bumpEnemiesKilled: (n: number) => void;
   gameOver: () => void;
   victory: () => void;
   setStage: (index: number) => void;
@@ -32,6 +34,12 @@ const INITIAL: HudState = {
   stageName: STAGES[0].name,
   milestone: null,
   volume: 0.6,
+  totalParries: 0,
+  perfectParries: 0,
+  damageTaken: 0,
+  enemiesKilled: 0,
+  playStartMs: 0,
+  playEndMs: 0,
 };
 
 const stageNameOf = (index: number): string =>
@@ -57,6 +65,8 @@ export const useHud = create<HudState & HudActions>((set) => ({
         status: "playing",
         hp,
         maxHp: hp,
+        playStartMs: Date.now(),
+        playEndMs: 0,
       };
     }),
   damage: (amount) =>
@@ -66,7 +76,9 @@ export const useHud = create<HudState & HudActions>((set) => ({
       return {
         hp,
         combo: 0,
+        damageTaken: s.damageTaken + amount,
         status: hp === 0 ? "gameover" : s.status,
+        playEndMs: hp === 0 ? Date.now() : s.playEndMs,
       };
     }),
   heal: (amount) =>
@@ -88,12 +100,19 @@ export const useHud = create<HudState & HudActions>((set) => ({
       };
     }),
   breakCombo: () => set({ combo: 0 }),
-  gameOver: () => set({ status: "gameover" }),
+  bumpParries: (total, perfect) =>
+    set((s) => ({
+      totalParries: s.totalParries + total,
+      perfectParries: s.perfectParries + perfect,
+    })),
+  bumpEnemiesKilled: (n) =>
+    set((s) => ({ enemiesKilled: s.enemiesKilled + n })),
+  gameOver: () => set({ status: "gameover", playEndMs: Date.now() }),
   victory: () =>
     set((s) => {
       if (s.status !== "playing") return s;
       unlockStage(s.stageIndex);
-      return { status: "victory" };
+      return { status: "victory", playEndMs: Date.now() };
     }),
   setStage: (index) =>
     set({ stageIndex: index, stageName: stageNameOf(index) }),

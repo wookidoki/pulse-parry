@@ -1,7 +1,7 @@
 import type { EngineCallbacks, EngineState, PlayerInput } from "../types";
 import { FINAL_STAGE_INDEX, STAGES, currentStage } from "../config/stages";
 import { getDetectedBpm, tickKickDetection } from "../audioAnalysis";
-import { getCurrentTrackIndex } from "../music";
+import { getCurrentTrackIndex, setBossPhase } from "../music";
 import { CHARACTERS, type CharacterId } from "../config/characters";
 import { MODIFIERS, type RunModifierId } from "../config/modifiers";
 import { maybeSpawnHazard, updateHazards } from "./hazards";
@@ -101,6 +101,7 @@ export function createEngineState(
     lastHealSpawnAtMs: nowMs,
     lastHealMilestone: 0,
     bossSpawned: false,
+    bossPhase: 0,
     dashActiveMsLeft: 0,
     dashCooldownMsLeft: 0,
     dashDirX: 0,
@@ -117,6 +118,18 @@ export function createEngineState(
     countdownMsLeft: 3300,
     countdownLastSecond: 4,
   };
+}
+
+function tickBossPhase(state: EngineState): void {
+  if (!state.bossSpawned) return;
+  const boss = state.enemies.find((e) => e.kind === "boss" && e.state !== "dead");
+  if (!boss) return;
+  const hpFrac = Math.max(0, boss.hp / boss.maxHp);
+  const phase = hpFrac > 0.66 ? 0 : hpFrac > 0.33 ? 1 : 2;
+  if (phase !== state.bossPhase) {
+    state.bossPhase = phase;
+    setBossPhase(phase);
+  }
 }
 
 function tickCountdown(state: EngineState, dt: number): boolean {
@@ -288,6 +301,7 @@ function handleParryRelease(
   if (result.count > 0) {
     cb.onScore(SCORE_PARRY_PER_BULLET * result.count);
     cb.onCombo(result.count);
+    cb.onParries(result.count, result.perfectCount);
     applyShake(state, SHAKE_ON_REFLECT);
     applyHitStop(state, HIT_STOP_MS_PARRY);
     sfx.playReflect();
@@ -479,6 +493,7 @@ export function update(ctx: UpdateContext): void {
 
   spawnEnemyIfNeeded(state, nowMs, canvasW, canvasH);
   spawnHealIfNeeded(state, nowMs, canvasW, canvasH, ctx.currentComboHint);
+  tickBossPhase(state);
 
   const enemyResult = updateEnemies(state, dt, nowMs, canvasW, canvasH);
   processEnemyShots(state, enemyResult.shotsFired, nowMs);
@@ -496,6 +511,9 @@ export function update(ctx: UpdateContext): void {
   }
   if (bulletEffects.reflectHits.length > 0) {
     applyHitStop(state, HIT_STOP_MS_REFLECT_HIT);
+  }
+  if (bulletEffects.enemyKills.length > 0) {
+    ctx.onEnemyKilled(bulletEffects.enemyKills.length);
   }
   for (const kill of bulletEffects.enemyKills) {
     applyShake(state, SHAKE_ON_ENEMY_KILL);

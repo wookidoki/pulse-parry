@@ -178,6 +178,7 @@ export interface EngineState {
   lastHealSpawnAtMs: number;
   lastHealMilestone: number;
   bossSpawned: boolean;
+  bossPhase: number;
   countdownMsLeft: number;
   countdownLastSecond: number;
   dashActiveMsLeft: number;
@@ -212,6 +213,8 @@ export interface EngineCallbacks {
   onHeal: (amount: number) => void;
   onStageUp: (stageIndex: number) => void;
   onVictory: () => void;
+  onParries: (total: number, perfect: number) => void;
+  onEnemyKilled: (n: number) => void;
 }
 
 export type GameStatus = "menu" | "playing" | "paused" | "gameover" | "victory";
@@ -234,4 +237,10 @@ export interface HudState {
   stageName: string;
   milestone: ComboMilestone | null;
   volume: number;
+  totalParries: number;
+  perfectParries: number;
+  damageTaken: number;
+  enemiesKilled: number;
+  playStartMs: number;
+  playEndMs: number;
 }

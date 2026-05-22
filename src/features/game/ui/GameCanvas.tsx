@@ -64,6 +64,8 @@ export function GameCanvas({
   const addScore = useHud((s) => s.addScore);
   const bumpCombo = useHud((s) => s.bumpCombo);
   const breakCombo = useHud((s) => s.breakCombo);
+  const bumpParries = useHud((s) => s.bumpParries);
+  const bumpEnemiesKilled = useHud((s) => s.bumpEnemiesKilled);
   const setStage = useHud((s) => s.setStage);
   const victory = useHud((s) => s.victory);
   const togglePause = useHud((s) => s.togglePause);
@@ -221,6 +223,8 @@ export function GameCanvas({
           onHeal: heal,
           onStageUp: setStage,
           onVictory: victory,
+          onParries: bumpParries,
+          onEnemyKilled: bumpEnemiesKilled,
         });
       }
 
@@ -243,7 +247,7 @@ export function GameCanvas({
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [addScore, bumpCombo, breakCombo, damage, heal, setStage, victory, togglePause, startStage, difficulty, characterId, modifierId]);
+  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startStage, difficulty, characterId, modifierId]);
 
   return <canvas ref={canvasRef} className={styles.canvas} />;
 }
