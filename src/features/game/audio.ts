@@ -11,9 +11,10 @@ export function ensureAudio(): boolean {
       (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     ctx = new Ctor();
     masterGain = ctx.createGain();
-    masterGain.gain.value = 0.6;
+    masterGain.gain.value = 0.55;
     masterGain.connect(ctx.destination);
     started = true;
+    void preloadSamples();
     return true;
   } catch {
     return false;
@@ -21,7 +22,7 @@ export function ensureAudio(): boolean {
 }
 
 export function setMasterVolume(v: number) {
-  if (masterGain) masterGain.gain.value = Math.max(0, Math.min(1, v));
+  if (masterGain) masterGain.gain.value = Math.max(0, Math.min(1, v)) * 0.9;
 }
 
 export function resumeAudio() {
@@ -32,6 +33,84 @@ export function getAudioContext(): AudioContext | null {
   return ctx;
 }
 
+// ───────── Sample pool ─────────
+type SampleKey =
+  | "slash"
+  | "clash"
+  | "laserSmall"
+  | "laserHeavy"
+  | "forceField"
+  | "impact"
+  | "explode"
+  | "explodeDeep"
+  | "uiClick"
+  | "pickup";
+
+const SAMPLE_URLS: Record<SampleKey, string[]> = {
+  slash: [
+    "/audio/sfx/slash1.ogg",
+    "/audio/sfx/slash2.ogg",
+    "/audio/sfx/slash3.ogg",
+    "/audio/sfx/slash4.ogg",
+  ],
+  clash: [
+    "/audio/sfx/clash1.ogg",
+    "/audio/sfx/clash2.ogg",
+    "/audio/sfx/clash3.ogg",
+  ],
+  laserSmall: ["/audio/sfx/laser_small.ogg", "/audio/sfx/laser_small2.ogg"],
+  laserHeavy: ["/audio/sfx/laser_large.ogg"],
+  forceField: ["/audio/sfx/force_field.ogg", "/audio/sfx/force_field2.ogg"],
+  impact: ["/audio/sfx/impact_metal.ogg", "/audio/sfx/impact_metal2.ogg"],
+  explode: ["/audio/sfx/explosion.ogg", "/audio/sfx/explosion_big.ogg"],
+  explodeDeep: ["/audio/sfx/explosion_deep.ogg"],
+  uiClick: ["/audio/sfx/ui_click.ogg"],
+  pickup: ["/audio/sfx/beep_pickup.ogg"],
+};
+
+const samplePool: Partial<Record<SampleKey, AudioBuffer[]>> = {};
+let samplesLoaded = false;
+
+async function preloadSamples(): Promise<void> {
+  if (samplesLoaded || !ctx) return;
+  samplesLoaded = true;
+  await Promise.all(
+    (Object.entries(SAMPLE_URLS) as [SampleKey, string[]][]).map(async ([key, urls]) => {
+      const buffers = await Promise.all(
+        urls.map(async (url) => {
+          try {
+            const res = await fetch(url);
+            const ab = await res.arrayBuffer();
+            return await ctx!.decodeAudioData(ab);
+          } catch {
+            return null;
+          }
+        }),
+      );
+      samplePool[key] = buffers.filter((b): b is AudioBuffer => b !== null);
+    }),
+  );
+}
+
+function playSample(
+  key: SampleKey,
+  opts?: { gain?: number; pitch?: number; delayMs?: number },
+): void {
+  if (!ctx || !masterGain) return;
+  const pool = samplePool[key];
+  if (!pool || pool.length === 0) return;
+  const buf = pool[Math.floor(Math.random() * pool.length)];
+  const startAt = ctx.currentTime + (opts?.delayMs ? opts.delayMs / 1000 : 0);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.playbackRate.value = opts?.pitch ?? 1;
+  const g = ctx.createGain();
+  g.gain.value = opts?.gain ?? 1;
+  src.connect(g).connect(masterGain);
+  src.start(startAt);
+}
+
+// ───────── Synth fallback helpers (still used for some events) ─────────
 function envOsc(
   freqStart: number,
   freqEnd: number,
@@ -74,48 +153,80 @@ function noiseBurst(durSec: number, gainPeak: number, filterFreq: number) {
   src.stop(t0 + durSec);
 }
 
+const PITCH_VAR = () => 0.92 + Math.random() * 0.16;
+
+// ───────── Public SFX API (samples + synth layered) ─────────
 export function playParryHit() {
-  envOsc(1400, 2400, 0.06, "square", 0.12);
+  playSample("clash", { gain: 0.45, pitch: PITCH_VAR() });
+  envOsc(1400, 2400, 0.06, "square", 0.06);
 }
 
 export function playReflect() {
-  envOsc(900, 2200, 0.18, "sawtooth", 0.22);
-  envOsc(80, 38, 0.16, "sine", 0.42);
-  envOsc(2600, 600, 0.08, "square", 0.14);
-  noiseBurst(0.08, 0.12, 3800);
+  playSample("slash", { gain: 0.6, pitch: PITCH_VAR() });
+  playSample("clash", { gain: 0.55, pitch: 0.95 + Math.random() * 0.1, delayMs: 25 });
+  envOsc(900, 2200, 0.12, "sawtooth", 0.1);
+  envOsc(80, 38, 0.14, "sine", 0.3);
 }
 
 export function playSlashWoosh() {
-  envOsc(1800, 320, 0.22, "sawtooth", 0.16);
-  noiseBurst(0.18, 0.16, 2200);
+  playSample("slash", { gain: 0.5, pitch: 1.05 + Math.random() * 0.15 });
 }
 
 export function playEnemyShoot() {
-  envOsc(420, 220, 0.08, "sawtooth", 0.1);
+  playSample("laserSmall", { gain: 0.4, pitch: PITCH_VAR() });
+}
+
+export function playEnemyShootHeavy() {
+  playSample("laserHeavy", { gain: 0.55, pitch: PITCH_VAR() });
 }
 
 export function playEnemyDie() {
-  envOsc(800, 90, 0.32, "triangle", 0.25);
-  envOsc(60, 28, 0.22, "sine", 0.55);
-  envOsc(2400, 380, 0.06, "sawtooth", 0.18);
-  noiseBurst(0.22, 0.22, 480);
-  noiseBurst(0.05, 0.3, 2400);
+  playSample("explode", { gain: 0.6, pitch: PITCH_VAR() });
+  playSample("explodeDeep", { gain: 0.5, pitch: 0.9 + Math.random() * 0.2, delayMs: 30 });
+  envOsc(60, 28, 0.22, "sine", 0.35);
 }
 
 export function playPlayerHit() {
-  envOsc(180, 60, 0.32, "sawtooth", 0.4);
-  noiseBurst(0.22, 0.2, 320);
+  playSample("impact", { gain: 0.75, pitch: 0.9 + Math.random() * 0.1 });
+  playSample("explodeDeep", { gain: 0.4, pitch: 0.85, delayMs: 20 });
+  envOsc(180, 60, 0.28, "sawtooth", 0.3);
 }
 
 export function playPerfectHeal() {
-  envOsc(660, 1320, 0.18, "sine", 0.22);
-  envOsc(990, 1980, 0.18, "triangle", 0.16);
-  noiseBurst(0.05, 0.08, 5000);
+  playSample("pickup", { gain: 0.55, pitch: 1.0 });
+  playSample("pickup", { gain: 0.5, pitch: 1.5, delayMs: 60 });
+  envOsc(990, 1980, 0.18, "triangle", 0.12);
+}
+
+export function playPerfectChime() {
+  playSample("forceField", { gain: 0.5, pitch: 1.5 });
+  envOsc(2200, 3400, 0.14, "sine", 0.18);
+  envOsc(1760, 2640, 0.18, "triangle", 0.14);
+}
+
+export function playDashWhoosh() {
+  playSample("forceField", { gain: 0.35, pitch: 1.8 });
+  noiseBurst(0.16, 0.12, 1800);
 }
 
 export function playStageUp() {
   if (!ctx) return;
+  playSample("uiClick", { gain: 0.35, pitch: 1.3 });
   [392, 523, 784].forEach((f, i) => {
-    setTimeout(() => envOsc(f, f, 0.18, "square", 0.18), i * 90);
+    setTimeout(() => envOsc(f, f, 0.18, "square", 0.15), i * 90);
   });
+}
+
+export function playCountdownBeep(final = false) {
+  if (final) {
+    playSample("forceField", { gain: 0.5, pitch: 1.2 });
+    envOsc(880, 1320, 0.32, "triangle", 0.2);
+  } else {
+    playSample("uiClick", { gain: 0.4, pitch: 1.1 });
+    envOsc(660, 660, 0.12, "sine", 0.15);
+  }
+}
+
+export function playUiClick() {
+  playSample("uiClick", { gain: 0.3, pitch: 1.4 });
 }

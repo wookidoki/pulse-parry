@@ -20,6 +20,7 @@ import {
   drawSlashes,
 } from "./effects";
 import { drawHazards } from "./hazards";
+import { drawCountdown } from "./countdown";
 import {
   drawComboFlowEdges,
   drawPauseOverlay,
@@ -77,6 +78,7 @@ export function render(
   drawScreenFlashes(c, state, w, h);
   drawStageProgress(c, state, w, nowMs);
   drawBossHpBar(c, state, w, nowMs);
+  drawCountdown(c, state, w, h);
 
   if (hud.paused) drawPauseOverlay(c, w, h);
 }

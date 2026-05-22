@@ -1,4 +1,17 @@
-PULSE PARRY — BGM Attribution
+PULSE PARRY — Audio Attribution
+
+═══ SFX (/audio/sfx/) ═══
+
+Sword sounds (slash1-4, clash1-3): "20 Sword Sound Effects" by StarNinjas
+  https://opengameart.org/content/20-sword-sound-effects-attacks-and-clashes (CC0)
+
+Sci-fi pickup (beep_pickup): "50 CC0 Sci-Fi SFX" by rubberduck
+  https://opengameart.org/content/50-cc0-sci-fi-sfx (CC0)
+
+Lasers / forceField / impact / explosion / ui_click: Kenney's Sci-fi Sounds
+  https://kenney.nl/assets/sci-fi-sounds (CC0)
+
+═══ BGM ═══
 
 스테이지마다 여러 트랙이 풀로 묶여 있고 매 플레이 랜덤 선택됨.
 

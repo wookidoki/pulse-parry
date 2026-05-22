@@ -178,6 +178,8 @@ export interface EngineState {
   lastHealSpawnAtMs: number;
   lastHealMilestone: number;
   bossSpawned: boolean;
+  countdownMsLeft: number;
+  countdownLastSecond: number;
   dashActiveMsLeft: number;
   dashCooldownMsLeft: number;
   dashDirX: number;

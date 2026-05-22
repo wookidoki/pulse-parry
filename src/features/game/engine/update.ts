@@ -114,7 +114,20 @@ export function createEngineState(
     modifierId,
     hazards: [],
     nextHazardAtMs: nowMs + 18000,
+    countdownMsLeft: 3300,
+    countdownLastSecond: 4,
   };
+}
+
+function tickCountdown(state: EngineState, dt: number): boolean {
+  if (state.countdownMsLeft <= 0) return false;
+  state.countdownMsLeft -= dt * 1000;
+  const secondNow = Math.max(0, Math.ceil(state.countdownMsLeft / 1000));
+  if (secondNow !== state.countdownLastSecond) {
+    state.countdownLastSecond = secondNow;
+    sfx.playCountdownBeep(secondNow === 0);
+  }
+  return state.countdownMsLeft > 0;
 }
 
 export interface UpdateContext extends EngineCallbacks {
@@ -242,8 +255,10 @@ function processEnemyShots(
   for (const s of shots) {
     const enemy = enemyById.get(s.enemyId);
     if (!enemy) continue;
-    state.bullets.push(createBullet(state, enemy, nowMs, s.angleOffset));
-    sfx.playEnemyShoot();
+    const bullet = createBullet(state, enemy, nowMs, s.angleOffset);
+    state.bullets.push(bullet);
+    if (bullet.kind === "heavy") sfx.playEnemyShootHeavy();
+    else sfx.playEnemyShoot();
   }
 }
 
@@ -304,7 +319,8 @@ function handleParryRelease(
     if (result.perfectCount > 0) {
       cb.onScore(SCORE_PERFECT_BONUS * result.perfectCount);
       cb.onCombo(result.perfectCount);
-      spawnScreenFlash(state, "#ffffff", 0.35);
+      spawnScreenFlash(state, "#ffffff", 0.45);
+      applyHitStop(state, HIT_STOP_MS_PARRY * 1.6);
       spawnScorePop(
         state,
         state.playerX,
@@ -313,7 +329,7 @@ function handleParryRelease(
         "#ffffff",
         1.4,
       );
-      sfx.playSlashWoosh();
+      sfx.playPerfectChime();
     }
     return;
   }
@@ -382,6 +398,7 @@ function processDashTrigger(state: EngineState, input: PlayerInput): void {
   state.dashDirY = dy / mag;
   state.dashActiveMsLeft = DASH_DURATION_MS;
   state.dashCooldownMsLeft = char.dashCooldownMs;
+  sfx.playDashWhoosh();
 }
 
 function updatePlayerMovement(state: EngineState, input: PlayerInput, dt: number): void {
@@ -426,6 +443,11 @@ export function update(ctx: UpdateContext): void {
 
   if (processHitStop(state, dt)) {
     state.parryHeld = input.parryHeld;
+    recomputeAimAngle(state, input);
+    return;
+  }
+
+  if (tickCountdown(state, dt)) {
     recomputeAimAngle(state, input);
     return;
   }
