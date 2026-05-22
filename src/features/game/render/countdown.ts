@@ -20,7 +20,8 @@ export function drawCountdown(
   c.translate(w / 2, h / 2 - 40);
   c.scale(scale, scale);
 
-  c.font = "bold 140px ui-monospace, monospace";
+  const fontSize = Math.max(72, Math.min(140, w * 0.12));
+  c.font = `bold ${fontSize}px ui-monospace, monospace`;
   c.textAlign = "center";
   c.textBaseline = "middle";
 

@@ -115,7 +115,7 @@
 }
 
 .stageName {
-  font-size: clamp(48px, 9vw, 96px);
+  font-size: clamp(36px, 9vw, 96px);
   font-weight: 900;
   letter-spacing: -0.02em;
   color: var(--neon-cyan);
@@ -123,6 +123,8 @@
     0 0 24px rgba(28, 240, 255, 0.95),
     0 0 64px rgba(28, 240, 255, 0.55);
   margin: 0;
+  padding: 0 16px;
+  text-align: center;
 }
 
 .tagline {
@@ -241,7 +243,7 @@
 }
 
 .bossTitle {
-  font-size: clamp(64px, 11vw, 128px);
+  font-size: clamp(44px, 11vw, 128px);
   font-weight: 900;
   letter-spacing: 0.04em;
   color: var(--neon-red);
@@ -251,6 +253,8 @@
     0 0 100px rgba(255, 56, 99, 0.4);
   margin: 0;
   animation: bossGlitchShift 0.18s steps(2) infinite;
+  text-align: center;
+  padding: 0 16px;
 }
 
 @keyframes bossGlitchShift {
@@ -359,7 +363,7 @@
 }
 
 .deathTitle {
-  font-size: clamp(40px, 8vw, 80px);
+  font-size: clamp(28px, 8vw, 80px);
   font-weight: 900;
   letter-spacing: -0.02em;
   color: var(--neon-red);
@@ -368,6 +372,8 @@
     0 0 48px rgba(255, 56, 99, 0.6);
   margin: 0;
   animation: deathGlitch 0.3s steps(2) infinite;
+  text-align: center;
+  padding: 0 16px;
 }
 
 @keyframes deathGlitch {
@@ -513,7 +519,7 @@
 }
 
 .victoryTitle {
-  font-size: clamp(70px, 12vw, 144px);
+  font-size: clamp(48px, 12vw, 144px);
   font-weight: 900;
   letter-spacing: 0.04em;
   background: linear-gradient(135deg, #f7ff3a 0%, #ffffff 40%, #1cf0ff 100%);
@@ -522,6 +528,8 @@
   -webkit-text-fill-color: transparent;
   margin: 0;
   filter: drop-shadow(0 0 28px rgba(247, 255, 58, 0.85)) drop-shadow(0 0 64px rgba(28, 240, 255, 0.5));
+  text-align: center;
+  padding: 0 16px;
 }
 
 .victorySubtitle {

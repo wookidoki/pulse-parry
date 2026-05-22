@@ -115,8 +115,8 @@ export function createEngineState(
     modifierId,
     hazards: [],
     nextHazardAtMs: nowMs + 18000,
-    countdownMsLeft: 3300,
-    countdownLastSecond: 4,
+    countdownMsLeft: 2300,
+    countdownLastSecond: 3,
     perfectFlashMsLeft: 0,
   };
 }

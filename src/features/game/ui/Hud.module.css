@@ -9,11 +9,37 @@
   z-index: 5;
 }
 
+@media (max-width: 720px) {
+  .hud {
+    padding: 16px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hud {
+    padding: 12px 14px;
+  }
+}
+
 .hpRow {
   display: flex;
   gap: 8px;
   font-size: 32px;
   line-height: 1;
+}
+
+@media (max-width: 720px) {
+  .hpRow {
+    font-size: 24px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hpRow {
+    font-size: 20px;
+    gap: 4px;
+  }
 }
 
 .heart {
@@ -54,6 +80,19 @@
     0 0 24px rgba(28, 240, 255, 0.3);
   line-height: 1;
   margin-top: 4px;
+}
+
+@media (max-width: 720px) {
+  .scoreValue { font-size: 26px; }
+  .scoreLabel { font-size: 9px; }
+  .comboNum { font-size: 24px; }
+  .comboX { font-size: 14px; }
+  .comboLabel { font-size: 8px; }
+}
+
+@media (max-width: 480px) {
+  .scoreValue { font-size: 20px; }
+  .comboNum { font-size: 18px; }
 }
 
 .combo {

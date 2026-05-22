@@ -7,6 +7,11 @@
   backdrop-filter: blur(12px);
   z-index: 10;
   padding: 24px;
+  overflow-y: auto;
+}
+
+@media (max-width: 480px) {
+  .overlay { padding: 12px; }
 }
 
 .gameover {
@@ -31,6 +36,24 @@
   max-width: 560px;
   width: 100%;
   animation: fadeUp 0.4s ease-out;
+}
+
+@media (max-width: 720px) {
+  .panel { padding: 22px 18px 18px; gap: 16px; }
+  .rankBadge { width: 88px; height: 88px; }
+  .rankLetter { font-size: 50px; }
+  .scoreValue { font-size: 30px; }
+  .statGrid { gap: 8px 14px; padding: 10px 0; }
+  .statValue { font-size: 14px; }
+}
+
+@media (max-width: 480px) {
+  .panel { padding: 16px 12px 14px; gap: 12px; }
+  .rankBadge { width: 72px; height: 72px; }
+  .rankLetter { font-size: 42px; }
+  .scoreValue { font-size: 24px; }
+  .actionRow { flex-direction: column; width: 100%; gap: 8px; }
+  .actionRow > * { width: 100%; }
 }
 
 @keyframes fadeUp {
