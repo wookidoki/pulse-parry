@@ -1,5 +1,5 @@
-import { StageSelect } from "@/features/game/ui/StageSelect";
+import { MainMenu } from "@/features/game/ui/MainMenu";
 
 export default function Home() {
-  return <StageSelect />;
+  return <MainMenu />;
 }
