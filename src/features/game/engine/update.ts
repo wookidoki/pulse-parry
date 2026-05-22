@@ -570,7 +570,10 @@ export function update(ctx: UpdateContext): void {
       spawnShockwave(state, kill.x, kill.y, nowMs + 160, PALETTE.yellow);
     }
     emitBurst(state, kill.x, kill.y, BURSTS.enemyDie());
-    sfx.playEnemyDie();
+    if (race === "core") sfx.playBossDie();
+    else if (race === "drone") sfx.playDroneDie();
+    else if (race === "virus") sfx.playVirusDie();
+    else sfx.playOmnicDie();
 
     if (kill.kind === "splitter") {
       state.enemies.push(

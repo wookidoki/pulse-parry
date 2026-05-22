@@ -39,7 +39,35 @@ const STAGE_TRACK_POOLS: string[][] = [
   ],
 ];
 
-const MENU_TRACK_URL = "/audio/oga1_anti_matter.ogg";
+interface MenuTrack {
+  url: string;
+  label: string;
+}
+
+const MENU_TRACK_POOL: MenuTrack[] = [
+  { url: "/audio/oga1_anti_matter.ogg", label: "ANTI MATTER" },
+  { url: "/audio/oga_chill_100.ogg", label: "CHILL 100" },
+  { url: "/audio/oga1_currents.ogg", label: "CURRENTS" },
+  { url: "/audio/oga1_simulation.ogg", label: "SIMULATION" },
+  { url: "/audio/stage1_breach.mp3", label: "LOW LEVEL BREACH" },
+  { url: "/audio/oga_moonlight.mp3", label: "MOONLIGHT" },
+];
+
+const MENU_TRACK_STORAGE = "pulse-parry-menu-track";
+
+function loadMenuTrackIdx(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = localStorage.getItem(MENU_TRACK_STORAGE);
+    const n = raw == null ? 0 : parseInt(raw, 10);
+    if (Number.isFinite(n) && n >= 0 && n < MENU_TRACK_POOL.length) return n;
+  } catch {
+    /* ignore */
+  }
+  return 0;
+}
+
+let menuTrackIdx = loadMenuTrackIdx();
 
 const CROSSFADE_MS = 700;
 const PHASE_CROSSFADE_MS = 1200;
@@ -116,14 +144,18 @@ export function setMusicVolume(v: number): void {
   if (menuAudio && !menuAudio.paused) menuAudio.volume = masterVolume * MENU_VOLUME_FACTOR;
 }
 
+function buildMenuAudio(): void {
+  if (typeof window === "undefined") return;
+  menuAudio = new Audio(MENU_TRACK_POOL[menuTrackIdx].url);
+  menuAudio.loop = true;
+  menuAudio.volume = 0;
+  menuAudio.preload = "auto";
+}
+
 export function playMenuBgm(): void {
   if (typeof window === "undefined") return;
-  if (!menuAudio) {
-    menuAudio = new Audio(MENU_TRACK_URL);
-    menuAudio.loop = true;
-    menuAudio.volume = 0;
-    menuAudio.preload = "auto";
-  }
+  if (!menuAudio) buildMenuAudio();
+  if (!menuAudio) return;
   menuAudio.currentTime = menuAudio.currentTime || 0;
   menuAudio.play().catch(() => {});
   fade(menuAudio, masterVolume * MENU_VOLUME_FACTOR, CROSSFADE_MS);
@@ -136,6 +168,44 @@ export function stopMenuBgm(): void {
   window.setTimeout(() => {
     a.pause();
   }, CROSSFADE_MS);
+}
+
+export interface MenuTrackInfo {
+  idx: number;
+  label: string;
+  total: number;
+}
+
+export function getMenuTrackInfo(): MenuTrackInfo {
+  return {
+    idx: menuTrackIdx,
+    label: MENU_TRACK_POOL[menuTrackIdx].label,
+    total: MENU_TRACK_POOL.length,
+  };
+}
+
+export function cycleMenuTrack(): MenuTrackInfo {
+  menuTrackIdx = (menuTrackIdx + 1) % MENU_TRACK_POOL.length;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(MENU_TRACK_STORAGE, String(menuTrackIdx));
+    } catch {
+      /* ignore */
+    }
+  }
+  // Crossfade to new track
+  const prev = menuAudio;
+  const wasPlaying = prev && !prev.paused;
+  buildMenuAudio();
+  if (wasPlaying && menuAudio) {
+    menuAudio.play().catch(() => {});
+    fade(menuAudio, masterVolume * MENU_VOLUME_FACTOR, CROSSFADE_MS);
+    if (prev) {
+      fade(prev, 0, CROSSFADE_MS);
+      window.setTimeout(() => prev.pause(), CROSSFADE_MS);
+    }
+  }
+  return getMenuTrackInfo();
 }
 
 export function setBossPhase(phase: number): void {

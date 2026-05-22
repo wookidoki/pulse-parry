@@ -10,7 +10,13 @@ import { loadProgress, getBestScore } from "../progress";
 import type { Difficulty } from "../types";
 import { loadLocale, saveLocale, t, type Locale } from "../i18n";
 import { ensureAudio, playUiClick, resumeAudio } from "../audio";
-import { initMusic, playMenuBgm, stopMenuBgm } from "../music";
+import {
+  cycleMenuTrack,
+  getMenuTrackInfo,
+  initMusic,
+  playMenuBgm,
+  stopMenuBgm,
+} from "../music";
 import { MenuBackground } from "./MenuBackground";
 import { CharacterPortrait } from "./CharacterPortrait";
 import { Button, ButtonLink } from "./Button";
@@ -65,6 +71,12 @@ export function MainMenu() {
     typeof window === "undefined" ? 0 : loadProgress().unlockedStage,
   );
   const [transitioning, setTransitioning] = useState(false);
+  const [trackInfo, setTrackInfo] = useState(() => getMenuTrackInfo());
+
+  const handleCycleTrack = () => {
+    click();
+    setTrackInfo(cycleMenuTrack());
+  };
 
   const launchGame = (href: string) => {
     click();
@@ -85,6 +97,12 @@ export function MainMenu() {
       <MenuBackground />
       <main className={styles.page}>
         <div className={styles.cornerTop}>
+          <button className={styles.trackBtn} onClick={handleCycleTrack} title="next track">
+            ♫ {trackInfo.label}
+            <span className={styles.trackIdx}>
+              {trackInfo.idx + 1}/{trackInfo.total}
+            </span>
+          </button>
           <button className={styles.localeBtn} onClick={toggleLocale}>
             {locale === "ko" ? "ENGLISH" : "한국어"}
           </button>

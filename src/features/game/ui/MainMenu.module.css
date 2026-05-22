@@ -84,6 +84,43 @@
   top: 18px;
   right: 24px;
   z-index: 3;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.trackBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--neon-yellow);
+  background: rgba(247, 255, 58, 0.06);
+  border: 1px solid rgba(247, 255, 58, 0.35);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.15s;
+  font-family: var(--font-geist-mono, monospace);
+}
+
+.trackBtn:hover {
+  background: rgba(247, 255, 58, 0.16);
+  border-color: rgba(247, 255, 58, 0.7);
+  box-shadow: 0 0 12px rgba(247, 255, 58, 0.3);
+}
+
+.trackIdx {
+  font-size: 9px;
+  opacity: 0.6;
+  letter-spacing: 0.15em;
+}
+
+@media (max-width: 480px) {
+  .trackBtn { padding: 5px 8px; font-size: 9px; }
+  .trackIdx { display: none; }
 }
 
 .cornerBottom {

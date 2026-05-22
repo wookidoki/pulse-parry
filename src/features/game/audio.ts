@@ -214,6 +214,39 @@ export function playEnemyDie() {
   envOsc(60, 28, 0.22, "sine", 0.35);
 }
 
+// ───────── Race-specific death variants ─────────
+export function playOmnicDie() {
+  playSample("explode", { gain: 0.55, pitch: 1.05 + Math.random() * 0.1 });
+  playSample("uiClick", { gain: 0.3, pitch: 0.7, delayMs: 60 });
+  envOsc(880, 220, 0.28, "sine", 0.22);
+  envOsc(660, 110, 0.32, "square", 0.1);
+}
+
+export function playVirusDie() {
+  playSample("explode", { gain: 0.55, pitch: 0.95 + Math.random() * 0.15 });
+  noiseBurst(0.16, 0.18, 2400);
+  noiseBurst(0.08, 0.14, 5400);
+  envOsc(1320, 80, 0.34, "sawtooth", 0.16);
+}
+
+export function playDroneDie() {
+  playSample("explode", { gain: 0.6, pitch: 0.85 + Math.random() * 0.1 });
+  playSample("explodeDeep", { gain: 0.6, pitch: 0.78, delayMs: 40 });
+  playSample("impact", { gain: 0.4, pitch: 0.8, delayMs: 100 });
+  envOsc(220, 60, 0.3, "sawtooth", 0.22);
+  envOsc(80, 30, 0.4, "sine", 0.32);
+}
+
+export function playBossDie() {
+  playSample("explode", { gain: 0.85, pitch: 1.0 });
+  playSample("explodeDeep", { gain: 0.85, pitch: 0.75, delayMs: 80 });
+  playSample("explode", { gain: 0.65, pitch: 0.65, delayMs: 200 });
+  playSample("explodeDeep", { gain: 0.7, pitch: 0.6, delayMs: 320 });
+  playSample("impact", { gain: 0.55, pitch: 0.7, delayMs: 60 });
+  envOsc(660, 60, 0.6, "sawtooth", 0.28);
+  envOsc(110, 30, 0.8, "sine", 0.42);
+}
+
 export function playPlayerHit() {
   playSample("impact", { gain: 0.75, pitch: 0.9 + Math.random() * 0.1 });
   playSample("explodeDeep", { gain: 0.4, pitch: 0.85, delayMs: 20 });
