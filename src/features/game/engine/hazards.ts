@@ -1,6 +1,5 @@
 import type { EngineState, Hazard, HazardKind } from "../types";
 import {
-  HAZARD_FIRST_SPAWN_DELAY_MS,
   HAZARD_LASER_ACTIVE_MS,
   HAZARD_LASER_FADE_MS,
   HAZARD_LASER_TELEGRAPH_MS,
@@ -20,10 +19,6 @@ import {
 import { PLAYER_MAX_DIST } from "../config/tuning";
 
 let nextHazardId = 1;
-
-export function initHazardSpawn(state: EngineState, nowMs: number): void {
-  state.nextHazardAtMs = nowMs + HAZARD_FIRST_SPAWN_DELAY_MS;
-}
 
 function pickKind(state: EngineState): HazardKind {
   const stage = state.stageIndex;
@@ -85,11 +80,21 @@ function spawnShockwave(nowMs: number): Hazard {
 export function maybeSpawnHazard(state: EngineState, nowMs: number): void {
   if (nowMs < state.nextHazardAtMs) return;
   const kind = pickKind(state);
-  let hazard: Hazard;
-  if (kind === "missile") hazard = spawnMissile(nowMs, state);
-  else if (kind === "shockwave") hazard = spawnShockwave(nowMs);
-  else hazard = spawnLaser(nowMs);
-  state.hazards.push(hazard);
+  if (kind === "missile") {
+    // Spawn a barrage of 3 missiles staggered by 280ms
+    const count = 2 + Math.floor(Math.random() * 2); // 2 or 3
+    for (let i = 0; i < count; i++) {
+      state.hazards.push(spawnMissile(nowMs + i * 280, state));
+    }
+  } else if (kind === "shockwave") {
+    state.hazards.push(spawnShockwave(nowMs));
+    // Echo wave 600ms later
+    if (Math.random() < 0.5) {
+      state.hazards.push(spawnShockwave(nowMs + 600));
+    }
+  } else {
+    state.hazards.push(spawnLaser(nowMs));
+  }
   const interval =
     HAZARD_SPAWN_MIN_INTERVAL_MS +
     Math.random() * (HAZARD_SPAWN_MAX_INTERVAL_MS - HAZARD_SPAWN_MIN_INTERVAL_MS);
@@ -114,12 +119,17 @@ function fadeMs(h: Hazard): number {
   return HAZARD_LASER_FADE_MS;
 }
 
-function hits(state: EngineState, h: Hazard): boolean {
+function hits(state: EngineState, h: Hazard, scanProgress = 1): boolean {
   if (h.kind === "laserSweep") {
     const cos = Math.cos(h.angle);
     const sin = Math.sin(h.angle);
+    const along = state.playerX * cos + state.playerY * sin;
     const perp = -state.playerX * sin + state.playerY * cos;
-    return Math.abs(perp) < h.width / 2;
+    if (Math.abs(perp) >= h.width / 2) return false;
+    // Beam scans from -reach to +reach over active phase.
+    const reach = 1000;
+    const tipPos = -reach + scanProgress * 2 * reach;
+    return along <= tipPos;
   }
   if (h.kind === "missile") {
     const dx = state.playerX - h.centerX;
@@ -148,6 +158,10 @@ export function updateHazards(
   let damageKind: HazardKind | null = null;
   const survivors: Hazard[] = [];
   for (const h of state.hazards) {
+    if (nowMs < h.startedAtMs) {
+      survivors.push(h);
+      continue;
+    }
     const age = nowMs - h.startedAtMs;
     if (h.state === "telegraph" && age >= telegraphMs(h)) {
       h.state = "active";
@@ -162,12 +176,18 @@ export function updateHazards(
       h.currentRadius = progress * h.blastRadius;
     }
 
+    if (h.kind === "laserSweep" && h.state === "active") {
+      const progress = Math.min(1, (nowMs - h.startedAtMs) / activeMs(h));
+      h.currentRadius = progress;
+    }
+
     if (h.state === "active" && !damaged && state.dashActiveMsLeft <= 0) {
-      if (hits(state, h)) {
+      const scanProg = h.kind === "laserSweep" ? h.currentRadius : 1;
+      if (hits(state, h, scanProg)) {
         damaged = true;
         damageId = h.id;
         damageKind = h.kind;
-        if (h.kind !== "shockwave") {
+        if (h.kind !== "shockwave" && h.kind !== "laserSweep") {
           h.state = "fading";
           h.startedAtMs = nowMs;
         }

@@ -52,22 +52,60 @@ function drawLaserSweep(
   }
 
   if (haz.state === "active") {
+    // Scanning sweep: beam grows from -reach end to +reach end.
+    const scanProg = haz.currentRadius; // 0 → 1
+    const SCAN_REACH = 1000;
+    const tipDist = -SCAN_REACH + scanProg * 2 * SCAN_REACH;
+    const tipX = cos * tipDist;
+    const tipY = sin * tipDist;
+    const startX = -cos * SCAN_REACH;
+    const startY = -sin * SCAN_REACH;
+    const passedX = -cos * SCAN_REACH;
+    const passedY = -sin * SCAN_REACH;
+
     c.save();
+
+    // Trailing dim line where beam already passed
+    c.shadowColor = "#ff3863";
+    c.shadowBlur = 18;
+    c.strokeStyle = "rgba(255, 56, 99, 0.55)";
+    c.lineWidth = haz.width * 0.5;
+    c.beginPath();
+    c.moveTo(passedX, passedY);
+    c.lineTo(tipX, tipY);
+    c.stroke();
+
+    // White hot core inside trailed line
+    c.shadowBlur = 30;
+    c.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    c.lineWidth = haz.width * 0.3;
+    c.beginPath();
+    c.moveTo(startX, startY);
+    c.lineTo(tipX, tipY);
+    c.stroke();
+
+    // Bright tip (the scanning head)
     c.shadowColor = "#ffffff";
-    c.shadowBlur = 40;
-    c.strokeStyle = "rgba(255, 255, 255, 0.95)";
-    c.lineWidth = haz.width;
+    c.shadowBlur = 38;
+    c.fillStyle = "#ffffff";
     c.beginPath();
-    c.moveTo(-cos * reach, -sin * reach);
-    c.lineTo(cos * reach, sin * reach);
-    c.stroke();
-    c.shadowBlur = 28;
-    c.strokeStyle = "#ff3863";
-    c.lineWidth = haz.width * 0.55;
+    c.arc(tipX, tipY, haz.width * 0.9, 0, Math.PI * 2);
+    c.fill();
+    c.shadowBlur = 26;
+    c.fillStyle = "#ff3863";
     c.beginPath();
-    c.moveTo(-cos * reach, -sin * reach);
-    c.lineTo(cos * reach, sin * reach);
+    c.arc(tipX, tipY, haz.width * 0.55, 0, Math.PI * 2);
+    c.fill();
+
+    // Faint preview of remaining beam ahead
+    c.shadowBlur = 0;
+    c.strokeStyle = "rgba(255, 56, 99, 0.25)";
+    c.lineWidth = haz.width * 0.35;
+    c.beginPath();
+    c.moveTo(tipX, tipY);
+    c.lineTo(cos * SCAN_REACH, sin * SCAN_REACH);
     c.stroke();
+
     c.restore();
     return;
   }
