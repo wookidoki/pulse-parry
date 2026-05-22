@@ -18,7 +18,7 @@ export const ENEMY_ORBIT_DRIFT_RAD_PER_SEC = 0.05;
 
 export const TELEGRAPH_MS = 350;
 export const ENEMY_SPAWN_DELAY_MS = 450;
-export const ENEMY_DEATH_MS = 280;
+export const ENEMY_DEATH_MS = 200;
 
 export const SCORE_REFLECT_HIT = 15;
 export const SCORE_ENEMY_KILL = 100;
@@ -47,10 +47,10 @@ export const HEAL_SPAWN_INTERVAL_MS = 45000;
 export const HEAL_BULLET_SPEED = 140;
 export const HEAL_COMBO_MILESTONES = [25, 50, 100, 200] as const;
 
-export const HIT_STOP_MS_PLAYER_HIT = 60;
-export const HIT_STOP_MS_ENEMY_KILL = 95;
-export const HIT_STOP_MS_REFLECT_HIT = 35;
-export const HIT_STOP_MS_PARRY = 25;
+export const HIT_STOP_MS_PLAYER_HIT = 50;
+export const HIT_STOP_MS_ENEMY_KILL = 55;
+export const HIT_STOP_MS_REFLECT_HIT = 25;
+export const HIT_STOP_MS_PARRY = 18;
 
 export const KNOCKBACK_DECAY_PER_SEC = 8;
 export const ENEMY_KNOCKBACK_AMOUNT = 14;
