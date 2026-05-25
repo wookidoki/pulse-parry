@@ -78,6 +78,7 @@ export const I18N_STRINGS = {
     endlessStart: "▶ 엔드리스 시작",
     endlessDesc: "스테이지 무한 루프. 매 루프 난이도 상승. 죽을 때까지 점수 누적.",
     loop: "LOOP",
+    achievements: "업적",
   },
   en: {
     title: "PULSE PARRY",
@@ -156,6 +157,7 @@ export const I18N_STRINGS = {
     endlessStart: "▶ ENDLESS START",
     endlessDesc: "Stages loop forever. Difficulty rises per loop. Score until you die.",
     loop: "LOOP",
+    achievements: "ACHIEVEMENTS",
   },
 } as const;
 

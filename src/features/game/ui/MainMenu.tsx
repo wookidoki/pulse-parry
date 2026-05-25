@@ -6,7 +6,8 @@ import { STAGES, tempoRangeOf } from "../config/stages";
 import { CHARACTERS, CHARACTER_ORDER, type CharacterId } from "../config/characters";
 import { DIFFICULTIES, DIFFICULTY_ORDER } from "../config/difficulty";
 import { MODIFIERS, MODIFIER_ORDER, type RunModifierId } from "../config/modifiers";
-import { loadProgress, getBestScore } from "../progress";
+import { getBestScore, getUnlockedAchievements, loadProgress, totalAchievements } from "../progress";
+import { ACHIEVEMENTS, ACHIEVEMENT_ORDER } from "../config/achievements";
 import type { Difficulty } from "../types";
 import { loadLocale, saveLocale, t, type Locale } from "../i18n";
 import { ensureAudio, playUiTap, resumeAudio } from "../audio";
@@ -51,7 +52,7 @@ function useMenuBgm(): void {
   }, []);
 }
 
-type View = "title" | "character" | "stage" | "credits";
+type View = "title" | "character" | "stage" | "credits" | "achievements";
 
 function readBestScores(difficulty: Difficulty): Record<number, number> {
   if (typeof window === "undefined") return {};
@@ -129,7 +130,11 @@ export function MainMenu() {
               hasSave={unlockedStage > 0}
               onPlay={() => setView("character")}
               onCredits={() => setView("credits")}
+              onAchievements={() => setView("achievements")}
             />
+          )}
+          {view === "achievements" && (
+            <AchievementsView locale={locale} onBack={() => setView("title")} />
           )}
           {view === "character" && (
             <CharacterView
@@ -173,12 +178,17 @@ function TitleView({
   hasSave,
   onPlay,
   onCredits,
+  onAchievements,
 }: {
   locale: Locale;
   hasSave: boolean;
   onPlay: () => void;
   onCredits: () => void;
+  onAchievements: () => void;
 }) {
+  const unlockedCount =
+    typeof window === "undefined" ? 0 : getUnlockedAchievements().size;
+  const totalCount = totalAchievements();
   return (
     <div className={`${styles.view} ${styles.titleView}`}>
       <h1 className={styles.title}>
@@ -209,12 +219,65 @@ function TitleView({
           fullWidth
           onClick={() => {
             click();
+            onAchievements();
+          }}
+        >
+          ★ {t("achievements", locale)} {unlockedCount}/{totalCount}
+        </Button>
+        <Button
+          variant="secondary"
+          size="lg"
+          fullWidth
+          onClick={() => {
+            click();
             onCredits();
           }}
         >
           {t("credits", locale)}
         </Button>
       </nav>
+    </div>
+  );
+}
+
+function AchievementsView({
+  locale,
+  onBack,
+}: {
+  locale: Locale;
+  onBack: () => void;
+}) {
+  const unlocked = getUnlockedAchievements();
+  return (
+    <div className={`${styles.view} ${styles.achievementsView}`}>
+      <header className={styles.viewHeader}>
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          ◀ {t("backToTitle", locale)}
+        </Button>
+        <span className={styles.stepLabel}>
+          ★ {t("achievements", locale)} {unlocked.size}/{ACHIEVEMENT_ORDER.length}
+        </span>
+        <span className={styles.stepCount} />
+      </header>
+      <div className={styles.achievementsGrid}>
+        {ACHIEVEMENT_ORDER.map((id) => {
+          const a = ACHIEVEMENTS[id];
+          const got = unlocked.has(id);
+          return (
+            <div
+              key={id}
+              className={`${styles.achievementTile} ${got ? styles.achievementGot : styles.achievementLocked}`}
+              style={got ? { borderColor: a.color, color: a.color } : undefined}
+            >
+              <div className={styles.achievementGlyphBig}>{got ? a.glyph : "?"}</div>
+              <div className={styles.achievementTileText}>
+                <div className={styles.achievementTileName}>{a.name[locale]}</div>
+                <div className={styles.achievementTileDesc}>{a.desc[locale]}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

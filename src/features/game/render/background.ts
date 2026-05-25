@@ -53,6 +53,7 @@ export function drawBackground(
   drawCityscape(c, w, h, nowMs, state.stageIndex);
   drawParallaxRadialLines(c, cx, cy, nowMs, state.stageIndex, pulseEnv);
   drawBeatRing(c, cx, cy, state.beat.beatPhase);
+  drawStageThemeOverlay(c, w, h, nowMs, state.stageIndex, state.beat.beatPhase, pulseEnv);
 
   // Boss-only effects
   if (bossActive && bossPhase >= 1) {
@@ -288,5 +289,206 @@ function drawBeatRing(
   c.beginPath();
   c.arc(cx, cy, radius, 0, Math.PI * 2);
   c.stroke();
+  c.restore();
+}
+
+// Stage-specific atmospheric overlays. Drawn on top of the shared background
+// pieces so each stage feels distinct without rewriting the whole pipeline.
+function drawStageThemeOverlay(
+  c: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  nowMs: number,
+  stageIndex: number,
+  beatPhase: number,
+  pulseEnv: number,
+): void {
+  switch (stageIndex) {
+    case 0: // INFILTRATION — already neon city; light scanline added.
+      drawScanlines(c, w, h, "rgba(28, 240, 255, 0.04)", 4);
+      break;
+    case 1: // ECHO — vertical mirror reflections, ghosting effect.
+      drawMirrorReflections(c, w, h, nowMs);
+      break;
+    case 2: // FACTORY — existing cityscape + warm sodium tone (no extra).
+      drawScanlines(c, w, h, "rgba(247, 255, 58, 0.04)", 6);
+      break;
+    case 3: // BLOOM — expanding pulse rings tied to beat.
+      drawBloomPulses(c, w / 2, h / 2, nowMs, beatPhase);
+      break;
+    case 4: // OVERDRIVE — fast diagonal streaks (motion).
+      drawDiagonalStreaks(c, w, h, nowMs);
+      break;
+    case 5: // TRIAGE — soft green cross/medical grid + pulse heartbeat.
+      drawMedicalCross(c, w, h, nowMs, beatPhase);
+      break;
+    case 6: // CHAOS — random jitter blocks, glitch.
+      drawChaosJitter(c, w, h, nowMs, pulseEnv);
+      break;
+    case 7: // REVOLT (boss) — handled by existing boss vignette + glitch.
+      break;
+  }
+}
+
+function drawScanlines(
+  c: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  color: string,
+  step: number,
+): void {
+  c.save();
+  c.strokeStyle = color;
+  c.lineWidth = 1;
+  for (let y = 0; y < h; y += step) {
+    c.beginPath();
+    c.moveTo(0, y);
+    c.lineTo(w, y);
+    c.stroke();
+  }
+  c.restore();
+}
+
+function drawMirrorReflections(
+  c: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  nowMs: number,
+): void {
+  c.save();
+  const stripeCount = 8;
+  for (let i = 0; i < stripeCount; i++) {
+    const seed = ((i * 9301 + 49297) % 233280) / 233280;
+    const x = seed * w;
+    const wiggle = Math.sin(nowMs / 600 + i) * 12;
+    const width = 80 + seed * 120;
+    const alpha = 0.04 + seed * 0.05;
+    c.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    c.fillRect(x + wiggle, 0, width, h);
+  }
+  c.restore();
+}
+
+function drawBloomPulses(
+  c: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  nowMs: number,
+  beatPhase: number,
+): void {
+  c.save();
+  for (let i = 0; i < 4; i++) {
+    const phase = ((nowMs / 1200) + i * 0.25) % 1;
+    const r = 60 + phase * 600;
+    const alpha = (1 - phase) * 0.18;
+    const hue = i % 2 === 0 ? "28, 240, 255" : "28, 247, 143";
+    c.strokeStyle = `rgba(${hue}, ${alpha})`;
+    c.lineWidth = 2 + (1 - phase) * 3;
+    c.beginPath();
+    c.arc(cx, cy, r, 0, Math.PI * 2);
+    c.stroke();
+  }
+  const beatGlow = (1 - beatPhase) * 0.12;
+  if (beatGlow > 0.02) {
+    const grad = c.createRadialGradient(cx, cy, 0, cx, cy, 220);
+    grad.addColorStop(0, `rgba(28, 247, 143, ${beatGlow})`);
+    grad.addColorStop(1, "rgba(28, 247, 143, 0)");
+    c.fillStyle = grad;
+    c.fillRect(cx - 240, cy - 240, 480, 480);
+  }
+  c.restore();
+}
+
+function drawDiagonalStreaks(
+  c: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  nowMs: number,
+): void {
+  c.save();
+  c.lineCap = "round";
+  for (let i = 0; i < 22; i++) {
+    const seed = ((i * 9301 + 49297) % 233280) / 233280;
+    const speed = 0.4 + seed * 0.8;
+    const cycle = w + h + 200;
+    const t = ((nowMs * speed * 0.4 + seed * cycle) % cycle) - 100;
+    const startX = -100 + t;
+    const startY = -100 + t * 0.8;
+    const len = 80 + seed * 160;
+    const hue = i % 3 === 0 ? "255, 56, 99" : i % 3 === 1 ? "247, 255, 58" : "177, 75, 255";
+    c.strokeStyle = `rgba(${hue}, ${0.08 + seed * 0.1})`;
+    c.lineWidth = 1.5 + seed * 1.5;
+    c.shadowColor = `rgba(${hue}, 0.4)`;
+    c.shadowBlur = 8;
+    c.beginPath();
+    c.moveTo(startX, startY);
+    c.lineTo(startX + len, startY + len);
+    c.stroke();
+  }
+  c.shadowBlur = 0;
+  c.restore();
+}
+
+function drawMedicalCross(
+  c: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  nowMs: number,
+  beatPhase: number,
+): void {
+  c.save();
+  const pulse = 0.4 + (1 - beatPhase) * 0.6;
+  c.strokeStyle = `rgba(28, 247, 143, ${0.08 * pulse})`;
+  c.lineWidth = 1;
+  const step = 80;
+  for (let x = step; x < w; x += step) {
+    c.beginPath();
+    c.moveTo(x, 0);
+    c.lineTo(x, h);
+    c.stroke();
+  }
+  for (let y = step; y < h; y += step) {
+    c.beginPath();
+    c.moveTo(0, y);
+    c.lineTo(w, y);
+    c.stroke();
+  }
+  // EKG line
+  const ekgY = h * 0.5;
+  c.strokeStyle = `rgba(28, 247, 143, ${0.18 + pulse * 0.25})`;
+  c.lineWidth = 1.5;
+  c.beginPath();
+  for (let x = 0; x <= w; x += 6) {
+    const phase = ((nowMs / 2 + x * 3) % 600) / 600;
+    let dy = 0;
+    if (phase < 0.05) dy = -28 * (phase / 0.05);
+    else if (phase < 0.1) dy = -28 + 56 * ((phase - 0.05) / 0.05);
+    else if (phase < 0.15) dy = 28 - 28 * ((phase - 0.1) / 0.05);
+    c.lineTo(x, ekgY + dy);
+  }
+  c.stroke();
+  c.restore();
+}
+
+function drawChaosJitter(
+  c: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  nowMs: number,
+  pulseEnv: number,
+): void {
+  c.save();
+  const blockCount = 6 + Math.floor(pulseEnv * 6);
+  const seedBase = Math.floor(nowMs / 80);
+  for (let i = 0; i < blockCount; i++) {
+    const s = ((seedBase * (i + 1) * 9301 + 49297) % 233280) / 233280;
+    const x = s * w;
+    const y = ((s * 17.31) % 1) * h;
+    const bw = 40 + s * 180;
+    const bh = 2 + s * 8;
+    const hue = i % 2 === 0 ? "177, 75, 255" : "255, 43, 214";
+    c.fillStyle = `rgba(${hue}, ${0.08 + s * 0.1})`;
+    c.fillRect(x, y, bw, bh);
+  }
   c.restore();
 }

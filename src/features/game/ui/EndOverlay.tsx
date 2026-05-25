@@ -1,9 +1,13 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useHud } from "../state";
-import { recordScore } from "../progress";
+import { checkAchievements, recordScore, type RunStats } from "../progress";
+import { ACHIEVEMENTS, type AchievementId } from "../config/achievements";
+import { CHARACTERS, type CharacterId } from "../config/characters";
+import { MODIFIERS, type RunModifierId } from "../config/modifiers";
+import { FINAL_STAGE_INDEX } from "../config/stages";
 import { initialLocale, t, type Locale } from "../i18n";
 import type { Difficulty } from "../types";
 import { Button, ButtonLink } from "./Button";
@@ -38,10 +42,19 @@ function formatTime(ms: number): string {
 
 export function EndOverlay() {
   const [locale] = useState<Locale>(initialLocale);
+  const [newlyUnlocked, setNewlyUnlocked] = useState<AchievementId[]>([]);
+  const achievementsCheckedRef = useRef(false);
   const searchParams = useSearchParams();
   const diffParam = searchParams?.get("diff");
   const difficulty: Difficulty =
     diffParam === "easy" || diffParam === "hard" ? diffParam : "normal";
+  const charParam = searchParams?.get("char");
+  const characterId: CharacterId =
+    charParam && charParam in CHARACTERS ? (charParam as CharacterId) : "ninja";
+  const modParam = searchParams?.get("mod");
+  const modifierId: RunModifierId =
+    modParam && modParam in MODIFIERS ? (modParam as RunModifierId) : "none";
+  const endlessMode = searchParams?.get("mode") === "endless";
 
   const status = useHud((s) => s.status);
   const score = useHud((s) => s.score);
@@ -53,13 +66,8 @@ export function EndOverlay() {
   const enemiesKilled = useHud((s) => s.enemiesKilled);
   const playStartMs = useHud((s) => s.playStartMs);
   const playEndMs = useHud((s) => s.playEndMs);
+  const endlessLoop = useHud((s) => s.endlessLoop);
   const reset = useHud((s) => s.reset);
-
-  useEffect(() => {
-    if (status === "victory" || status === "gameover") {
-      recordScore(stageIndex, difficulty, score);
-    }
-  }, [status, stageIndex, score, difficulty]);
 
   const isVictory = status === "victory";
   const accuracy = totalParries > 0 ? perfectParries / totalParries : 0;
@@ -68,6 +76,55 @@ export function EndOverlay() {
     () => computeRank(isVictory, accuracy, damageTaken),
     [isVictory, accuracy, damageTaken],
   );
+
+  useEffect(() => {
+    if (status !== "victory" && status !== "gameover") {
+      achievementsCheckedRef.current = false;
+      return;
+    }
+    if (achievementsCheckedRef.current) return;
+    achievementsCheckedRef.current = true;
+    recordScore(stageIndex, difficulty, score);
+    const stats: RunStats = {
+      isVictory,
+      isBossKill: isVictory && stageIndex === FINAL_STAGE_INDEX,
+      bossRank: stageIndex === FINAL_STAGE_INDEX ? rank.letter : "",
+      score,
+      totalParries,
+      perfectParries,
+      damageTaken,
+      enemiesKilled,
+      maxCombo,
+      stageIndex,
+      difficulty,
+      characterId,
+      modifierId,
+      endlessLoop,
+      endlessMode,
+    };
+    const unlocks = checkAchievements(stats);
+    if (unlocks.length === 0) return;
+    // Defer the state update past the effect body so React's "set-state-in-effect"
+    // lint rule and double-render concerns are avoided.
+    const id = window.setTimeout(() => setNewlyUnlocked(unlocks), 0);
+    return () => window.clearTimeout(id);
+  }, [
+    status,
+    stageIndex,
+    score,
+    difficulty,
+    isVictory,
+    rank.letter,
+    totalParries,
+    perfectParries,
+    damageTaken,
+    enemiesKilled,
+    maxCombo,
+    characterId,
+    modifierId,
+    endlessLoop,
+    endlessMode,
+  ]);
 
   if (status !== "gameover" && status !== "victory") return null;
 
@@ -116,6 +173,30 @@ export function EndOverlay() {
               className={styles.accuracyFill}
               style={{ width: `${Math.round(accuracy * 100)}%` }}
             />
+          </div>
+        )}
+
+        {newlyUnlocked.length > 0 && (
+          <div className={styles.achievementsList}>
+            <div className={styles.achievementsLabel}>
+              {locale === "ko" ? "★ 새 도전과제 해금" : "★ NEW ACHIEVEMENTS"}
+            </div>
+            {newlyUnlocked.map((id) => {
+              const a = ACHIEVEMENTS[id];
+              return (
+                <div
+                  key={id}
+                  className={styles.achievementCard}
+                  style={{ borderColor: a.color, color: a.color }}
+                >
+                  <span className={styles.achievementGlyph}>{a.glyph}</span>
+                  <div className={styles.achievementText}>
+                    <div className={styles.achievementName}>{a.name[locale]}</div>
+                    <div className={styles.achievementDesc}>{a.desc[locale]}</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

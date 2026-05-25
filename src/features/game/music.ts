@@ -87,6 +87,7 @@ let menuTrackIdx = loadMenuTrackIdx();
 
 const CROSSFADE_MS = 700;
 const PHASE_CROSSFADE_MS = 1200;
+const INTENSITY_RAMP_MS = 600;
 const MUSIC_VOLUME_FACTOR = 0.55;
 const MENU_VOLUME_FACTOR = 0.42;
 
@@ -98,6 +99,9 @@ let masterVolume = 0.5;
 let isPaused = false;
 let bossPhase = 0;
 let bossPhaseAudio: HTMLAudioElement | null = null;
+// 0.75 (combo break) → 1.15 (sustained combo). Reinforces the rhythm payoff
+// without making low-combo runs feel quiet on purpose.
+let intensityMul = 1;
 
 export function initMusic(): void {
   if (typeof window === "undefined" || stagePools.length > 0) return;
@@ -150,7 +154,29 @@ function fade(el: HTMLAudioElement, target: number, durationMs: number): void {
 }
 
 function targetVolume(): number {
-  return masterVolume * MUSIC_VOLUME_FACTOR;
+  return masterVolume * MUSIC_VOLUME_FACTOR * intensityMul;
+}
+
+function comboToIntensity(combo: number): number {
+  if (combo < 5) return 0.78;
+  if (combo < 25) return 0.88;
+  if (combo < 50) return 0.96;
+  if (combo < 100) return 1.05;
+  return 1.15;
+}
+
+export function setBgmIntensity(combo: number): void {
+  const target = comboToIntensity(combo);
+  if (Math.abs(target - intensityMul) < 0.02) return;
+  intensityMul = target;
+  const cur = bossPhaseAudio ?? currentAudio();
+  if (cur && !cur.paused) {
+    fade(cur, targetVolume(), INTENSITY_RAMP_MS);
+  }
+}
+
+export function resetBgmIntensity(): void {
+  intensityMul = 1;
 }
 
 export function setMusicVolume(v: number): void {

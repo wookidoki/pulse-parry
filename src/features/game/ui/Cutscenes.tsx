@@ -75,7 +75,7 @@ export function IntroCutscene() {
       <div className={styles.introContent}>
         <span className={styles.stageNum}>STAGE 0{stageIndex + 1}</span>
         <h2 className={styles.stageName}>{stage.name}</h2>
-        <p className={styles.tagline}>{stage.tagline}</p>
+        <p className={styles.tagline}>{stage.lore?.[locale] ?? stage.tagline}</p>
         <span className={styles.diveText}>DIVING INTO THE GRID</span>
       </div>
       <div className={styles.scanlines} />

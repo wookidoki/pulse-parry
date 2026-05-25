@@ -26,6 +26,7 @@ export function StageBanner() {
   }
 
   const bannerKey = `${stageIndex}-${endlessLoop}`;
+  const lore = stage.lore?.[locale];
 
   return (
     <div className={styles.banner} key={bannerKey}>
@@ -37,6 +38,7 @@ export function StageBanner() {
       <div className={styles.stageBpm}>
         {range.min} → {range.max} BPM
       </div>
+      {lore && <div className={styles.stageLore}>{lore}</div>}
     </div>
   );
 }

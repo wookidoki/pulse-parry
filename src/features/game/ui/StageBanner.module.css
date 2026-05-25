@@ -1,6 +1,6 @@
 .banner {
   position: fixed;
-  top: 38%;
+  top: 34%;
   left: 50%;
   display: flex;
   flex-direction: column;
@@ -9,7 +9,9 @@
   pointer-events: none;
   z-index: 6;
   opacity: 0;
-  animation: bannerSlam 1.8s ease-out forwards;
+  max-width: min(720px, 90vw);
+  text-align: center;
+  animation: bannerSlam 4.2s ease-out forwards;
 }
 
 .stageNum {
@@ -38,18 +40,45 @@
   margin-top: 8px;
 }
 
+.stageLore {
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: rgba(240, 246, 255, 0.85);
+  text-shadow: 0 0 8px rgba(28, 240, 255, 0.4);
+  margin-top: 18px;
+  padding: 10px 20px;
+  border-top: 1px dashed rgba(28, 240, 255, 0.35);
+  border-bottom: 1px dashed rgba(28, 240, 255, 0.35);
+  font-style: italic;
+  line-height: 1.4;
+  animation: loreReveal 1.8s ease-out 0.4s both;
+}
+
+@keyframes loreReveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
 @keyframes bannerSlam {
   0% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(1.5);
     filter: blur(20px);
   }
-  20% {
+  10% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
     filter: blur(0);
   }
-  80% {
+  90% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
     filter: blur(0);

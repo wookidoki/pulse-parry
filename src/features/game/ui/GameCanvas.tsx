@@ -7,7 +7,9 @@ import {
   initMusic,
   pauseMusic,
   playStageBgm,
+  resetBgmIntensity,
   resumeMusic,
+  setBgmIntensity,
   setMusicVolume,
   setupAudioAnalysis,
 } from "../music";
@@ -81,6 +83,7 @@ export function GameCanvas({
   const sfxVolume = useHud((s) => s.sfxVolume);
   const stageIndex = useHud((s) => s.stageIndex);
   const status = useHud((s) => s.status);
+  const combo = useHud((s) => s.combo);
 
   useEffect(() => {
     const char = CHARACTERS[characterId];
@@ -104,6 +107,16 @@ export function GameCanvas({
   useEffect(() => {
     if (status === "playing") playStageBgm(stageIndex);
   }, [stageIndex, status]);
+
+  useEffect(() => {
+    if (status === "playing") setBgmIntensity(combo);
+  }, [combo, status]);
+
+  useEffect(() => {
+    if (status === "menu" || status === "gameover" || status === "victory") {
+      resetBgmIntensity();
+    }
+  }, [status]);
 
   useEffect(() => {
     if (status === "paused") pauseMusic();
