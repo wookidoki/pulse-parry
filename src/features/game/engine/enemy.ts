@@ -12,6 +12,7 @@ import {
   TELEGRAPH_MS,
 } from "../config/tuning";
 import { normalizeAngle } from "./geometry";
+import { endlessLoopMul } from "./scaling";
 
 const PHANTOM_TELEPORT_BEATS = 4;
 const SPREAD_TOTAL_RAD = 0.42;
@@ -132,8 +133,7 @@ export function shouldSpawnEnemy(
   }
   const diffConfig = DIFFICULTIES[state.difficulty];
   const modConfig = MODIFIERS[state.modifierId];
-  const loopMul = state.endlessMode ? 1 + Math.min(0.6, state.endlessLoop * 0.08) : 1;
-  const effectiveSpawnRate = modConfig.spawnRateMul * loopMul;
+  const effectiveSpawnRate = modConfig.spawnRateMul * endlessLoopMul(state);
   const maxEnemies = stage.isBoss
     ? 1
     : Math.max(
@@ -230,10 +230,9 @@ function maybeStartTelegraph(enemy: Enemy, state: EngineState): void {
   if (!fireEvent) return;
   const config = getEffectiveConfig(enemy);
   const modConfig = MODIFIERS[state.modifierId];
-  const loopMul = state.endlessMode ? 1 + Math.min(0.6, state.endlessLoop * 0.08) : 1;
   const effectiveBeatsPerShot = Math.max(
     1,
-    config.beatsPerShot / (modConfig.enemyFireRateMul * loopMul),
+    config.beatsPerShot / (modConfig.enemyFireRateMul * endlessLoopMul(state)),
   );
   if (state.beat.currentBeat - enemy.lastShotBeat < effectiveBeatsPerShot) return;
   const baseTelegraph = Math.min(TELEGRAPH_MS, state.beat.beatPeriodMs * 0.55);

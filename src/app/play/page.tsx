@@ -35,11 +35,15 @@ function parseDifficulty(v: string | undefined): Difficulty {
 }
 
 function parseCharacter(v: string | undefined): CharacterId {
-  return v && v in CHARACTERS ? (v as CharacterId) : "ninja";
+  return v && Object.prototype.hasOwnProperty.call(CHARACTERS, v)
+    ? (v as CharacterId)
+    : "ninja";
 }
 
 function parseModifier(v: string | undefined): RunModifierId {
-  return v && v in MODIFIERS ? (v as RunModifierId) : "none";
+  return v && Object.prototype.hasOwnProperty.call(MODIFIERS, v)
+    ? (v as RunModifierId)
+    : "none";
 }
 
 export default async function PlayPage({ searchParams }: PageProps) {

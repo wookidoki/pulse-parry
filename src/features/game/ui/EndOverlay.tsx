@@ -50,10 +50,14 @@ export function EndOverlay() {
     diffParam === "easy" || diffParam === "hard" ? diffParam : "normal";
   const charParam = searchParams?.get("char");
   const characterId: CharacterId =
-    charParam && charParam in CHARACTERS ? (charParam as CharacterId) : "ninja";
+    charParam && Object.prototype.hasOwnProperty.call(CHARACTERS, charParam)
+      ? (charParam as CharacterId)
+      : "ninja";
   const modParam = searchParams?.get("mod");
   const modifierId: RunModifierId =
-    modParam && modParam in MODIFIERS ? (modParam as RunModifierId) : "none";
+    modParam && Object.prototype.hasOwnProperty.call(MODIFIERS, modParam)
+      ? (modParam as RunModifierId)
+      : "none";
   const endlessMode = searchParams?.get("mode") === "endless";
 
   const status = useHud((s) => s.status);
@@ -84,7 +88,7 @@ export function EndOverlay() {
     }
     if (achievementsCheckedRef.current) return;
     achievementsCheckedRef.current = true;
-    recordScore(stageIndex, difficulty, score);
+    recordScore(stageIndex, difficulty, score, endlessMode);
     const stats: RunStats = {
       isVictory,
       isBossKill: isVictory && stageIndex === FINAL_STAGE_INDEX,

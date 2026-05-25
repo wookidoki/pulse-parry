@@ -2,7 +2,7 @@ import type { Difficulty } from "./types";
 import type { CharacterId } from "./config/characters";
 import type { RunModifierId } from "./config/modifiers";
 import { CHARACTER_ORDER } from "./config/characters";
-import { FINAL_STAGE_INDEX, STAGES } from "./config/stages";
+import { STAGES } from "./config/stages";
 import {
   ACHIEVEMENTS,
   type AchievementId,
@@ -65,17 +65,18 @@ export function unlockStage(stageIndex: number): void {
   }
 }
 
-function scoreKey(stageIndex: number, difficulty: Difficulty): string {
-  return `s${stageIndex}:${difficulty}`;
+function scoreKey(stageIndex: number, difficulty: Difficulty, endless = false): string {
+  return endless ? `endless:${difficulty}` : `s${stageIndex}:${difficulty}`;
 }
 
 export function recordScore(
   stageIndex: number,
   difficulty: Difficulty,
   score: number,
+  endless = false,
 ): void {
   const p = loadProgress();
-  const key = scoreKey(stageIndex, difficulty);
+  const key = scoreKey(stageIndex, difficulty, endless);
   if (!(key in p.bestScores) || score > p.bestScores[key]) {
     p.bestScores[key] = score;
     saveProgress(p);
@@ -83,7 +84,11 @@ export function recordScore(
 }
 
 export function getBestScore(stageIndex: number, difficulty: Difficulty): number {
-  return loadProgress().bestScores[scoreKey(stageIndex, difficulty)] ?? 0;
+  return loadProgress().bestScores[scoreKey(stageIndex, difficulty, false)] ?? 0;
+}
+
+export function getEndlessBestScore(difficulty: Difficulty): number {
+  return loadProgress().bestScores[scoreKey(0, difficulty, true)] ?? 0;
 }
 
 // ───────── Achievements ─────────
@@ -120,23 +125,33 @@ function unlockOne(p: Progress, id: AchievementId, newlyUnlocked: AchievementId[
 export function checkAchievements(stats: RunStats): AchievementId[] {
   const p = loadProgress();
   const newlyUnlocked: AchievementId[] = [];
+  let dirty = false;
 
-  // Track cumulative progress (cleared characters / stages)
-  if (stats.isVictory || stats.stageIndex > 0) {
-    if (!p.charactersCleared.includes(stats.characterId)) {
-      p.charactersCleared.push(stats.characterId);
+  // Track cleared stages: stages reached and survived count as cleared. Boss
+  // victory clears stage 7; otherwise we credit stages 0..stageIndex-1
+  // because the player advanced past them before dying.
+  const clearedThroughIdx = stats.isVictory
+    ? stats.stageIndex
+    : stats.stageIndex - 1;
+  for (let i = 0; i <= clearedThroughIdx; i++) {
+    if (!p.stagesCleared.includes(i)) {
+      p.stagesCleared.push(i);
+      dirty = true;
     }
-    if (stats.isVictory && !p.stagesCleared.includes(stats.stageIndex)) {
-      p.stagesCleared.push(stats.stageIndex);
-    }
+  }
+  // Characters: credit if the player meaningfully played (cleared at least 1 stage).
+  if (clearedThroughIdx >= 0 && !p.charactersCleared.includes(stats.characterId)) {
+    p.charactersCleared.push(stats.characterId);
+    dirty = true;
   }
   if (stats.endlessMode && stats.endlessLoop > p.endlessBestLoop) {
     p.endlessBestLoop = stats.endlessLoop;
+    dirty = true;
   }
 
   // Per-run achievements
   if (stats.enemiesKilled >= 10) unlockOne(p, "FIRST_BLOOD", newlyUnlocked);
-  if (stats.isVictory && stats.stageIndex >= 0) unlockOne(p, "FIRST_STAGE", newlyUnlocked);
+  if (stats.isVictory) unlockOne(p, "FIRST_STAGE", newlyUnlocked);
   if (stats.maxCombo >= 100) unlockOne(p, "RHYTHM_MASTER", newlyUnlocked);
   if (stats.perfectParries >= 50) unlockOne(p, "PERFECT_TUNE", newlyUnlocked);
   if (stats.isVictory && stats.damageTaken === 0) unlockOne(p, "UNTOUCHED", newlyUnlocked);
@@ -162,18 +177,12 @@ export function checkAchievements(stats: RunStats): AchievementId[] {
   if (CHARACTER_ORDER.every((id) => p.charactersCleared.includes(id))) {
     unlockOne(p, "ALL_CHARACTERS", newlyUnlocked);
   }
-  if (
-    STAGES.length > 0 &&
-    STAGES.every((_, i) => i === FINAL_STAGE_INDEX
-      ? p.stagesCleared.includes(i)
-      : p.stagesCleared.includes(i))
-  ) {
+  if (STAGES.length > 0 && STAGES.every((_, i) => p.stagesCleared.includes(i))) {
     unlockOne(p, "ALL_CLEAR", newlyUnlocked);
   }
 
-  if (newlyUnlocked.length > 0 || stats.endlessMode) {
-    saveProgress(p);
-  }
+  if (newlyUnlocked.length > 0) dirty = true;
+  if (dirty) saveProgress(p);
   return newlyUnlocked;
 }
 

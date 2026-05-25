@@ -12,6 +12,7 @@ import {
   SCORE_REFLECT_HIT,
 } from "../config/tuning";
 import { angleBetween, magnitude, normalizeAngle, unitVector } from "./geometry";
+import { endlessLoopMul } from "./scaling";
 import { killEnemy } from "./enemy";
 import { BURSTS, emitBurst } from "./particles";
 import { spawnScorePop } from "./effects";
@@ -32,9 +33,10 @@ export function createBullet(
   const distance = magnitude(dx, dy);
   const flightBeats = enemyConfig.flightBeats * diffConfig.flightBeatsMul;
   const flightMs = flightBeats * state.beat.beatPeriodMs;
-  const loopMul = state.endlessMode ? 1 + Math.min(0.6, state.endlessLoop * 0.08) : 1;
   const speed =
-    (distance / Math.max(0.05, flightMs / 1000)) * modConfig.bulletSpeedMul * loopMul;
+    (distance / Math.max(0.05, flightMs / 1000)) *
+    modConfig.bulletSpeedMul *
+    endlessLoopMul(state);
   const baseAngle = Math.atan2(dy, dx);
   const finalAngle = baseAngle + angleOffset;
   const ux = Math.cos(finalAngle);
@@ -252,9 +254,7 @@ export function updateBullets(
         // Mirror enemies bounce non-charged reflects back at the player.
         // Only a CHARGED reflect breaks through and damages a mirror.
         if (e.kind === "mirror" && !b.isCharged) {
-          const towardPx = px - b.x;
-          const towardPy = py - b.y;
-          const { ux, uy } = unitVector(towardPx, towardPy);
+          const { ux, uy } = unitVector(px - b.x, py - b.y);
           const speed = magnitude(b.vx, b.vy);
           b.vx = ux * speed;
           b.vy = uy * speed;

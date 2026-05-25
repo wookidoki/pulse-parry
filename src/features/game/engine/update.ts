@@ -129,12 +129,6 @@ export function createEngineState(
   };
 }
 
-// Per-loop difficulty multiplier in endless mode. Capped at +60% so it
-// stays survivable but distinctly harder each loop.
-export function endlessLoopMul(state: EngineState): number {
-  if (!state.endlessMode) return 1;
-  return 1 + Math.min(0.6, state.endlessLoop * 0.08);
-}
 
 function tickBossPhase(state: EngineState, cb: EngineCallbacks): void {
   if (!state.bossSpawned) return;

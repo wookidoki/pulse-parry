@@ -157,12 +157,16 @@ function targetVolume(): number {
   return masterVolume * MUSIC_VOLUME_FACTOR * intensityMul;
 }
 
+// BGM is the core of this rhythm game (see project memory), so the intensity
+// range is intentionally narrow — full ducking would drown out what the
+// player came for. Low combo gets a mild tuck, sustained combo rewards a
+// modest swell.
 function comboToIntensity(combo: number): number {
-  if (combo < 5) return 0.78;
-  if (combo < 25) return 0.88;
-  if (combo < 50) return 0.96;
-  if (combo < 100) return 1.05;
-  return 1.15;
+  if (combo < 5) return 0.92;
+  if (combo < 25) return 0.98;
+  if (combo < 50) return 1.04;
+  if (combo < 100) return 1.1;
+  return 1.18;
 }
 
 export function setBgmIntensity(combo: number): void {
