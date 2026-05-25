@@ -74,6 +74,10 @@ export const I18N_STRINGS = {
     rank: "등급",
     controlHint:
       "WASD 회피 · SHIFT 대시 · MOUSE 조준 · SPACE 막기 / 놓음=반격 · 꾹=차지 · 딱=PERFECT · ESC 일시정지",
+    endlessMode: "엔드리스",
+    endlessStart: "▶ 엔드리스 시작",
+    endlessDesc: "스테이지 무한 루프. 매 루프 난이도 상승. 죽을 때까지 점수 누적.",
+    loop: "LOOP",
   },
   en: {
     title: "PULSE PARRY",
@@ -148,6 +152,10 @@ export const I18N_STRINGS = {
     rank: "RANK",
     controlHint:
       "WASD move · SHIFT dash · MOUSE aim · SPACE parry / release=reflect · HOLD=charge · QUICK=PERFECT · ESC pause",
+    endlessMode: "ENDLESS",
+    endlessStart: "▶ ENDLESS START",
+    endlessDesc: "Stages loop forever. Difficulty rises per loop. Score until you die.",
+    loop: "LOOP",
   },
 } as const;
 

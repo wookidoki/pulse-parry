@@ -71,6 +71,7 @@ export function createEngineState(
   characterId: CharacterId = "ninja",
   modifierId: RunModifierId = "none",
   tutorialMode = false,
+  endlessMode = false,
 ): EngineState {
   const safeStage = Math.max(0, Math.min(STAGES.length - 1, startStage));
   const stage = STAGES[safeStage];
@@ -123,7 +124,16 @@ export function createEngineState(
     countdownMsLeft: 2300,
     countdownLastSecond: 3,
     perfectFlashMsLeft: 0,
+    endlessMode,
+    endlessLoop: 0,
   };
+}
+
+// Per-loop difficulty multiplier in endless mode. Capped at +60% so it
+// stays survivable but distinctly harder each loop.
+export function endlessLoopMul(state: EngineState): number {
+  if (!state.endlessMode) return 1;
+  return 1 + Math.min(0.6, state.endlessLoop * 0.08);
 }
 
 function tickBossPhase(state: EngineState, cb: EngineCallbacks): void {
@@ -194,10 +204,29 @@ function tickTempoCurve(state: EngineState, nowMs: number): void {
 function advanceStage(state: EngineState, nowMs: number, cb: EngineCallbacks): boolean {
   const stage = currentStage(state.stageIndex);
   const elapsed = nowMs - state.stageStartMs;
-  if (state.stageIndex >= FINAL_STAGE_INDEX || elapsed < stage.durationMs) {
-    return false;
+  if (elapsed < stage.durationMs) return false;
+
+  // Endless: when reaching the second-to-last stage (just before the boss),
+  // loop back to stage 1 instead, bumping the difficulty boost.
+  if (state.endlessMode) {
+    const isLastNonBoss = state.stageIndex === FINAL_STAGE_INDEX - 1;
+    if (isLastNonBoss) {
+      state.stageIndex = 1;
+      state.endlessLoop += 1;
+      cb.onEndlessLoop(state.endlessLoop);
+    } else {
+      state.stageIndex += 1;
+      // Skip boss stage entirely in endless mode.
+      if (state.stageIndex === FINAL_STAGE_INDEX) {
+        state.stageIndex = 1;
+        state.endlessLoop += 1;
+        cb.onEndlessLoop(state.endlessLoop);
+      }
+    }
+  } else {
+    if (state.stageIndex >= FINAL_STAGE_INDEX) return false;
+    state.stageIndex += 1;
   }
-  state.stageIndex += 1;
   state.stageStartMs = nowMs;
   state.lastEnemySpawnBeat = state.beat.currentBeat;
   const next = STAGES[state.stageIndex];
@@ -544,6 +573,11 @@ export function update(ctx: UpdateContext): void {
   processEnemyShots(state, enemyResult.shotsFired, nowMs);
   for (const tp of enemyResult.teleported) {
     emitBurst(state, tp.oldX, tp.oldY, BURSTS.parryCatch());
+  }
+  for (const hp of enemyResult.healerPulses) {
+    emitBurst(state, hp.fromX, hp.fromY, BURSTS.healCatch());
+    emitBurst(state, hp.toX, hp.toY, BURSTS.healCatch());
+    spawnScorePop(state, hp.toX, hp.toY - 16, "+1 HP", "#1cf78f", 0.7);
   }
 
   const bulletEffects = updateBullets(state, dt, canvasW, canvasH, nowMs);

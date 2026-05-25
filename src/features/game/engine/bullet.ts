@@ -32,8 +32,9 @@ export function createBullet(
   const distance = magnitude(dx, dy);
   const flightBeats = enemyConfig.flightBeats * diffConfig.flightBeatsMul;
   const flightMs = flightBeats * state.beat.beatPeriodMs;
+  const loopMul = state.endlessMode ? 1 + Math.min(0.6, state.endlessLoop * 0.08) : 1;
   const speed =
-    (distance / Math.max(0.05, flightMs / 1000)) * modConfig.bulletSpeedMul;
+    (distance / Math.max(0.05, flightMs / 1000)) * modConfig.bulletSpeedMul * loopMul;
   const baseAngle = Math.atan2(dy, dx);
   const finalAngle = baseAngle + angleOffset;
   const ux = Math.cos(finalAngle);
@@ -247,6 +248,26 @@ export function updateBullets(
         if (e.state !== "alive") continue;
         const dd = magnitude(b.x - e.x, b.y - e.y);
         if (dd >= ENEMY_RADIUS + radius) continue;
+
+        // Mirror enemies bounce non-charged reflects back at the player.
+        // Only a CHARGED reflect breaks through and damages a mirror.
+        if (e.kind === "mirror" && !b.isCharged) {
+          const towardPx = px - b.x;
+          const towardPy = py - b.y;
+          const { ux, uy } = unitVector(towardPx, towardPy);
+          const speed = magnitude(b.vx, b.vy);
+          b.vx = ux * speed;
+          b.vy = uy * speed;
+          b.state = "incoming";
+          b.minDist = Infinity;
+          b.nearMissFired = false;
+          b.isPerfect = false;
+          b.ownerEnemyId = e.id;
+          e.pulse = 1;
+          e.hitFlashMsLeft = 60;
+          emitBurst(state, b.x, b.y, BURSTS.parryCatch());
+          break;
+        }
 
         const baseDamage = b.kind === "heavy" ? 2 : 1;
         const charged = b.isCharged ? 1 : 0;

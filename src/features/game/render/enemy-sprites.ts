@@ -18,6 +18,9 @@ const SVG_URLS: Record<EnemyKind, string> = {
   bomber: "/assets/enemies/mortar.svg",
   splitter: "/assets/enemies/virus.svg",
   shard: "/assets/enemies/virus.svg",
+  mirror: "/assets/enemies/omnic.svg",
+  healer: "/assets/enemies/drone.svg",
+  pulser: "/assets/enemies/spiraler.svg",
 };
 
 const cache: Map<EnemyKind, SpriteCache> = new Map();

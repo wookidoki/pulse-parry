@@ -569,7 +569,7 @@
 
 .stageGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   width: 100%;
 }
@@ -578,6 +578,14 @@
   .stageGrid {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   }
+}
+
+.launchRow {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
 }
 
 .stageCard {

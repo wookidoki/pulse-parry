@@ -10,7 +10,10 @@ export type EnemyKind =
   | "mortar"
   | "bomber"
   | "splitter"
-  | "shard";
+  | "shard"
+  | "mirror"
+  | "healer"
+  | "pulser";
 export type EnemyRace = "omnic" | "virus" | "drone" | "core";
 export type EnemyState = "spawning" | "alive" | "dying" | "dead";
 
@@ -27,6 +30,9 @@ export const KIND_RACE: Record<EnemyKind, EnemyRace> = {
   bomber: "drone",
   splitter: "virus",
   shard: "virus",
+  mirror: "omnic",
+  healer: "drone",
+  pulser: "virus",
 };
 
 export const KIND_LABEL: Record<EnemyKind, string> = {
@@ -42,6 +48,9 @@ export const KIND_LABEL: Record<EnemyKind, string> = {
   bomber: "DRONE.BOMBER",
   splitter: "VIRUS.SPLITTER",
   shard: "VIRUS.SHARD",
+  mirror: "OMNIC.MIRROR",
+  healer: "DRONE.HEALER",
+  pulser: "VIRUS.PULSER",
 };
 
 export const RACE_LABEL: Record<EnemyRace, string> = {
@@ -206,6 +215,8 @@ export interface EngineState {
   hazards: Hazard[];
   nextHazardAtMs: number;
   tutorialMode: boolean;
+  endlessMode: boolean;
+  endlessLoop: number;
 }
 
 export type HazardKind = "laserSweep" | "missile" | "shockwave";
@@ -235,6 +246,7 @@ export interface EngineCallbacks {
   onEnemyKilled: (n: number) => void;
   onBossAppear: () => void;
   onBossPhaseChange: (phase: number) => void;
+  onEndlessLoop: (loop: number) => void;
 }
 
 export type GameStatus =
@@ -275,4 +287,5 @@ export interface HudState {
   enemiesKilled: number;
   playStartMs: number;
   playEndMs: number;
+  endlessLoop: number;
 }

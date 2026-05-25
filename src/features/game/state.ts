@@ -28,6 +28,7 @@ interface HudActions {
   finalizeDeath: () => void;
   finalizeVictory: () => void;
   triggerBossPhaseAlert: (phase: number) => void;
+  setEndlessLoop: (loop: number) => void;
 }
 
 const VOLUME_STORAGE_KEY = "pulse-parry-volumes";
@@ -85,6 +86,7 @@ const INITIAL: HudState = {
   enemiesKilled: 0,
   playStartMs: 0,
   playEndMs: 0,
+  endlessLoop: 0,
 };
 
 const stageNameOf = (index: number): string =>
@@ -204,4 +206,5 @@ export const useHud = create<HudState & HudActions>((set) => ({
       bossPhase: phase,
       bossPhaseAlertKey: s.bossPhaseAlertKey + 1,
     })),
+  setEndlessLoop: (loop) => set({ endlessLoop: loop }),
 }));

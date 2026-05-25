@@ -1,8 +1,8 @@
 import { PALETTE } from "./palette";
 
-export type CharacterId = "ninja" | "monk" | "netrunner";
+export type CharacterId = "ninja" | "monk" | "netrunner" | "conductor";
 
-export type BladeShape = "katana" | "staff" | "razor";
+export type BladeShape = "katana" | "staff" | "razor" | "baton";
 
 export interface CharacterStats {
   id: CharacterId;
@@ -82,6 +82,25 @@ export const CHARACTERS: Record<CharacterId, CharacterStats> = {
     reflectDamageMul: 1.4,
     bladeShape: "razor",
   },
+  conductor: {
+    id: "conductor",
+    name: { ko: "컨덕터", en: "CONDUCTOR" },
+    tagline: { ko: "박자의 지휘자, PERFECT 마스터", en: "Maestro of the beat — PERFECT master" },
+    ability: { ko: "넓은 PERFECT 윈도우 + 긴 반사", en: "Wider PERFECT window, longer reach" },
+    coneAngleRad: (42 * Math.PI) / 180,
+    parryRange: 150,
+    reflectSpeed: 1000,
+    perfectWindowMs: 220,
+    dashSpeed: 800,
+    dashCooldownMs: 1300,
+    maxHp: 2,
+    bladeColor: PALETTE.magenta,
+    accentColor: PALETTE.magenta,
+    bladeLengthIdle: 50,
+    bladeLengthParry: 82,
+    reflectDamageMul: 1.15,
+    bladeShape: "baton",
+  },
 };
 
-export const CHARACTER_ORDER: CharacterId[] = ["ninja", "monk", "netrunner"];
+export const CHARACTER_ORDER: CharacterId[] = ["ninja", "monk", "netrunner", "conductor"];

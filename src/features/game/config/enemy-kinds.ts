@@ -133,6 +133,36 @@ export const ENEMY_KINDS: Record<EnemyKind, EnemyKindConfig> = {
     color: PALETTE.cyan,
     glowColor: PALETTE.cyan,
   },
+  mirror: {
+    hp: 3,
+    beatsPerShot: 8,
+    bulletKind: "normal",
+    flightBeats: 2.5,
+    burstShots: 1,
+    burstIntervalBeatFraction: 0,
+    color: "#ffffff",
+    glowColor: PALETTE.magenta,
+  },
+  healer: {
+    hp: 4,
+    beatsPerShot: 10,
+    bulletKind: "normal",
+    flightBeats: 3,
+    burstShots: 1,
+    burstIntervalBeatFraction: 0,
+    color: "#1cf78f",
+    glowColor: "#1cf78f",
+  },
+  pulser: {
+    hp: 2,
+    beatsPerShot: 6,
+    bulletKind: "rapid",
+    flightBeats: 2.4,
+    burstShots: 8,
+    burstIntervalBeatFraction: 0.04,
+    color: PALETTE.cyan,
+    glowColor: PALETTE.cyan,
+  },
 };
 
 export interface BulletKindConfig {

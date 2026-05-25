@@ -74,6 +74,10 @@ function angleOffsetForShot(
   if (kind === "boss") {
     return (shotIndex - (totalShots - 1) / 2) * 0.18;
   }
+  if (kind === "pulser") {
+    // Full 360° omnidirectional burst
+    return (shotIndex / totalShots) * Math.PI * 2;
+  }
   return 0;
 }
 
@@ -128,19 +132,21 @@ export function shouldSpawnEnemy(
   }
   const diffConfig = DIFFICULTIES[state.difficulty];
   const modConfig = MODIFIERS[state.modifierId];
+  const loopMul = state.endlessMode ? 1 + Math.min(0.6, state.endlessLoop * 0.08) : 1;
+  const effectiveSpawnRate = modConfig.spawnRateMul * loopMul;
   const maxEnemies = stage.isBoss
     ? 1
     : Math.max(
         1,
         Math.round(
-          (stage.maxEnemies + diffConfig.enemyCountDelta) * modConfig.spawnRateMul,
+          (stage.maxEnemies + diffConfig.enemyCountDelta) * effectiveSpawnRate,
         ),
       );
   if (alive >= maxEnemies) return false;
   const beatsSinceLastSpawn = state.beat.currentBeat - state.lastEnemySpawnBeat;
   const effectiveSpawnBeats = Math.max(
     1,
-    stage.spawnEveryBeats / modConfig.spawnRateMul,
+    stage.spawnEveryBeats / effectiveSpawnRate,
   );
   return state.enemies.length === 0 || beatsSinceLastSpawn >= effectiveSpawnBeats;
 }
@@ -156,6 +162,7 @@ export interface EnemyTickResult {
   shotsFired: EnemyShot[];
   teleported: { enemyId: number; oldX: number; oldY: number }[];
   bomberDetonations: BomberDetonation[];
+  healerPulses: HealerPulse[];
 }
 
 function tryFireMainShot(
@@ -164,6 +171,7 @@ function tryFireMainShot(
   dt: number,
   beatPeriodMs: number,
   result: EnemyTickResult,
+  burstBonus: number,
 ): boolean {
   if (enemy.telegraphMsLeft <= 0) return false;
   enemy.telegraphMsLeft -= dt * 1000;
@@ -173,7 +181,7 @@ function tryFireMainShot(
   enemy.pulse = 1;
 
   const config = getEffectiveConfig(enemy);
-  const totalShots = Math.max(1, config.burstShots);
+  const totalShots = Math.max(1, config.burstShots + burstBonus);
   const angleOffset = angleOffsetForShot(enemy.kind, 0, totalShots);
   result.shotsFired.push({
     enemyId: enemy.id,
@@ -194,13 +202,14 @@ function tryFireBurstShot(
   nowMs: number,
   beatPeriodMs: number,
   result: EnemyTickResult,
+  burstBonus: number,
 ): boolean {
   if (enemy.burstShotsRemaining <= 0) return false;
   if (nowMs < enemy.burstNextShotAtMs) return true;
 
   enemy.pulse = 1;
   const config = getEffectiveConfig(enemy);
-  const totalShots = Math.max(1, config.burstShots);
+  const totalShots = Math.max(1, config.burstShots + burstBonus);
   const shotIndex = totalShots - enemy.burstShotsRemaining;
   const angleOffset = angleOffsetForShot(enemy.kind, shotIndex, totalShots);
   result.shotsFired.push({
@@ -221,9 +230,10 @@ function maybeStartTelegraph(enemy: Enemy, state: EngineState): void {
   if (!fireEvent) return;
   const config = getEffectiveConfig(enemy);
   const modConfig = MODIFIERS[state.modifierId];
+  const loopMul = state.endlessMode ? 1 + Math.min(0.6, state.endlessLoop * 0.08) : 1;
   const effectiveBeatsPerShot = Math.max(
     1,
-    config.beatsPerShot / modConfig.enemyFireRateMul,
+    config.beatsPerShot / (modConfig.enemyFireRateMul * loopMul),
   );
   if (state.beat.currentBeat - enemy.lastShotBeat < effectiveBeatsPerShot) return;
   const baseTelegraph = Math.min(TELEGRAPH_MS, state.beat.beatPeriodMs * 0.55);
@@ -252,12 +262,55 @@ function maybeTeleportPhantom(
 
 const BOMBER_SPEED = 60;
 const BOMBER_DETONATE_RADIUS = 80;
+const HEALER_PULSE_BEATS = 4;
 
 export interface BomberDetonation {
   enemyId: number;
   x: number;
   y: number;
   hitPlayer: boolean;
+}
+
+export interface HealerPulse {
+  healerId: number;
+  targetId: number;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+}
+
+function maybeHealNeighbors(
+  healer: Enemy,
+  state: EngineState,
+  result: EnemyTickResult,
+): void {
+  if (!state.beat.isBeatTick) return;
+  if (state.beat.currentBeat % HEALER_PULSE_BEATS !== 0) return;
+  let closest: Enemy | null = null;
+  let closestDist = Infinity;
+  for (const other of state.enemies) {
+    if (other === healer) continue;
+    if (other.state !== "alive") continue;
+    if (other.hp >= other.maxHp) continue;
+    const d = Math.hypot(other.x - healer.x, other.y - healer.y);
+    if (d < closestDist) {
+      closestDist = d;
+      closest = other;
+    }
+  }
+  if (!closest) return;
+  closest.hp = Math.min(closest.maxHp, closest.hp + 1);
+  closest.pulse = 1;
+  healer.pulse = 1;
+  result.healerPulses.push({
+    healerId: healer.id,
+    targetId: closest.id,
+    fromX: healer.x,
+    fromY: healer.y,
+    toX: closest.x,
+    toY: closest.y,
+  });
 }
 
 export function updateEnemies(
@@ -267,9 +320,15 @@ export function updateEnemies(
   canvasW: number,
   canvasH: number,
 ): EnemyTickResult {
-  const result: EnemyTickResult = { shotsFired: [], teleported: [], bomberDetonations: [] };
+  const result: EnemyTickResult = {
+    shotsFired: [],
+    teleported: [],
+    bomberDetonations: [],
+    healerPulses: [],
+  };
   const r = orbitRadius(canvasW, canvasH);
   const bossRadius = r * 1.1;
+  const burstBonus = MODIFIERS[state.modifierId].burstShotsBonus;
 
   for (const e of state.enemies) {
     if (e.state === "dead") continue;
@@ -318,11 +377,12 @@ export function updateEnemies(
     if (e.state !== "alive") continue;
 
     maybeTeleportPhantom(e, state, canvasW, canvasH, result);
+    if (e.kind === "healer") maybeHealNeighbors(e, state, result);
 
     if (isBomber) continue;
 
-    if (tryFireMainShot(e, nowMs, dt, state.beat.beatPeriodMs, result)) continue;
-    if (tryFireBurstShot(e, nowMs, state.beat.beatPeriodMs, result)) continue;
+    if (tryFireMainShot(e, nowMs, dt, state.beat.beatPeriodMs, result, burstBonus)) continue;
+    if (tryFireBurstShot(e, nowMs, state.beat.beatPeriodMs, result, burstBonus)) continue;
     maybeStartTelegraph(e, state);
   }
   return result;

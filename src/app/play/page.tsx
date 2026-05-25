@@ -15,8 +15,9 @@ import {
 import { PracticeHud } from "@/features/game/ui/PracticeHud";
 import { BossPhaseAlert } from "@/features/game/ui/BossPhaseAlert";
 import type { Difficulty } from "@/features/game/types";
-import type { CharacterId } from "@/features/game/config/characters";
-import type { RunModifierId } from "@/features/game/config/modifiers";
+import { CHARACTERS, type CharacterId } from "@/features/game/config/characters";
+import { MODIFIERS, type RunModifierId } from "@/features/game/config/modifiers";
+import { STAGES } from "@/features/game/config/stages";
 
 interface PageProps {
   searchParams: Promise<{
@@ -25,6 +26,7 @@ interface PageProps {
     char?: string;
     mod?: string;
     tutorial?: string;
+    mode?: string;
   }>;
 }
 
@@ -33,33 +35,28 @@ function parseDifficulty(v: string | undefined): Difficulty {
 }
 
 function parseCharacter(v: string | undefined): CharacterId {
-  return v === "monk" || v === "netrunner" ? v : "ninja";
+  return v && v in CHARACTERS ? (v as CharacterId) : "ninja";
 }
 
 function parseModifier(v: string | undefined): RunModifierId {
-  if (
-    v === "rapidFire" ||
-    v === "metalRain" ||
-    v === "purist" ||
-    v === "stoneHeart"
-  ) {
-    return v;
-  }
-  return "none";
+  return v && v in MODIFIERS ? (v as RunModifierId) : "none";
 }
 
 export default async function PlayPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const stageIdx = Math.max(0, Math.min(4, parseInt(params.stage ?? "0", 10) || 0));
+  const maxStage = STAGES.length - 1;
+  const stageIdx = Math.max(0, Math.min(maxStage, parseInt(params.stage ?? "0", 10) || 0));
   const tutorialMode = params.tutorial === "1";
+  const endlessMode = params.mode === "endless";
   return (
     <>
       <GameCanvas
-        startStage={stageIdx}
+        startStage={endlessMode ? 0 : stageIdx}
         difficulty={parseDifficulty(params.diff)}
         characterId={parseCharacter(params.char)}
         modifierId={parseModifier(params.mod)}
         tutorialMode={tutorialMode}
+        endlessMode={endlessMode}
       />
       <Hud />
       <StageBanner />

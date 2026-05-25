@@ -786,10 +786,11 @@ function drawBladeAt(
   bladeColor: string,
   intense: boolean,
   nowMs: number,
-  shape: "katana" | "staff" | "razor" = "katana",
+  shape: "katana" | "staff" | "razor" | "baton" = "katana",
 ): void {
   if (shape === "staff") drawStaffBlade(c, angle, length, bladeColor, intense, nowMs);
   else if (shape === "razor") drawRazorBlade(c, angle, length, bladeColor, intense, nowMs);
+  else if (shape === "baton") drawBatonBlade(c, angle, length, bladeColor, intense, nowMs);
   else drawKatanaBlade(c, angle, length, bladeColor, intense, nowMs);
 }
 
@@ -965,6 +966,87 @@ function drawRazorBlade(
     c.arc(flameX, flameY, 3, 0, Math.PI * 2);
     c.fill();
   }
+  c.restore();
+}
+
+// Conductor's baton — thin tapered stick with a bright tip orb and
+// trailing music-note particles when intense (the "beat" tells).
+function drawBatonBlade(
+  c: CanvasRenderingContext2D,
+  angle: number,
+  length: number,
+  bladeColor: string,
+  intense: boolean,
+  nowMs: number,
+): void {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const perpCos = -sin;
+  const perpSin = cos;
+  const innerX = cos * BLADE_INNER_OFFSET;
+  const innerY = sin * BLADE_INNER_OFFSET;
+  const tipX = cos * (BLADE_INNER_OFFSET + length);
+  const tipY = sin * (BLADE_INNER_OFFSET + length);
+
+  c.save();
+  c.lineCap = "round";
+  c.shadowColor = intense ? PALETTE.yellow : bladeColor;
+  c.shadowBlur = intense ? 30 : 20;
+
+  // Tapered stick — wider at base, thin at tip.
+  const segs = 6;
+  const baseW = intense ? 7 : 5;
+  for (let i = 0; i < segs; i++) {
+    const t0 = i / segs;
+    const t1 = (i + 1) / segs;
+    const w0 = baseW * (1 - t0 * 0.7);
+    const w1 = baseW * (1 - t1 * 0.7);
+    c.strokeStyle = intense ? PALETTE.yellow : bladeColor;
+    c.lineWidth = (w0 + w1) / 2;
+    c.beginPath();
+    c.moveTo(innerX + (tipX - innerX) * t0, innerY + (tipY - innerY) * t0);
+    c.lineTo(innerX + (tipX - innerX) * t1, innerY + (tipY - innerY) * t1);
+    c.stroke();
+  }
+
+  // White core
+  c.shadowBlur = 0;
+  c.strokeStyle = "rgba(255, 255, 255, 0.95)";
+  c.lineWidth = intense ? 2 : 1.4;
+  c.beginPath();
+  c.moveTo(innerX, innerY);
+  c.lineTo(tipX, tipY);
+  c.stroke();
+
+  // Bright tip orb
+  c.shadowColor = "#ffffff";
+  c.shadowBlur = intense ? 26 : 16;
+  c.fillStyle = "#ffffff";
+  const orbR = intense ? 6 + Math.sin(nowMs / 70) * 1.5 : 4;
+  c.beginPath();
+  c.arc(tipX, tipY, orbR, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = bladeColor;
+  c.beginPath();
+  c.arc(tipX, tipY, intense ? 3 : 2.2, 0, Math.PI * 2);
+  c.fill();
+
+  // Music-note particle trail when parrying (intense)
+  if (intense) {
+    for (let i = 0; i < 4; i++) {
+      const phase = ((nowMs / 240) + i * 0.27) % 1;
+      const side = (i % 2 === 0 ? 1 : -1) * (6 + Math.sin(phase * Math.PI) * 4);
+      const back = -phase * 22;
+      const px = tipX + perpCos * side + cos * back;
+      const py = tipY + perpSin * side + sin * back;
+      const alpha = 1 - phase;
+      c.fillStyle = `rgba(255, 255, 255, ${alpha * 0.7})`;
+      c.beginPath();
+      c.arc(px, py, 1.6 + alpha * 1.1, 0, Math.PI * 2);
+      c.fill();
+    }
+  }
+
   c.restore();
 }
 

@@ -469,18 +469,33 @@ function StageView({
       </div>
       <p className={styles.modDescription}>{MODIFIERS[modifierId].description[locale]}</p>
 
-      <Button
-        variant="primary"
-        size="lg"
-        bracket
-        onClick={() =>
-          onLaunch(
-            `/play?stage=${selectedStage}&diff=${difficulty}&char=${characterId}&mod=${modifierId}`,
-          )
-        }
-      >
-        ▶ {t("startGame", locale)}
-      </Button>
+      <div className={styles.launchRow}>
+        <Button
+          variant="primary"
+          size="lg"
+          bracket
+          onClick={() =>
+            onLaunch(
+              `/play?stage=${selectedStage}&diff=${difficulty}&char=${characterId}&mod=${modifierId}`,
+            )
+          }
+        >
+          ▶ {t("startGame", locale)}
+        </Button>
+        <Button
+          variant="secondary"
+          size="lg"
+          bracket
+          onClick={() =>
+            onLaunch(
+              `/play?mode=endless&diff=${difficulty}&char=${characterId}&mod=${modifierId}`,
+            )
+          }
+          title={t("endlessDesc", locale)}
+        >
+          {t("endlessStart", locale)}
+        </Button>
+      </div>
     </div>
   );
 }

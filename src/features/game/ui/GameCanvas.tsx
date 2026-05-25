@@ -38,6 +38,7 @@ interface GameCanvasProps {
   characterId?: CharacterId;
   modifierId?: RunModifierId;
   tutorialMode?: boolean;
+  endlessMode?: boolean;
 }
 
 export function GameCanvas({
@@ -46,6 +47,7 @@ export function GameCanvas({
   characterId = "ninja",
   modifierId = "none",
   tutorialMode = false,
+  endlessMode = false,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<EngineState | null>(null);
@@ -74,6 +76,7 @@ export function GameCanvas({
   const togglePause = useHud((s) => s.togglePause);
   const startBossCutscene = useHud((s) => s.startBossCutscene);
   const triggerBossPhaseAlert = useHud((s) => s.triggerBossPhaseAlert);
+  const setEndlessLoop = useHud((s) => s.setEndlessLoop);
   const musicVolume = useHud((s) => s.musicVolume);
   const sfxVolume = useHud((s) => s.sfxVolume);
   const stageIndex = useHud((s) => s.stageIndex);
@@ -201,7 +204,15 @@ export function GameCanvas({
     window.addEventListener("blur", handleBlur);
 
     const startTime = performance.now();
-    engineRef.current = createEngineState(0, startStage, difficulty, characterId, modifierId, tutorialMode);
+    engineRef.current = createEngineState(
+      0,
+      startStage,
+      difficulty,
+      characterId,
+      modifierId,
+      tutorialMode,
+      endlessMode,
+    );
     setStage(startStage);
     let prevTime = startTime;
 
@@ -237,6 +248,7 @@ export function GameCanvas({
           onEnemyKilled: bumpEnemiesKilled,
           onBossAppear: startBossCutscene,
           onBossPhaseChange: triggerBossPhaseAlert,
+          onEndlessLoop: setEndlessLoop,
         });
       }
 
@@ -259,7 +271,7 @@ export function GameCanvas({
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, triggerBossPhaseAlert, startStage, difficulty, characterId, modifierId, tutorialMode]);
+  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, triggerBossPhaseAlert, setEndlessLoop, startStage, difficulty, characterId, modifierId, tutorialMode, endlessMode]);
 
   return <canvas ref={canvasRef} className={styles.canvas} />;
 }

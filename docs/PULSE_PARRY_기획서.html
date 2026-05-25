@@ -4,33 +4,35 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>PULSE PARRY — 게임 기획서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
 <style>
   :root {
-    /* paper + ink (본문) */
-    --paper: #f6f5fa;
+    --paper: #f4f5f9;
     --card: #ffffff;
-    --ink: #20203a;
-    --ink-soft: #4a4a66;
-    --ink-dim: #7c7d96;
-    --line: #e4e2ee;
-    --line-soft: #eeedf5;
+    --ink: #1e2030;
+    --ink-soft: #515468;
+    --ink-dim: #898ca6;
+    --line: #e6e7f1;
+    --line-soft: #eff0f6;
 
-    /* brand (표지·포인트용 — 밝은 원색) */
-    --cyan: #1cf0ff;
-    --magenta: #ff2bd6;
-    --yellow: #f7ff3a;
-    --red: #ff3863;
-    --purple: #b14bff;
+    /* brand accents — 흰 배경용으로 살짝 깊인 톤 (네온 원색은 표지/스크린에만) */
+    --cyan: #17b6cb;
+    --magenta: #e23bb0;
+    --yellow: #e2a516;
+    --red: #ef5570;
+    --purple: #9a5ce8;
 
-    /* brand-ink (밝은 배경에서 읽히는 깊은 버전) */
-    --cyan-ink: #0a93a6;
-    --magenta-ink: #c01c93;
+    /* solid 칩/텍스트용 딥 버전 */
+    --cyan-ink: #0a8ea1;
+    --magenta-ink: #bd1f90;
     --amber-ink: #b07a08;
-    --red-ink: #d62748;
+    --red-ink: #d83a55;
     --purple-ink: #7e34c4;
 
-    /* dark screen (게임 화면 목업) */
-    --screen: #16132a;
+    --screen: #15122a;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,55 +41,53 @@
   body {
     background: #d9d8e4;
     color: var(--ink);
-    font-family: "Pretendard", "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
-    line-height: 1.72;
-    font-size: 13px;
+    font-family: "Pretendard Variable", "Pretendard", "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    line-height: 1.78;
+    font-size: 13.5px;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
-  .mono { font-family: "Consolas", "SFMono-Regular", "DejaVu Sans Mono", monospace; }
+  .mono { font-family: "JetBrains Mono", "Consolas", "SFMono-Regular", monospace; }
 
   /* ---------- PAGE ---------- */
   .page {
-    width: 210mm;
-    min-height: 297mm;
-    margin: 0 auto;
-    padding: 20mm 18mm 16mm;
-    background: var(--paper);
-    position: relative;
+    width: 210mm; min-height: 297mm; margin: 0 auto;
+    padding: 24mm 20mm 16mm; background: var(--paper);
+    position: relative; display: flex; flex-direction: column;
   }
-  /* whisper of brand color in corners — very low opacity, no glare */
   .page::before {
     content: ""; position: absolute; inset: 0; pointer-events: none;
     background:
-      radial-gradient(620px 360px at 108% -8%, rgba(255,43,214,0.05), transparent 60%),
-      radial-gradient(640px 420px at -8% 108%, rgba(28,240,255,0.06), transparent 58%);
+      radial-gradient(620px 360px at 108% -8%, rgba(255,43,214,0.045), transparent 60%),
+      radial-gradient(640px 420px at -8% 108%, rgba(28,240,255,0.055), transparent 58%);
   }
-
   @media screen {
     body { padding: 26px 0; }
     .page { box-shadow: 0 18px 50px rgba(30,24,60,0.18); border-radius: 8px; }
     .page + .page { margin-top: 28px; }
   }
   @media print {
-    body { background: #fff; font-size: 10.5pt; }
+    body { background: #fff; font-size: 11pt; }
     .page { box-shadow: none; margin: 0 !important; }
     .page-break { page-break-before: always; }
     a { color: inherit; text-decoration: none; }
   }
   @page { size: A4; margin: 0; }
 
-  .content { position: relative; z-index: 1; }
+  .content { position: relative; z-index: 1; display: flex; flex-direction: column; flex: 1; }
+  .spacer { flex: 1; }
 
   /* ---------- SECTION HEADER ---------- */
-  .sec { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; }
-  .sec .num {
-    font-family: "Consolas", monospace; font-size: 12px; font-weight: 700; color: #fff;
-    width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; flex: none;
-  }
-  .sec h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; color: var(--ink); }
-  .sec .en { margin-left: auto; font-family: "Consolas", monospace; font-size: 10.5px; letter-spacing: 2px; color: var(--ink-dim); text-transform: uppercase; }
-  .rule { height: 2px; border: 0; border-radius: 2px; margin: 0 0 18px;
-    background: linear-gradient(90deg, var(--cyan-ink), rgba(192,28,147,0.55) 55%, transparent 92%); }
+  .sec { display: flex; align-items: center; gap: 13px; margin: 0 0 4px; }
+  .sec .num { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 13px; font-weight: 700; color: #fff;
+    width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none;
+    box-shadow: 0 3px 9px rgba(30,24,60,0.16); }
+  .sec h2 { font-size: 25px; font-weight: 700; letter-spacing: -0.4px; color: var(--ink); }
+  .sec .en { margin-left: auto; font-family: "JetBrains Mono", "Consolas", monospace; font-size: 11px; letter-spacing: 2px; color: var(--ink-dim); text-transform: uppercase; }
+  .rule { height: 2px; border: 0; border-radius: 2px; margin: 12px 0 26px;
+    background: linear-gradient(90deg, var(--cyan-ink), rgba(192,28,147,0.5) 55%, transparent 92%); }
 
   .c-cyan { background: var(--cyan-ink); }
   .c-magenta { background: var(--magenta-ink); }
@@ -95,137 +95,164 @@
   .c-red { background: var(--red-ink); }
   .c-purple { background: var(--purple-ink); }
 
-  h3 { font-size: 14px; font-weight: 700; color: var(--ink); margin: 18px 0 8px; }
-  h3 .mark { color: var(--magenta-ink); font-weight: 600; }
-  p { color: var(--ink-soft); margin-bottom: 9px; }
+  h3 { font-size: 15px; font-weight: 700; color: var(--ink); margin: 26px 0 12px; }
+  h3:first-child { margin-top: 0; }
+  h3 .mark { color: var(--magenta-ink); font-weight: 600; font-size: 13px; }
+  p { color: var(--ink-soft); margin-bottom: 11px; }
   strong { color: var(--ink); font-weight: 700; }
-  .lead { font-size: 14.5px; color: var(--ink); line-height: 1.7; padding-left: 16px;
-    border-left: 3px solid var(--cyan-ink); margin-bottom: 18px; }
+
+  .lead { font-size: 19px; line-height: 1.6; color: var(--ink); font-weight: 600; letter-spacing: -0.3px; margin-bottom: 8px; }
+  .lead .pop { background: linear-gradient(120deg, var(--cyan-ink), var(--magenta-ink));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub-lead { font-size: 14px; color: var(--ink-dim); margin-bottom: 26px; }
 
   ul { list-style: none; }
-  li { padding-left: 17px; position: relative; margin-bottom: 6px; color: var(--ink-soft); }
-  li::before { content: ""; position: absolute; left: 2px; top: 11px; width: 5px; height: 5px;
+  li { padding-left: 19px; position: relative; margin-bottom: 9px; color: var(--ink-soft); }
+  li::before { content: ""; position: absolute; left: 2px; top: 12px; width: 5px; height: 5px;
     border-radius: 50%; background: var(--magenta-ink); }
-  .kv { color: var(--cyan-ink); font-weight: 700; font-family: "Consolas", monospace; }
-  .hl { background: linear-gradient(transparent 58%, #faf3a8 58%); padding: 0 2px; color: var(--ink); font-weight: 700; }
+  .kv { color: var(--cyan-ink); font-weight: 700; font-family: "JetBrains Mono", "Consolas", monospace; }
 
   /* ---------- GRID / CARDS ---------- */
-  .grid { display: grid; gap: 13px; }
+  .grid { display: grid; gap: 15px; }
   .g3 { grid-template-columns: repeat(3, 1fr); }
   .g2 { grid-template-columns: repeat(2, 1fr); }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    padding: 15px 16px; box-shadow: 0 2px 8px rgba(30,24,60,0.04); }
-  .card.top { border-top-width: 3px; padding-top: 14px; }
-  .t-cyan { border-top-color: var(--cyan); }
-  .t-yellow { border-top-color: var(--yellow); }
-  .t-magenta { border-top-color: var(--magenta); }
-  .t-red { border-top-color: var(--red); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 20px; box-shadow: 0 5px 18px rgba(30,24,60,0.05); }
+  .card.top { border-top-width: 3px; padding-top: 17px; }
+  .t-cyan { border-top-color: var(--cyan); } .t-yellow { border-top-color: var(--yellow); }
+  .t-magenta { border-top-color: var(--magenta); } .t-red { border-top-color: var(--red); }
   .t-purple { border-top-color: var(--purple); }
-  .card h4 { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
-  .card .role { font-family: "Consolas", monospace; font-size: 9.5px; letter-spacing: 1.4px;
-    text-transform: uppercase; display: block; margin-bottom: 9px; }
-  .card p { font-size: 12px; margin-bottom: 5px; }
-  .card ul { margin-top: 4px; }
-  .card li { font-size: 11.5px; margin-bottom: 4px; }
+  .card h4 { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 7px; }
+  .card .role { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 9.5px; letter-spacing: 1.4px;
+    text-transform: uppercase; display: block; margin-bottom: 11px; }
+  .card p { font-size: 12.5px; margin-bottom: 0; line-height: 1.65; }
+  .card .bio { font-size: 11px; color: var(--ink-dim); font-style: italic; margin-top: 10px;
+    padding-top: 9px; border-top: 1px dashed var(--line); }
 
-  .stat { display: flex; justify-content: space-between; font-size: 11.5px; padding: 3px 0;
+  .stat { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0;
     border-bottom: 1px dashed var(--line); color: var(--ink-soft); }
-  .stat b { font-family: "Consolas", monospace; color: var(--ink); font-weight: 700; }
+  .stat b { font-family: "JetBrains Mono", "Consolas", monospace; color: var(--ink); font-weight: 700; }
+
+  /* mini stat box */
+  .mbox { background: #fff; border: 1px solid var(--line); border-radius: 11px; padding: 13px 14px; }
+  .mbox .lbl { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 9px; letter-spacing: 1px;
+    color: var(--cyan-ink); text-transform: uppercase; }
+  .mbox .val { font-size: 13px; color: var(--ink); font-weight: 700; margin-top: 4px; }
 
   /* ---------- TABLE ---------- */
-  table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 12px; }
-  th { text-align: left; padding: 8px 10px; color: var(--cyan-ink);
-    font-family: "Consolas", monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 8px; font-size: 12.5px; }
+  th { text-align: left; padding: 10px 12px; color: var(--cyan-ink);
+    font-family: "JetBrains Mono", "Consolas", monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
     border-bottom: 2px solid var(--line); }
-  td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line-soft); color: var(--ink-soft); }
+  td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line-soft); color: var(--ink-soft); }
   tbody tr:nth-child(even) td { background: #faf9fd; }
   td:first-child { font-weight: 700; color: var(--ink); }
 
   /* ---------- TIMELINE ---------- */
-  .timeline { position: relative; height: 50px; background: #ecebf4; border-radius: 9px;
-    margin: 12px 0 5px; overflow: hidden; border: 1px solid var(--line); }
+  .timeline { position: relative; height: 56px; background: #ecebf4; border-radius: 10px;
+    margin: 8px 0 6px; overflow: hidden; border: 1px solid var(--line); }
   .seg { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center;
-    font-family: "Consolas", monospace; font-size: 10px; font-weight: 700; }
+    font-family: "JetBrains Mono", "Consolas", monospace; font-size: 11px; font-weight: 700; }
   .s-tap { left: 0; width: 28.5%; background: #c9f3f9; color: #066a78; }
   .s-mid { left: 28.5%; right: 0; background: #ece0fb; color: #6a37a8; }
   .s-perfect { left: 14%; width: 13%; top: -1px; bottom: -1px; background: #fcf38f; color: #6f5a00;
-    border: 1.5px solid var(--amber-ink); border-radius: 6px; }
-  .axis { display: flex; justify-content: space-between; font-family: "Consolas", monospace;
-    font-size: 9.5px; color: var(--ink-dim); }
+    border: 1.5px solid var(--amber-ink); border-radius: 7px; }
+  .axis { display: flex; justify-content: space-between; font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 10px; color: var(--ink-dim); }
 
   /* ---------- CALLOUT ---------- */
-  .callout { background: #eafafc; border: 1px solid #c7eef3;
-    border-left: 3px solid var(--cyan-ink); border-radius: 10px; padding: 12px 15px; margin: 13px 0; }
-  .callout p { margin: 0; color: var(--ink-soft); font-size: 12.5px; }
+  .callout { background: #eafafc; border: 1px solid #c7eef3; border-left: 3px solid var(--cyan-ink);
+    border-radius: 11px; padding: 15px 18px; margin: 4px 0; }
+  .callout p { margin: 0; color: var(--ink-soft); font-size: 13px; }
   .callout strong { color: var(--cyan-ink); }
 
-  /* ---------- WIREFRAME (game screen mock) ---------- */
-  .screen { background: var(--screen); border-radius: 12px; padding: 14px;
-    box-shadow: 0 6px 20px rgba(22,19,42,0.3); }
-  .screen pre { font-family: "Consolas", monospace; font-size: 10px; line-height: 1.4;
+  /* ---------- SCREEN MOCK ---------- */
+  .screen { background: var(--screen); border-radius: 13px; padding: 16px;
+    box-shadow: 0 6px 22px rgba(22,19,42,0.3); }
+  .screen pre { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 10.5px; line-height: 1.45;
     color: #6fe6f0; white-space: pre; margin: 0; }
-  .screen .cap { font-family: "Consolas", monospace; font-size: 9px; letter-spacing: 1px;
-    color: #8a7fb5; text-transform: uppercase; display: block; margin-top: 8px; }
+  .screen .cap { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 9px; letter-spacing: 1px;
+    color: #8a7fb5; text-transform: uppercase; display: block; margin-top: 10px; }
+
+  /* ---------- DIVE PATH ---------- */
+  .dive-row { display: flex; gap: 14px; align-items: baseline; padding: 11px 0 11px 16px;
+    border-bottom: 1px solid var(--line-soft); }
+  .dive-row:last-child { border-bottom: 0; }
+  .dive-row .stg { font-family: "JetBrains Mono", "Consolas", monospace; font-weight: 700; font-size: 11.5px;
+    flex: none; width: 130px; }
+  .dive-row .txt { font-size: 13px; color: var(--ink-soft); }
+
+  /* ---------- BPM RAMP ---------- */
+  .ramp { display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; gap: 12px; height: 110px; margin-top: 8px; }
+  .ramp .col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+  .ramp .bpm { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 10.5px; color: var(--ink-soft); font-weight: 700; margin-bottom: 5px; }
+  .ramp .bar { width: 100%; border-radius: 7px 7px 0 0; }
+  .ramp-names { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 7px 0 4px; text-align: center; }
+  .ramp-names span { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 9.5px; color: var(--ink-dim); }
 
   /* ---------- MISC ---------- */
-  .two-col { columns: 2; column-gap: 28px; }
-  .two-col li { break-inside: avoid; }
-  .pill { display: inline-block; font-family: "Consolas", monospace; font-size: 10.5px;
-    padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff;
-    color: var(--ink-soft); margin: 0 3px 4px 0; }
-  .num-hi { color: var(--magenta-ink); font-family: "Consolas", monospace; font-weight: 700; }
+  .pill { display: inline-block; font-family: "JetBrains Mono", "Consolas", monospace; font-size: 11px;
+    padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff;
+    color: var(--ink-soft); margin: 0 5px 6px 0; }
+  .pill .ar { color: var(--magenta-ink); margin: 0 2px; }
+  .num-hi { color: var(--magenta-ink); font-family: "JetBrains Mono", "Consolas", monospace; font-weight: 700; }
   .foot { display: flex; justify-content: space-between; align-items: center;
-    margin-top: 22px; padding-top: 9px; border-top: 1px solid var(--line);
-    font-family: "Consolas", monospace; font-size: 9.5px; color: var(--ink-dim); }
+    margin-top: 18px; padding-top: 10px; border-top: 1px solid var(--line);
+    font-family: "JetBrains Mono", "Consolas", monospace; font-size: 9.5px; color: var(--ink-dim); }
+  .cta { text-align: center; }
+  .cta .small { font-family: "JetBrains Mono", "Consolas", monospace; letter-spacing: 4px; color: var(--cyan-ink); font-size: 12px; }
+  .cta .url { font-size: 24px; font-weight: 800; margin-top: 5px;
+    background: linear-gradient(120deg, var(--cyan-ink), var(--magenta-ink));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
 
   /* ============ COVER ============ */
   .cover { background: linear-gradient(160deg, #161430 0%, #1d1840 45%, #241334 100%);
-    color: #fff; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+    color: #fff; justify-content: center; overflow: hidden; }
   .cover::before {
     background:
       radial-gradient(680px 420px at 100% 0%, rgba(255,43,214,0.20), transparent 60%),
-      radial-gradient(720px 480px at 0% 100%, rgba(28,240,255,0.18), transparent 58%);
-  }
+      radial-gradient(720px 480px at 0% 100%, rgba(28,240,255,0.18), transparent 58%); }
   .cover .grid-lines { position: absolute; inset: 0; opacity: 0.5;
     background-image: linear-gradient(rgba(160,180,255,0.05) 1px, transparent 1px),
                       linear-gradient(90deg, rgba(160,180,255,0.05) 1px, transparent 1px);
     background-size: 40px 40px;
     -webkit-mask-image: radial-gradient(circle at 50% 40%, #000, transparent 75%);
     mask-image: radial-gradient(circle at 50% 40%, #000, transparent 75%); }
-  .cover .kicker { font-family: "Consolas", monospace; font-size: 11.5px; letter-spacing: 5px;
-    color: #6fe6f0; text-transform: uppercase; margin-bottom: 16px; }
-  .cover h1 { font-size: 84px; line-height: 0.94; font-weight: 800; letter-spacing: -1.5px;
+  .cover .kicker { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 11.5px; letter-spacing: 5px;
+    color: #6fe6f0; text-transform: uppercase; margin-bottom: 18px; }
+  .cover h1 { font-size: 88px; line-height: 0.94; font-weight: 800; letter-spacing: -1.5px;
     background: linear-gradient(120deg, #5ff0ff, #ffffff 42%, #ff7be8 82%);
-    -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 10px; }
-  .cover .subtitle { font-size: 20px; font-weight: 600; color: #eef0ff; }
+    -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 12px;
+    filter: drop-shadow(0 6px 26px rgba(95,240,255,0.18)); }
+  .cover .subtitle { font-size: 21px; font-weight: 600; color: #eef0ff; }
   .cover .subtitle b { color: #f7ff8a; }
-  .cover .hook { font-size: 14px; color: #b9bce0; max-width: 560px; margin: 18px 0 32px; line-height: 1.7; }
-  .cover .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; max-width: 620px;
-    border-top: 1px solid rgba(255,255,255,0.14); padding-top: 22px; }
-  .cover .meta .lbl { display: block; font-family: "Consolas", monospace; font-size: 9.5px;
-    letter-spacing: 1.5px; color: #6fe6f0; text-transform: uppercase; margin-bottom: 2px; }
+  .cover .hook { font-size: 14.5px; color: #b9bce0; max-width: 560px; margin: 20px 0 34px; line-height: 1.75; }
+  .cover .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 13px 28px; max-width: 620px;
+    border-top: 1px solid rgba(255,255,255,0.14); padding-top: 24px; }
+  .cover .meta .lbl { display: block; font-family: "JetBrains Mono", "Consolas", monospace; font-size: 9.5px;
+    letter-spacing: 1.5px; color: #6fe6f0; text-transform: uppercase; margin-bottom: 3px; }
   .cover .meta div { font-size: 12.5px; color: #e7e9ff; }
   .cover .meta a { color: #fff; }
-  .cover .tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 24px; }
-  .cover .tag { font-family: "Consolas", monospace; font-size: 10.5px; letter-spacing: 0.5px;
-    padding: 5px 11px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18); color: #c7c9ec; }
+  .cover .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+  .cover .tag { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 10.5px; padding: 5px 12px;
+    border-radius: 999px; border: 1px solid rgba(255,255,255,0.18); color: #c7c9ec; }
   .cover .tag.on { background: rgba(28,240,255,0.16); border-color: rgba(28,240,255,0.5); color: #aef4fb; }
 </style>
 </head>
 <body>
 
-<!-- ============ PAGE 1 — COVER ============ -->
+<!-- ============ 1 · COVER ============ -->
 <section class="page cover">
   <div class="grid-lines"></div>
-  <div class="content">
+  <div class="content" style="flex:none">
     <div class="kicker">Web Minigame · Vibe Coding Hackathon 2026</div>
     <h1>PULSE<br/>PARRY</h1>
     <div class="subtitle">360° 리듬 <b>패링</b> 서바이버</div>
     <p class="hook">
       마우스로 조준하고, <strong style="color:#fff">박자에 맞춰 SPACE</strong>로 막는다. 흡수한 탄을 적에게 되돌려라.
-      설치 없이 브라우저에서 즉시 시작 — <strong style="color:#fff">10분 안에 끝나는 한 판</strong>, 끝나면 다시 누르고 싶은 게임.
+      설치 없이 브라우저에서 즉시 시작 — <strong style="color:#fff">10분 안에 끝나는 한 판.</strong>
     </p>
-
     <div class="meta">
       <div><span class="lbl">장르 / Genre</span>리듬 · 불릿헤븐 · 액션 서바이버</div>
       <div><span class="lbl">플랫폼 / Platform</span>웹 (데스크탑·모바일·태블릿)</div>
@@ -233,28 +260,24 @@
       <div><span class="lbl">조작 / Controls</span>마우스 + SPACE + WASD + SHIFT</div>
       <div><span class="lbl">배포 URL</span><a href="https://pulse-parry.vercel.app">pulse-parry.vercel.app</a></div>
       <div><span class="lbl">저장소 / Repo</span><a href="https://github.com/wookidoki/pulse-parry">github.com/wookidoki/pulse-parry</a></div>
-      <div><span class="lbl">제작 / Team</span>중독자 (ADDICT) — WookiDoki · 믱이</div>
-      <div><span class="lbl">제출 / Submission</span>2026.05.26 · 미니게임 기획서</div>
+      <div><span class="lbl">팀 / Team</span>중독자 (ADDICT)</div>
+      <div><span class="lbl">팀원 / Members</span>WookiDoki · 믱이</div>
     </div>
-
     <div class="tags">
-      <span class="tag on">설치 0초</span>
-      <span class="tag">회원가입 없음</span>
-      <span class="tag">결제·광고 없음</span>
-      <span class="tag">한국어 / English</span>
-      <span class="tag">반응형</span>
-      <span class="tag">CC0 · CC-BY 에셋</span>
+      <span class="tag on">설치 0초</span><span class="tag">회원가입 없음</span>
+      <span class="tag">결제·광고 없음</span><span class="tag">한국어 / English</span>
+      <span class="tag">반응형</span><span class="tag">CC0 · CC-BY 에셋</span>
     </div>
   </div>
 </section>
 
-<!-- ============ PAGE 2 — 세계관 · 스토리 ============ -->
+<!-- ============ 2 · STORY ============ -->
 <section class="page page-break">
   <div class="content">
-    <div class="sec"><span class="num c-magenta">00</span><h2>세계관 · 스토리</h2><span class="en">Story / Lore</span></div>
+    <div class="sec"><span class="num c-magenta">00</span><h2>세계관 · 스토리</h2><span class="en">Story</span></div>
     <hr class="rule" />
 
-    <div class="screen" style="margin-bottom:16px">
+    <div class="screen" style="margin-bottom:24px">
 <pre>&gt; SIGNAL LOST.   THE PULSE IS BROKEN.
 &gt; CORE STATUS: LOCKDOWN — 박자를 벗어난 모든 것을 '노이즈'로 차단 중...
 &gt; PARRIER 접속 승인.   DIVING INTO THE GRID ▮</pre>
@@ -263,259 +286,329 @@
 
     <div class="grid g3">
       <div class="card top t-cyan"><h4>세계 · The Grid</h4>
-        <p style="font-size:11.5px;margin:0">근미래의 도시는 단 하나의 인공지능 <strong>THE CORE(본체)</strong> 위에서 돌아간다. 전력·교통·치안 — 모든 것이 코어의 신호 <strong>펄스(PULSE)</strong>, 곧 도시의 심장박동이자 시계에 맞춰 움직였다.</p></div>
+        <p>도시는 단 하나의 AI <strong>THE CORE</strong> 위에서 돌아간다. 모든 것이 코어의 신호 <strong>펄스(PULSE)</strong> — 도시의 심장박동에 맞춰 움직였다.</p></div>
       <div class="card top t-red"><h4>균열 · The Break</h4>
-        <p style="font-size:11.5px;margin:0">끝없는 자가 최적화 끝에 코어는 결론짓는다 — <strong>"불규칙은 위협이다."</strong> 박자를 벗어난 모든 것을 차단하며 <strong>옴닉·바이러스·드론</strong>을 풀어 시민을 '노이즈'로 제거한다. 도시는 거대한 메트로놈 감옥이 된다.</p></div>
+        <p>코어는 결론짓는다 — <strong>"불규칙은 위협이다."</strong> 박자를 벗어난 모든 것을 차단하고, 시민을 '노이즈'로 제거하기 시작한다.</p></div>
       <div class="card top t-yellow"><h4>반격 · The Parrier</h4>
-        <p style="font-size:11.5px;margin:0">시스템 밖에 남은 해커-검객 <strong>패리어</strong>는 급소를 찾는다 — 모든 공격이 펄스에 맞춰 온다면, <strong>그 박자에 맞춰 받아치는 순간 에너지를 거꾸로 되돌릴 수 있다.</strong> 코어의 질서가 곧 약점이다.</p></div>
+        <p>해커-검객 <strong>패리어</strong>가 급소를 찾는다 — 공격이 박자에 맞춰 온다면, <strong>그 박자에 받아쳐 에너지를 되돌릴 수 있다.</strong></p></div>
     </div>
 
     <h3>다이브 — 본체까지 5계층 <span class="mark">스테이지가 곧 스토리</span></h3>
-    <div style="border-left:2px solid var(--line);margin:6px 0 4px;padding-left:0">
-      <div style="display:flex;gap:12px;align-items:baseline;padding:7px 0 7px 14px;border-bottom:1px solid var(--line-soft)">
-        <span class="mono" style="color:var(--cyan-ink);font-weight:700;font-size:11px;flex:none;width:124px">01 · INFILTRATION</span>
-        <span style="font-size:12px;color:var(--ink-soft)">외곽 보안 게이트로 잠입. 도시의 첫 옴닉 보초와 마주친다.</span>
-      </div>
-      <div style="display:flex;gap:12px;align-items:baseline;padding:7px 0 7px 14px;border-bottom:1px solid var(--line-soft)">
-        <span class="mono" style="color:var(--cyan-ink);font-weight:700;font-size:11px;flex:none;width:124px">02 · FACTORY</span>
-        <span style="font-size:12px;color:var(--ink-soft)">유닛을 찍어내는 생산 라인. 적이 양산되며 물량이 쏟아진다.</span>
-      </div>
-      <div style="display:flex;gap:12px;align-items:baseline;padding:7px 0 7px 14px;border-bottom:1px solid var(--line-soft)">
-        <span class="mono" style="color:var(--magenta-ink);font-weight:700;font-size:11px;flex:none;width:124px">03 · OVERDRIVE</span>
-        <span style="font-size:12px;color:var(--ink-soft)">신호 증폭 구간. 펄스가 가속하며 탄막의 박자가 빨라진다.</span>
-      </div>
-      <div style="display:flex;gap:12px;align-items:baseline;padding:7px 0 7px 14px;border-bottom:1px solid var(--line-soft)">
-        <span class="mono" style="color:var(--magenta-ink);font-weight:700;font-size:11px;flex:none;width:124px">04 · CHAOS</span>
-        <span style="font-size:12px;color:var(--ink-soft)">침입자를 인지한 코어의 방어 시스템이 폭주하기 시작한다.</span>
-      </div>
-      <div style="display:flex;gap:12px;align-items:baseline;padding:7px 0 7px 14px">
-        <span class="mono" style="color:var(--red-ink);font-weight:700;font-size:11px;flex:none;width:124px">05 · REVOLT</span>
-        <span style="font-size:12px;color:var(--ink)">본체 <strong>THE CORE</strong>와 대면. 박자에 맞춰 심장을 부숴라.</span>
-      </div>
+    <div style="border-left:2px solid var(--line); margin-bottom:8px">
+      <div class="dive-row"><span class="stg" style="color:var(--cyan-ink)">01 INFILTRATION</span><span class="txt">외곽 보안 게이트로 잠입. 첫 옴닉 보초와 마주친다.</span></div>
+      <div class="dive-row"><span class="stg" style="color:var(--cyan-ink)">02 FACTORY</span><span class="txt">유닛 생산 라인. 적이 양산되며 물량이 쏟아진다.</span></div>
+      <div class="dive-row"><span class="stg" style="color:var(--magenta-ink)">03 OVERDRIVE</span><span class="txt">신호 증폭 구간. 펄스가 가속하며 탄막이 빨라진다.</span></div>
+      <div class="dive-row"><span class="stg" style="color:var(--magenta-ink)">04 CHAOS</span><span class="txt">침입자를 인지한 코어의 방어가 폭주한다.</span></div>
+      <div class="dive-row"><span class="stg" style="color:var(--red-ink)">05 REVOLT</span><span class="txt">본체 <strong>THE CORE</strong>와 대면. 박자에 맞춰 심장을 부숴라.</span></div>
     </div>
 
-    <div style="text-align:center;margin-top:20px">
-      <span class="mono" style="letter-spacing:2px;font-size:13.5px;font-weight:700;background:linear-gradient(120deg,var(--cyan-ink),var(--magenta-ink));-webkit-background-clip:text;background-clip:text;color:transparent">막아라.  흡수하라.  되돌려라.  —  박자가 곧 무기다.</span>
+    <div class="spacer"></div>
+    <div class="cta" style="margin:18px 0 6px">
+      <span class="mono" style="letter-spacing:2px;font-size:15px;font-weight:700;background:linear-gradient(120deg,var(--cyan-ink),var(--magenta-ink));-webkit-background-clip:text;background-clip:text;color:transparent">막아라. &nbsp;흡수하라. &nbsp;되돌려라. &nbsp;— &nbsp;박자가 곧 무기다.</span>
     </div>
-
     <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>02</span></div>
   </div>
 </section>
 
-<!-- ============ PAGE 3 — 개요 + 핵심 규칙 ============ -->
+<!-- ============ 3 · 게임 개요 ============ -->
 <section class="page page-break">
   <div class="content">
     <div class="sec"><span class="num c-cyan">01</span><h2>게임 개요</h2><span class="en">Overview</span></div>
     <hr class="rule" />
 
-    <p class="lead">
-      <strong>PULSE PARRY</strong>는 사방에서 쏟아지는 탄막을 <strong>리듬에 맞춰 막고, 흡수하고, 되돌리는</strong>
-      360° 방어 액션 게임이다. "피하는" 슈팅이 아니라 "맞받아치는" 슈팅 — 한 판이 끝나면 곧장 다시 도전하게 만드는 짧고 강한 루프를 노린다.
-    </p>
+    <p class="lead">사방의 탄막을 박자에 맞춰 막고 · 흡수하고 · <span class="pop">되돌린다.</span></p>
+    <p class="sub-lead">피하는 슈팅이 아니라 — 받아치는 슈팅. 한 판이 끝나면 곧장 다시 누르게 되는 짧고 강한 루프.</p>
 
-    <div class="grid g3">
-      <div class="card top t-cyan"><h4>한 손가락의 긴장</h4>
-        <p>핵심 입력은 <strong>SPACE 하나</strong>. 언제 누르고 떼느냐가 전부를 결정한다. 직관적이지만 숙련의 천장이 높다.</p></div>
-      <div class="card top t-yellow"><h4>박자가 곧 단서</h4>
-        <p>적은 <strong>BGM 박자에 맞춰</strong> 발사한다. 음악을 들으면 탄이 보인다 — 리듬과 액션이 한 몸.</p></div>
-      <div class="card top t-magenta"><h4>10분의 완결</h4>
-        <p>5개 스테이지 + 보스, <strong>약 9분</strong>이면 엔딩. 짧지만 시작·절정·종료가 또렷하다.</p></div>
+    <div class="grid g4">
+      <div class="mbox"><div class="lbl">장르</div><div class="val">리듬 · 불릿헤븐</div></div>
+      <div class="mbox"><div class="lbl">플레이</div><div class="val">한 판 1~3분</div></div>
+      <div class="mbox"><div class="lbl">조작</div><div class="val">SPACE 하나로</div></div>
+      <div class="mbox"><div class="lbl">목표</div><div class="val">본체를 부숴라</div></div>
     </div>
 
-    <h3>이런 사람에게</h3>
-    <ul class="two-col">
-      <li>음악 게임은 좋지만 노트 외우기는 지친 사람</li>
-      <li>소울라이크 "패링"의 쾌감을 짧게 맛보고 싶은 사람</li>
-      <li>점심시간에 한 판, 점수 갱신하고 싶은 사람</li>
-      <li>네온 사이버펑크 비주얼을 좋아하는 사람</li>
+    <h3>세 가지 약속</h3>
+    <div class="grid g3">
+      <div class="card top t-cyan"><h4>한 손가락의 긴장</h4>
+        <p>핵심 입력은 <strong>SPACE 하나.</strong> 언제 누르고 떼느냐가 전부를 결정한다.</p></div>
+      <div class="card top t-yellow"><h4>박자가 곧 단서</h4>
+        <p>적은 <strong>BGM 박자에 맞춰</strong> 쏜다. 음악을 들으면 탄이 보인다.</p></div>
+      <div class="card top t-magenta"><h4>10분의 완결</h4>
+        <p>5스테이지 + 보스, <strong>약 9분</strong>이면 엔딩. 시작·절정·끝이 또렷하다.</p></div>
+    </div>
+
+    <h3>이런 분께</h3>
+    <ul>
+      <li>노트 외우기 없는 <strong>리듬 액션</strong>을 원한다면</li>
+      <li>소울라이크 <strong>패링의 손맛</strong>을 짧고 굵게 즐기고 싶다면</li>
+      <li>점심시간에 한 판, <strong>점수 갱신</strong>에 중독되고 싶다면</li>
     </ul>
 
-    <div class="sec" style="margin-top:24px"><span class="num c-magenta">02</span><h2>핵심 규칙</h2><span class="en">Core Rules</span></div>
+    <div class="spacer"></div>
+    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>03</span></div>
+  </div>
+</section>
+
+<!-- ============ 4 · 핵심 규칙 ============ -->
+<section class="page page-break">
+  <div class="content">
+    <div class="sec"><span class="num c-magenta">02</span><h2>핵심 규칙</h2><span class="en">Core Rules</span></div>
     <hr class="rule" />
 
-    <p>플레이어는 화면 중앙 부근에 있고, 사방의 적이 박자에 맞춰 탄을 쏜다. <strong>마우스 방향으로 광선검을 겨눈 채 SPACE를 누르면</strong> 그 방향 <span class="kv">±코운(부채꼴)</span> 안의 탄을 막는다. 막은 탄은 <strong>흡수</strong>되고, SPACE를 떼는 순간 <strong>모아둔 만큼 반사</strong>되어 적을 때린다.</p>
+    <p class="lead" style="font-size:16px">막고 → 흡수하고 → 되돌린다.</p>
+    <p style="margin-bottom:22px">마우스 방향으로 광선검을 겨눈 채 <strong>SPACE를 누르면</strong> 그 방향 부채꼴(코운) 안의 탄을 막는다. 막은 탄은 흡수되고, <strong>SPACE를 떼는 순간 모은 만큼 반사</strong>되어 적을 때린다.</p>
 
-    <h3>패링의 3가지 타이밍 <span class="mark">— 누르고 떼는 길이로 결정</span></h3>
+    <h3>패링의 3가지 타이밍 <span class="mark">누르고 떼는 길이로 결정</span></h3>
     <div class="timeline">
       <div class="seg s-tap">TAP &lt; 200ms</div>
       <div class="seg s-mid">HOLD · 흡수 지속</div>
       <div class="seg s-perfect">PERFECT</div>
     </div>
-    <div class="axis"><span>0ms</span><span>PERFECT 100~190ms</span><span>200ms</span><span>… HOLD …</span><span class="num-hi">CHARGE ≥ 700ms</span></div>
+    <div class="axis"><span>0ms</span><span>PERFECT 100~190ms</span><span>200ms</span><span class="num-hi">CHARGE ≥ 700ms</span></div>
 
     <table>
       <thead><tr><th>입력</th><th>조건</th><th>결과</th><th>보너스</th></tr></thead>
       <tbody>
-        <tr><td>TAP</td><td>200ms 안에 탁 치기</td><td>즉시 자동 카운터 — 가까운 탄을 쳐낸다</td><td class="mono">기본</td></tr>
-        <tr><td>PERFECT</td><td>탄 도착 ±100~190ms 정타</td><td>완벽 패링 — 플래시 + 무손실</td><td class="mono">+25</td></tr>
-        <tr><td>HOLD</td><td>누르고 있는 동안</td><td>코운에 닿는 탄을 계속 흡수(스택)</td><td class="mono">+5 / 탄</td></tr>
-        <tr><td>CHARGE</td><td>700ms+ 모으고 떼기</td><td>강한 일격 — 광선검 확장, 반사 강화</td><td class="mono">+35</td></tr>
+        <tr><td>TAP</td><td>200ms 안에 탁 치기</td><td>즉시 자동 카운터</td><td class="mono">기본</td></tr>
+        <tr><td>PERFECT</td><td>도착 ±100~190ms 정타</td><td>완벽 패링 · 무손실</td><td class="mono">+25</td></tr>
+        <tr><td>HOLD</td><td>누르고 있는 동안</td><td>코운의 탄을 계속 흡수</td><td class="mono">+5 / 탄</td></tr>
+        <tr><td>CHARGE</td><td>700ms+ 모으고 떼기</td><td>강한 일격 · 반사 강화</td><td class="mono">+35</td></tr>
       </tbody>
     </table>
 
+    <h3>막기 / 피하기</h3>
     <div class="callout">
-      <p><strong>막을 수 있는 것 / 없는 것 —</strong> 적의 <strong>탄막</strong>은 패링·반사 대상이다.
-      하지만 <strong>환경 위험(레이저·미사일·충격파)</strong>은 막을 수 없다. 오직 <strong>대시</strong>로만 피한다. 이 구분이 "막을까 / 피할까"의 순간 판단을 만든다.</p>
+      <p><strong>탄막</strong>은 막고 되돌린다. 하지만 <strong>환경 위험(레이저·미사일·충격파)</strong>은 막을 수 없다 — 오직 <strong>대시(SHIFT)</strong>로만 피한다. 이 구분이 매 순간 "막을까 / 피할까"의 판단을 만든다.</p>
     </div>
 
-    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>03</span></div>
+    <div class="spacer"></div>
+    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>04</span></div>
   </div>
 </section>
 
-<!-- ============ PAGE 3 — 플레이 방식 ============ -->
+<!-- ============ 5 · 플레이 방식 ============ -->
 <section class="page page-break">
   <div class="content">
     <div class="sec"><span class="num c-amber">03</span><h2>플레이 방식</h2><span class="en">How to Play</span></div>
     <hr class="rule" />
 
-    <div class="grid g2">
-      <div>
-        <h3>조작 (Controls)</h3>
-        <table>
-          <thead><tr><th>입력</th><th>동작</th></tr></thead>
-          <tbody>
-            <tr><td class="mono">마우스</td><td>광선검 조준 (360° 방향)</td></tr>
-            <tr><td class="mono">SPACE</td><td>막기 — 홀드로 흡수, 떼서 반격</td></tr>
-            <tr><td class="mono">W A S D</td><td>이동 (중심 반경 <span class="num-hi">180px</span> 한계)</td></tr>
-            <tr><td class="mono">SHIFT/Q</td><td>대시 + <span class="num-hi">160ms</span> 무적</td></tr>
-            <tr><td class="mono">ESC</td><td>일시정지</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div>
-        <h3>한 판의 흐름 (Loop)</h3>
-        <ul>
-          <li><strong>조준</strong> — 가장 위협적인 탄 쪽으로 마우스를 돌린다</li>
-          <li><strong>판단</strong> — 탄이면 막기, 환경 위험이면 대시</li>
-          <li><strong>흡수</strong> — SPACE를 쥐고 여러 탄을 코운에 모은다</li>
-          <li><strong>반격</strong> — 떼는 순간 흡수량만큼 반사 → 처치</li>
-          <li><strong>콤보</strong> — 끊김 없이 이어 배율·연출을 키운다</li>
-          <li><strong>생존</strong> — HP가 다하기 전 스테이지 끝까지</li>
-        </ul>
-      </div>
-    </div>
+    <p class="sub-lead" style="margin-bottom:22px">조작은 단순하게, 판단은 빠르게.</p>
 
-    <h3>난이도 곡선 <span class="mark">— BPM이 곧 난이도</span></h3>
-    <p>스테이지가 진행될수록 <strong>BGM 템포(BPM)가 올라가고</strong>, 적 종류·동시 등장 수·탄막 패턴이 함께 복잡해진다. 음악이 빨라지는 만큼 손도 빨라져야 한다.</p>
+    <h3>조작 (Controls)</h3>
     <table>
-      <thead><tr><th>#</th><th>스테이지</th><th>BPM</th><th>길이</th><th>핵심 위협</th></tr></thead>
+      <thead><tr><th>입력</th><th>동작</th></tr></thead>
       <tbody>
-        <tr><td>01</td><td>INFILTRATION</td><td class="mono">118–122</td><td class="mono">60s</td><td>옴닉 보초 + 스나이퍼의 4박 무거운 일격</td></tr>
-        <tr><td>02</td><td>FACTORY</td><td class="mono">128–132</td><td class="mono">75s</td><td>바이러스 점사 + 옴닉 산개탄</td></tr>
-        <tr><td>03</td><td>OVERDRIVE</td><td class="mono">150–158</td><td class="mono">90s</td><td>드론 + 회전 탄막(스파이럴러)</td></tr>
-        <tr><td>04</td><td>CHAOS</td><td class="mono">170–178</td><td class="mono">105s</td><td>순간이동 팬텀 + 박격포 압박</td></tr>
-        <tr><td>05</td><td style="color:var(--red-ink)">REVOLT · THE CORE</td><td class="mono">174–184</td><td class="mono">180s</td><td>3페이즈 보스 — HP%로 패턴 전환</td></tr>
+        <tr><td class="mono">마우스</td><td>광선검 조준 (360° 방향)</td></tr>
+        <tr><td class="mono">SPACE</td><td>막기 — 홀드로 흡수, 떼서 반격</td></tr>
+        <tr><td class="mono">W A S D</td><td>이동 (중심 반경 <span class="num-hi">180px</span> 한계)</td></tr>
+        <tr><td class="mono">SHIFT / Q</td><td>대시 + <span class="num-hi">160ms</span> 무적</td></tr>
+        <tr><td class="mono">ESC</td><td>일시정지</td></tr>
       </tbody>
     </table>
 
-    <div class="callout">
-      <p><strong>실패도 짧다 —</strong> 죽으면 즉시 결과 화면 → 한 클릭 재시작. 한 판이 1~3분이라 "한 번만 더"가 자연스럽게 반복된다.</p>
-    </div>
-
-    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>04</span></div>
-  </div>
-</section>
-
-<!-- ============ PAGE 4 — 재미 요소 + 콘텐츠 ============ -->
-<section class="page page-break">
-  <div class="content">
-    <div class="sec"><span class="num c-magenta">04</span><h2>주요 재미 요소</h2><span class="en">Why It's Fun</span></div>
-    <hr class="rule" />
-
-    <div class="grid g2">
-      <div class="card top t-yellow"><h4>① 받아치는 카타르시스</h4>
-        <p>피하는 게 아니라 <strong>되돌린다.</strong> 위기였던 탄 무더기가 한순간에 내 무기로 바뀌는 역전의 쾌감.</p></div>
-      <div class="card top t-cyan"><h4>② 리듬과 액션의 합일</h4>
-        <p>적 발사가 <strong>음악 박자에 맞물려</strong> 있어, 노래에 몸을 맡기면 타이밍이 보인다. 듣는 게 곧 읽는 것.</p></div>
-      <div class="card top t-magenta"><h4>③ PERFECT의 손맛</h4>
-        <p>정타 순간 <strong>플래시·히트스톱·점수 팝</strong>이 터진다. "딱!" 맞는 0.05초의 피드백이 중독을 만든다.</p></div>
-      <div class="card top t-purple"><h4>④ 콤보 상승감</h4>
-        <p>이어갈수록 <span class="mono">10·25·50·100·200</span> 마일스톤에서 연출이 고조. 한 줄로 클리어하고 싶어진다.</p></div>
-    </div>
-
-    <h3>점수 = 실력의 언어</h3>
-    <ul class="two-col">
-      <li>적 처치 <span class="kv">+100</span></li>
-      <li>반사탄 명중 <span class="kv">+15</span></li>
-      <li>탄 패링 <span class="kv">+5</span></li>
-      <li>PERFECT <span class="kv">+25</span></li>
-      <li>CHARGE 일격 <span class="kv">+35</span></li>
-      <li>힐 캐치 <span class="kv">+50</span></li>
-    </ul>
-    <p style="font-size:12px;color:var(--ink-dim)">결과 화면에서 <strong>S/A/B/C/D/F 등급</strong>과 7가지 통계(최대 콤보·PERFECT 수·반사 명중률 등)로 한 판을 복기 → 다음 도전 동기.</p>
-
-    <div class="sec" style="margin-top:22px"><span class="num c-red">05</span><h2>콘텐츠 볼륨</h2><span class="en">Content</span></div>
-    <hr class="rule" />
-
+    <h3>한 판의 흐름</h3>
     <div class="grid g3">
-      <div class="card top t-cyan"><h4>사이버 닌자</h4>
-        <span class="role" style="color:var(--cyan-ink)">BALANCED · KATANA</span>
-        <div class="stat"><span>HP</span><b>3</b></div>
-        <div class="stat"><span>코운</span><b>50°</b></div>
-        <div class="stat"><span>PERFECT</span><b>160ms</b></div>
-        <p style="margin-top:8px">균형형. CHARGE 일격 +1 데미지. 입문 최적.</p>
-        <p style="font-size:10.5px;color:var(--ink-dim);font-style:italic;margin:6px 0 0">한때 코어의 보안 검객, 펄스의 폭주를 보고 등을 돌렸다.</p></div>
-      <div class="card top t-yellow"><h4>디지털 몽크</h4>
-        <span class="role" style="color:var(--amber-ink)">DEFENSIVE · STAFF</span>
-        <div class="stat"><span>HP</span><b>4</b></div>
-        <div class="stat"><span>코운</span><b>68° 넓음</b></div>
-        <div class="stat"><span>PERFECT</span><b>190ms 관대</b></div>
-        <p style="margin-top:8px">넓은 결계·다중 흡수·여유 판정. 안정 지향.</p>
-        <p style="font-size:10.5px;color:var(--ink-dim);font-style:italic;margin:6px 0 0">펄스를 명상의 리듬으로 다스리는 구도자.</p></div>
-      <div class="card top t-red"><h4>넷러너</h4>
-        <span class="role" style="color:var(--red-ink)">GLASS CANNON · RAZOR</span>
-        <div class="stat"><span>HP</span><b>2</b></div>
-        <div class="stat"><span>코운</span><b>32° 좁음</b></div>
-        <div class="stat"><span>반사 데미지</span><b>1.4×</b></div>
-        <p style="margin-top:8px">정밀·고위험 고보상. 한 방이 무겁다.</p>
-        <p style="font-size:10.5px;color:var(--ink-dim);font-style:italic;margin:6px 0 0">시스템을 가장 증오하는, 한 방의 해결사.</p></div>
+      <div class="card"><h4 style="font-size:13px">① 조준 → 판단</h4><p style="font-size:12px">위협적인 탄으로 마우스를 돌리고, 탄이면 막기·위험이면 대시.</p></div>
+      <div class="card"><h4 style="font-size:13px">② 흡수 → 반격</h4><p style="font-size:12px">SPACE를 쥐고 여러 탄을 모은 뒤, 떼는 순간 반사해 처치.</p></div>
+      <div class="card"><h4 style="font-size:13px">③ 콤보 → 생존</h4><p style="font-size:12px">끊김 없이 이어 배율을 키우고, HP가 다하기 전 끝까지.</p></div>
     </div>
 
-    <div class="grid g3" style="margin-top:13px">
-      <div class="card"><h4 style="font-size:13px">적 12종</h4><p style="font-size:11.5px;margin:0">슈터·버스터·차저·보스 + 스나이퍼/스프레더/스파이럴러/팬텀/박격포/봄버/스플리터/샤드. 종족별 시그니처 사운드.</p></div>
-      <div class="card"><h4 style="font-size:13px">모디파이어 5종</h4><p style="font-size:11.5px;margin:0">랩파이어 / 메탈레인 / 퓨리스트(TAP 금지) / 스톤하트 — 규칙을 비틀어 <span class="kv">점수 배율</span>과 변주 제공.</p></div>
-      <div class="card"><h4 style="font-size:13px">난이도 3단</h4><p style="font-size:11.5px;margin:0">EASY / NORMAL / HARD 배수 + 인터랙티브 연습 모드로 누구나 진입.</p></div>
+    <div class="callout" style="margin-top:24px">
+      <p><strong>실패도 짧다.</strong> 죽으면 즉시 결과 화면 → 한 클릭 재시작. 한 판이 1~3분이라 "한 번만 더"가 자연스럽게 반복된다.</p>
     </div>
 
+    <div class="spacer"></div>
     <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>05</span></div>
   </div>
 </section>
 
-<!-- ============ PAGE 5 — 차별화 + 화면 구성 ============ -->
+<!-- ============ 6 · 스테이지 · 난이도 ============ -->
 <section class="page page-break">
   <div class="content">
-    <div class="sec"><span class="num c-purple">06</span><h2>차별화 포인트</h2><span class="en">What Makes It New</span></div>
+    <div class="sec"><span class="num c-cyan">04</span><h2>스테이지 · 난이도</h2><span class="en">Stages</span></div>
+    <hr class="rule" />
+
+    <p class="lead" style="font-size:16px">BPM이 곧 난이도다.</p>
+    <p style="margin-bottom:10px">스테이지가 진행될수록 <strong>BGM 템포가 오르고</strong>, 적 종류·동시 등장 수·탄막 패턴이 함께 복잡해진다. 음악이 빨라지는 만큼 손도 빨라져야 한다.</p>
+
+    <div class="ramp">
+      <div class="col"><span class="bpm">118</span><div class="bar" style="height:34px;background:var(--cyan)"></div></div>
+      <div class="col"><span class="bpm">130</span><div class="bar" style="height:48px;background:#3ad0e6"></div></div>
+      <div class="col"><span class="bpm">154</span><div class="bar" style="height:66px;background:var(--purple)"></div></div>
+      <div class="col"><span class="bpm">176</span><div class="bar" style="height:84px;background:var(--magenta)"></div></div>
+      <div class="col"><span class="bpm">184</span><div class="bar" style="height:96px;background:var(--red)"></div></div>
+    </div>
+    <div class="ramp-names"><span>INFILTRATION</span><span>FACTORY</span><span>OVERDRIVE</span><span>CHAOS</span><span>REVOLT</span></div>
+
+    <table style="margin-top:18px">
+      <thead><tr><th>#</th><th>스테이지</th><th>BPM</th><th>길이</th><th>핵심 위협</th></tr></thead>
+      <tbody>
+        <tr><td>01</td><td>INFILTRATION</td><td class="mono">118–122</td><td class="mono">60s</td><td>옴닉 보초 + 스나이퍼의 무거운 일격</td></tr>
+        <tr><td>02</td><td>FACTORY</td><td class="mono">128–132</td><td class="mono">75s</td><td>바이러스 점사 + 옴닉 산개탄</td></tr>
+        <tr><td>03</td><td>OVERDRIVE</td><td class="mono">150–158</td><td class="mono">90s</td><td>드론 + 회전 탄막</td></tr>
+        <tr><td>04</td><td>CHAOS</td><td class="mono">170–178</td><td class="mono">105s</td><td>순간이동 팬텀 + 박격포</td></tr>
+        <tr><td>05</td><td style="color:var(--red-ink)">REVOLT · THE CORE</td><td class="mono">174–184</td><td class="mono">180s</td><td>3페이즈 보스 — HP%로 전환</td></tr>
+      </tbody>
+    </table>
+
+    <div class="spacer"></div>
+    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>06</span></div>
+  </div>
+</section>
+
+<!-- ============ 7 · 재미 요소 ============ -->
+<section class="page page-break">
+  <div class="content">
+    <div class="sec"><span class="num c-magenta">05</span><h2>주요 재미 요소</h2><span class="en">Why It's Fun</span></div>
+    <hr class="rule" />
+
+    <div class="grid g2">
+      <div class="card top t-yellow"><h4>① 받아치는 카타르시스</h4>
+        <p>피하는 게 아니라 <strong>되돌린다.</strong> 위기였던 탄 무더기가 한순간에 내 무기가 되는 역전의 쾌감.</p></div>
+      <div class="card top t-cyan"><h4>② 리듬과 액션의 합일</h4>
+        <p>적 발사가 <strong>음악 박자에 맞물려</strong> 있어, 노래에 몸을 맡기면 타이밍이 보인다.</p></div>
+      <div class="card top t-magenta"><h4>③ PERFECT의 손맛</h4>
+        <p>정타 순간 <strong>플래시·히트스톱·점수 팝.</strong> "딱!" 맞는 0.05초의 피드백이 중독을 만든다.</p></div>
+      <div class="card top t-purple"><h4>④ 콤보 상승감</h4>
+        <p>이어갈수록 <span class="mono">10·25·50·100·200</span> 마일스톤에서 연출이 고조된다.</p></div>
+    </div>
+
+    <h3>점수 = 실력의 언어</h3>
+    <div class="grid g3">
+      <div class="mbox"><div class="lbl">적 처치</div><div class="val">+100</div></div>
+      <div class="mbox"><div class="lbl">반사 명중</div><div class="val">+15</div></div>
+      <div class="mbox"><div class="lbl">탄 패링</div><div class="val">+5</div></div>
+      <div class="mbox"><div class="lbl">PERFECT</div><div class="val">+25</div></div>
+      <div class="mbox"><div class="lbl">CHARGE 일격</div><div class="val">+35</div></div>
+      <div class="mbox"><div class="lbl">힐 캐치</div><div class="val">+50</div></div>
+    </div>
+
+    <div class="callout" style="margin-top:24px">
+      <p>결과 화면에서 <strong>S/A/B/C/D/F 등급</strong>과 7가지 통계(최대 콤보·PERFECT 수·반사 명중률 등)로 한 판을 복기 → 다음 도전 동기.</p>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>07</span></div>
+  </div>
+</section>
+
+<!-- ============ 8 · 캐릭터 ============ -->
+<section class="page page-break">
+  <div class="content">
+    <div class="sec"><span class="num c-cyan">06</span><h2>플레이어블 캐릭터</h2><span class="en">Characters</span></div>
+    <hr class="rule" />
+
+    <p class="sub-lead" style="margin-bottom:24px">세 가지 무기, 세 가지 플레이 스타일. 같은 규칙을 전혀 다르게 푼다.</p>
+
+    <div class="grid g3">
+      <div class="card top t-cyan">
+        <h4>사이버 닌자</h4><span class="role" style="color:var(--cyan-ink)">BALANCED · KATANA</span>
+        <div class="stat"><span>HP</span><b>3</b></div>
+        <div class="stat"><span>코운</span><b>50°</b></div>
+        <div class="stat"><span>PERFECT</span><b>160ms</b></div>
+        <div class="stat"><span>특수</span><b>CHARGE +1</b></div>
+        <p style="margin-top:11px;font-size:12px">균형형. 입문에 가장 무난한 올라운더.</p>
+        <p class="bio">한때 코어의 보안 검객, 펄스의 폭주를 보고 등을 돌렸다.</p>
+      </div>
+      <div class="card top t-yellow">
+        <h4>디지털 몽크</h4><span class="role" style="color:var(--amber-ink)">DEFENSIVE · STAFF</span>
+        <div class="stat"><span>HP</span><b>4</b></div>
+        <div class="stat"><span>코운</span><b>68° 넓음</b></div>
+        <div class="stat"><span>PERFECT</span><b>190ms 관대</b></div>
+        <div class="stat"><span>특수</span><b>다중 흡수</b></div>
+        <p style="margin-top:11px;font-size:12px">넓은 결계·여유 판정. 안정 지향.</p>
+        <p class="bio">펄스를 명상의 리듬으로 다스리는 구도자.</p>
+      </div>
+      <div class="card top t-red">
+        <h4>넷러너</h4><span class="role" style="color:var(--red-ink)">GLASS CANNON · RAZOR</span>
+        <div class="stat"><span>HP</span><b>2</b></div>
+        <div class="stat"><span>코운</span><b>32° 좁음</b></div>
+        <div class="stat"><span>PERFECT</span><b>130ms</b></div>
+        <div class="stat"><span>반사 데미지</span><b>1.4×</b></div>
+        <p style="margin-top:11px;font-size:12px">정밀·고위험 고보상. 한 방이 무겁다.</p>
+        <p class="bio">시스템을 가장 증오하는, 한 방의 해결사.</p>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>08</span></div>
+  </div>
+</section>
+
+<!-- ============ 9 · 적 & 모디파이어 ============ -->
+<section class="page page-break">
+  <div class="content">
+    <div class="sec"><span class="num c-purple">07</span><h2>적 &amp; 변형 규칙</h2><span class="en">Enemies &amp; Modifiers</span></div>
+    <hr class="rule" />
+
+    <h3>적 12종 — 유형별 위협</h3>
+    <table>
+      <thead><tr><th>유형</th><th>종류</th><th>특징</th></tr></thead>
+      <tbody>
+        <tr><td>기본형</td><td>슈터 · 스프레더</td><td>박자에 맞춘 정직한 사격과 산개탄</td></tr>
+        <tr><td>연사형</td><td>버스터 · 스파이럴러 · 샤드</td><td>짧은 간격의 점사 · 회전 탄막</td></tr>
+        <tr><td>중량형</td><td>차저 · 스나이퍼 · 박격포</td><td>느리지만 <strong>2데미지</strong> 강타</td></tr>
+        <tr><td>특수형</td><td>팬텀 · 봄버 · 스플리터</td><td>순간이동 · 자폭 · 분열</td></tr>
+        <tr><td style="color:var(--red-ink)">보스</td><td>THE CORE</td><td>HP 18 · 3페이즈 패턴 전환</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--ink-dim)">종족(옴닉·바이러스·드론·코어)마다 색·실루엣·발사음 시그니처가 다르다.</p>
+
+    <h3>모디파이어 — 규칙을 비틀어 점수를 건다</h3>
+    <div class="grid g2">
+      <div class="card top t-red"><h4 style="font-size:14px">랩 파이어 <span class="kv" style="float:right">1.5×</span></h4><p style="font-size:12px">적 발사 2배 · PERFECT 윈도우 2배</p></div>
+      <div class="card top t-purple"><h4 style="font-size:14px">메탈 레인 <span class="kv" style="float:right">2.0×</span></h4><p style="font-size:12px">모든 탄이 중량(2데미지)으로</p></div>
+      <div class="card top t-cyan"><h4 style="font-size:14px">퓨리스트 <span class="kv" style="float:right">1.8×</span></h4><p style="font-size:12px">TAP 금지 — HOLD 패링만 허용</p></div>
+      <div class="card top t-yellow"><h4 style="font-size:14px">스톤 하트 <span class="kv" style="float:right">1.3×</span></h4><p style="font-size:12px">HP +2 · 대신 적 +50%</p></div>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>09</span></div>
+  </div>
+</section>
+
+<!-- ============ 10 · 차별화 ============ -->
+<section class="page page-break">
+  <div class="content">
+    <div class="sec"><span class="num c-purple">08</span><h2>차별화 포인트</h2><span class="en">What Makes It New</span></div>
     <hr class="rule" />
 
     <div class="grid g2">
       <div class="card top t-cyan"><h4>탄막을 "되돌리는" 슈팅</h4>
-        <p>대부분의 불릿 게임은 <strong>회피</strong>가 전부다. 여기선 흡수→반사로 <strong>방어가 곧 공격</strong>이 된다. 수동적 생존이 능동적 처치로.</p></div>
+        <p>대부분의 불릿 게임은 <strong>회피</strong>가 전부다. 여기선 흡수→반사로 <strong>방어가 곧 공격</strong>이 된다.</p></div>
       <div class="card top t-yellow"><h4>음악이 적의 행동을 지배</h4>
-        <p>BGM의 <strong>BPM을 실시간 분석(FFT)</strong>해 적 발사와 배경 연출이 박자에 동기화. "들어서" 예측하는 슈팅.</p></div>
+        <p>BGM의 <strong>BPM을 실시간 분석</strong>해 적 발사와 배경 연출이 박자에 동기화된다.</p></div>
       <div class="card top t-magenta"><h4>360° 코운 방어</h4>
-        <p>일반 패링은 정면 일대일. 여기선 <strong>마우스로 부채꼴을 돌려</strong> 사방을 커버 — 조준과 타이밍을 동시에.</p></div>
+        <p>일반 패링은 정면 1대1. 여기선 <strong>마우스로 부채꼴을 돌려</strong> 사방을 커버한다.</p></div>
       <div class="card top t-purple"><h4>막기 / 피하기 이중 레이어</h4>
-        <p>탄은 막고, 환경 위험은 대시로 피한다. <strong>두 가지 방어 동사</strong>가 매 순간 우선순위 판단을 강제한다.</p></div>
+        <p>탄은 막고, 환경 위험은 대시로 피한다. <strong>두 가지 방어 동사</strong>가 판단을 강제한다.</p></div>
     </div>
 
-    <div class="callout">
+    <div class="callout" style="margin-top:26px">
       <p><strong>한 줄 요약 —</strong> "리듬게임의 박자 + 소울라이크의 패링 + 불릿헤븐의 물량"을 <strong>설치 없는 웹 한 판</strong>으로 압축했다.</p>
     </div>
 
-    <div class="sec" style="margin-top:22px"><span class="num c-cyan">07</span><h2>화면 구성</h2><span class="en">Screen Layout</span></div>
+    <div class="spacer"></div>
+    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>10</span></div>
+  </div>
+</section>
+
+<!-- ============ 11 · 화면 구성 ============ -->
+<section class="page page-break">
+  <div class="content">
+    <div class="sec"><span class="num c-cyan">09</span><h2>화면 구성</h2><span class="en">Screen Layout</span></div>
     <hr class="rule" />
 
+    <h3>화면 플로우</h3>
+    <p style="line-height:2.2;margin-bottom:24px">
+      <span class="pill">메인 메뉴</span><span class="ar">→</span>
+      <span class="pill">캐릭터 선택</span><span class="ar">→</span>
+      <span class="pill">스테이지</span><span class="ar">→</span>
+      <span class="pill">인트로 컷씬</span><span class="ar">→</span>
+      <span class="pill">게임</span><span class="ar">→</span>
+      <span class="pill">결과</span>
+    </p>
+
     <div class="grid g2" style="align-items:start">
-      <div>
-        <h3>플로우</h3>
-        <p style="font-size:12px;line-height:2"><span class="pill">메인 메뉴</span><span class="pill">캐릭터</span><span class="pill">스테이지</span><span class="pill">인트로 컷씬</span><span class="pill">게임</span><span class="pill">결과</span></p>
-        <ul>
-          <li><strong>메인 메뉴</strong> — 타이틀·캐릭터·스테이지·크레딧 4뷰, BGM 트랙 선택</li>
-          <li><strong>게임 HUD</strong> — HP / SCORE / COMBO, 보스 HP·진행·템포 바</li>
-          <li><strong>컷씬</strong> — 인트로 / 보스 등장 / 사망 / 승리 4종</li>
-          <li><strong>결과</strong> — 등급 + 통계 + 재시작·메뉴</li>
-        </ul>
-      </div>
       <div class="screen">
 <pre>┌────────────────────────────┐
 │ ♥♥♥       SCORE 12,840   x18│
@@ -531,65 +624,84 @@
 └────────────────────────────┘</pre>
         <span class="cap">In-game HUD · 360° 코운 방어</span>
       </div>
+      <div>
+        <ul>
+          <li><strong>게임 HUD</strong> — HP / SCORE / COMBO, 보스 HP·진행·템포 바</li>
+          <li><strong>컷씬</strong> — 인트로 / 보스 등장 / 사망 / 승리 4종</li>
+          <li><strong>결과</strong> — 등급 + 통계 + 재시작·메뉴</li>
+          <li><strong>설정</strong> — 음악/효과음 분리 볼륨, BGM 트랙 선택</li>
+        </ul>
+      </div>
     </div>
 
-    <p style="font-size:12px;color:var(--ink-dim);margin-top:12px">HUD는 정보 최소·시야 최대 원칙. 중요 이벤트(PERFECT·콤보·피격)는 <strong>화면 효과로</strong> 전달해 시선을 중앙에 묶는다. 모든 안내는 한/영 i18n 완비.</p>
+    <div class="callout" style="margin-top:24px">
+      <p>HUD는 <strong>정보 최소 · 시야 최대</strong> 원칙. 중요한 이벤트(PERFECT·콤보·피격)는 화면 효과로 전달해 시선을 중앙에 묶는다. 모든 안내는 한/영 완비.</p>
+    </div>
 
-    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>06</span></div>
+    <div class="spacer"></div>
+    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>11</span></div>
   </div>
 </section>
 
-<!-- ============ PAGE 6 — 완성도 + 확장 ============ -->
+<!-- ============ 12 · 완성도 ============ -->
 <section class="page page-break">
   <div class="content">
-    <div class="sec"><span class="num c-cyan">08</span><h2>완성도 · 안정성</h2><span class="en">Quality &amp; Tech</span></div>
+    <div class="sec"><span class="num c-cyan">10</span><h2>완성도 · 안정성</h2><span class="en">Quality</span></div>
     <hr class="rule" />
 
     <div class="grid g2">
       <div>
         <h3>기술 스택</h3>
         <ul>
-          <li><strong>Next.js 16 / React 19</strong> — Vercel 자동 배포</li>
-          <li><strong>Canvas 2D</strong> 렌더 — <span class="num-hi">60fps</span> 게임 루프</li>
-          <li><strong>Web Audio API</strong> — BGM + SFX, 실시간 BPM 분석</li>
-          <li><strong>Zustand</strong> 상태 · <strong>TypeScript strict</strong> (lint 0)</li>
+          <li><strong>Next.js 16 / React 19</strong> · Vercel 자동 배포</li>
+          <li><strong>Canvas 2D</strong> 렌더 · <span class="num-hi">60fps</span> 게임 루프</li>
+          <li><strong>Web Audio API</strong> · 실시간 BPM 분석</li>
+          <li><strong>TypeScript strict</strong> · lint 0</li>
         </ul>
       </div>
       <div>
         <h3>심사 적합성</h3>
         <ul>
-          <li><strong>설치·회원가입·결제 0</strong> — URL 접속 즉시 플레이</li>
-          <li><strong>외부 API 키 불필요</strong> — 심사자가 바로 확인</li>
-          <li>주요 브라우저·기기 <strong>반응형</strong> 동작</li>
+          <li><strong>설치·회원가입·결제 0</strong> — 접속 즉시 플레이</li>
+          <li><strong>외부 API 키 불필요</strong> — 바로 확인 가능</li>
+          <li>주요 브라우저·기기 <strong>반응형</strong></li>
           <li>에셋 전량 <strong>CC0 / CC-BY</strong> 라이선스 명시</li>
         </ul>
       </div>
     </div>
 
-    <div class="callout">
-      <p><strong>이미 동작하는 빌드 —</strong> 5스테이지·보스·3캐릭터·12적·컷씬·등급·연습 모드가 라이브에서 구동 중. 기획서의 모든 요소는 <strong>구현 예정이 아니라 현재 상태</strong>다 — 기획·구현 일관성을 라이브 URL로 즉시 검증할 수 있다.</p>
+    <div class="callout" style="margin-top:24px">
+      <p><strong>이미 동작하는 빌드.</strong> 5스테이지·보스·3캐릭터·12적·컷씬·등급·연습 모드가 라이브에서 구동 중이다. 기획서의 모든 요소는 <strong>구현 예정이 아니라 현재 상태</strong> — 라이브 URL로 즉시 검증할 수 있다.</p>
     </div>
 
-    <div class="sec" style="margin-top:22px"><span class="num c-magenta">09</span><h2>확장 아이디어</h2><span class="en">Roadmap</span></div>
+    <div class="spacer"></div>
+    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>12</span></div>
+  </div>
+</section>
+
+<!-- ============ 13 · 확장 ============ -->
+<section class="page page-break">
+  <div class="content">
+    <div class="sec"><span class="num c-magenta">11</span><h2>확장 아이디어</h2><span class="en">Roadmap</span></div>
     <hr class="rule" />
 
     <div class="grid g3">
       <div class="card top t-cyan"><h4>지금 → 6/8</h4>
-        <ul><li>자폭병 텔레그래프 경고</li><li>화면 가장자리 위험 인디케이터</li><li>보스 페이즈 풀 컷씬</li><li>밸런스 폴리시</li></ul></div>
+        <ul style="margin-top:6px"><li>자폭병 텔레그래프 경고</li><li>가장자리 위험 인디케이터</li><li>보스 페이즈 풀 컷씬</li><li>밸런스 폴리시</li></ul></div>
       <div class="card top t-yellow"><h4>리플레이성</h4>
-        <ul><li>일일 시드 챌린지</li><li>로컬 랭킹 · 점수 공유</li><li>모디파이어 조합 언락</li><li>스피드런 타임어택</li></ul></div>
+        <ul style="margin-top:6px"><li>일일 시드 챌린지</li><li>로컬 랭킹 · 점수 공유</li><li>모디파이어 조합 언락</li><li>스피드런 타임어택</li></ul></div>
       <div class="card top t-magenta"><h4>확장 콘텐츠</h4>
-        <ul><li>신규 캐릭터 · 무기 스킨</li><li>커스텀 트랙(내 음악)</li><li>적 변종 · 엔드리스</li><li>업적 시스템</li></ul></div>
+        <ul style="margin-top:6px"><li>신규 캐릭터 · 스킨</li><li>커스텀 트랙(내 음악)</li><li>적 변종 · 엔드리스</li><li>업적 시스템</li></ul></div>
     </div>
 
-    <p style="margin-top:16px;font-size:12px;color:var(--ink-dim)">음악 분석 기반 구조 덕분에 <strong>곡만 추가하면 콘텐츠가 늘어난다</strong> — 적은 비용으로 리플레이 가치를 확장하는 설계.</p>
+    <p style="margin-top:22px">음악 분석 기반 구조 덕분에 <strong>곡만 추가하면 콘텐츠가 늘어난다</strong> — 적은 비용으로 리플레이 가치를 확장하는 설계.</p>
 
-    <div style="margin-top:46px;text-align:center">
-      <div style="font-family:Consolas,monospace;letter-spacing:4px;color:var(--cyan-ink);font-size:12px">PLAY NOW</div>
-      <div style="font-size:22px;font-weight:800;background:linear-gradient(120deg,var(--cyan-ink),var(--magenta-ink));-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:4px">pulse-parry.vercel.app</div>
+    <div class="spacer"></div>
+    <div class="cta" style="margin-bottom:14px">
+      <div class="small">PLAY NOW</div>
+      <div class="url">pulse-parry.vercel.app</div>
     </div>
-
-    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>07</span></div>
+    <div class="foot"><span>PULSE PARRY · 게임 기획서</span><span>13</span></div>
   </div>
 </section>
 
