@@ -9,7 +9,7 @@ import { MODIFIERS, MODIFIER_ORDER, type RunModifierId } from "../config/modifie
 import { loadProgress, getBestScore } from "../progress";
 import type { Difficulty } from "../types";
 import { loadLocale, saveLocale, t, type Locale } from "../i18n";
-import { ensureAudio, playUiClick, resumeAudio } from "../audio";
+import { ensureAudio, playUiTap, resumeAudio } from "../audio";
 import {
   cycleMenuTrack,
   getMenuTrackInfo,
@@ -23,10 +23,11 @@ import { Button, ButtonLink } from "./Button";
 import styles from "./MainMenu.module.css";
 import { useEffect as useReactEffect } from "react";
 
+// Button/ButtonLink handle their own click SFX via playUiTap. This helper only
+// ensures the audio context is running and (re)starts the menu BGM if needed.
 function click() {
   ensureAudio();
   resumeAudio();
-  playUiClick();
   playMenuBgm();
 }
 
@@ -97,13 +98,26 @@ export function MainMenu() {
       <MenuBackground />
       <main className={styles.page}>
         <div className={styles.cornerTop}>
-          <button className={styles.trackBtn} onClick={handleCycleTrack} title="next track">
+          <button
+            className={styles.trackBtn}
+            onClick={() => {
+              playUiTap();
+              handleCycleTrack();
+            }}
+            title="next track"
+          >
             ♫ {trackInfo.label}
             <span className={styles.trackIdx}>
               {trackInfo.idx + 1}/{trackInfo.total}
             </span>
           </button>
-          <button className={styles.localeBtn} onClick={toggleLocale}>
+          <button
+            className={styles.localeBtn}
+            onClick={() => {
+              playUiTap();
+              toggleLocale();
+            }}
+          >
             {locale === "ko" ? "ENGLISH" : "한국어"}
           </button>
         </div>
@@ -250,11 +264,25 @@ function CharacterView({
       </header>
 
       <div className={styles.characterStage}>
-        <button className={styles.arrowBtn} onClick={prev} aria-label="prev">
+        <button
+          className={styles.arrowBtn}
+          onClick={() => {
+            playUiTap();
+            prev();
+          }}
+          aria-label="prev"
+        >
           ◀
         </button>
         <CharacterPortrait characterId={characterId} active={true} size={280} />
-        <button className={styles.arrowBtn} onClick={next} aria-label="next">
+        <button
+          className={styles.arrowBtn}
+          onClick={() => {
+            playUiTap();
+            next();
+          }}
+          aria-label="next"
+        >
           ▶
         </button>
       </div>
@@ -281,7 +309,10 @@ function CharacterView({
           <button
             key={id}
             className={`${styles.dot} ${id === characterId ? styles.dotActive : ""}`}
-            onClick={() => setCharacterId(id)}
+            onClick={() => {
+              playUiTap();
+              setCharacterId(id);
+            }}
             aria-label={id}
           />
         ))}
@@ -364,7 +395,11 @@ function StageView({
             <button
               key={i}
               className={`${styles.stageCard} ${isSel ? styles.stageCardSelected : ""} ${!unlocked ? styles.stageCardLocked : ""} ${s.isBoss ? styles.stageCardBoss : ""}`}
-              onClick={() => unlocked && setSelectedStage(i)}
+              onClick={() => {
+                if (!unlocked) return;
+                playUiTap();
+                setSelectedStage(i);
+              }}
               disabled={!unlocked}
             >
               <div className={styles.stageIdx}>0{i + 1}</div>

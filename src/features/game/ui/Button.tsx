@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import {
+  forwardRef,
+  type ButtonHTMLAttributes,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
+import { playUiTap } from "../audio";
 import styles from "./Button.module.css";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -23,7 +29,7 @@ type ButtonProps = CommonProps &
 
 interface ButtonLinkProps extends CommonProps {
   href: string;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLAnchorElement>) => void;
   prefetch?: boolean;
   pressed?: boolean;
 }
@@ -73,13 +79,32 @@ function Content({
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant, size, bracket = false, fullWidth, pressed, title, children, className, ...rest },
+  {
+    variant,
+    size,
+    bracket = false,
+    fullWidth,
+    pressed,
+    title,
+    children,
+    className,
+    onClick,
+    disabled,
+    ...rest
+  },
   ref,
 ) {
+  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
+    if (disabled) return;
+    playUiTap();
+    onClick?.(e);
+  };
   return (
     <button
       ref={ref}
       title={title}
+      disabled={disabled}
+      onClick={handleClick}
       className={classesFor({ variant, size, fullWidth, pressed, className })}
       {...rest}
     >
@@ -100,10 +125,14 @@ export function ButtonLink({
   onClick,
   prefetch,
 }: ButtonLinkProps) {
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    playUiTap();
+    onClick?.(e);
+  };
   return (
     <Link
       href={href}
-      onClick={onClick}
+      onClick={handleClick}
       prefetch={prefetch}
       className={classesFor({ variant, size, fullWidth, pressed, className })}
     >

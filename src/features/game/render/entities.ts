@@ -340,6 +340,14 @@ function drawDrone(
   const spriteColor = e.hitFlashMsLeft > 0 ? "#ffffff" : config.color;
   drawEnemySprite(c, e.kind, x, y, radius * 0.95, spriteColor, 0.85, 22 + e.pulse * 18);
 
+  // Sub-kind shape differentiation within drone race:
+  // bomber = triangle (aggressive, pointing motion), mortar = hex (chunky launcher),
+  // charger = octagon (heavy mech). All distinct from omnic hex / virus star / core octagon-large.
+  const outerSides = e.kind === "bomber" ? 3 : e.kind === "mortar" ? 6 : 8;
+  const innerSides = outerSides;
+  const propArms = e.kind === "bomber" ? 3 : 6;
+  const cornerCount = outerSides;
+
   c.save();
   c.translate(x, y);
   c.rotate(rotation);
@@ -349,14 +357,14 @@ function drawDrone(
   c.fillStyle = styles.bgFill;
   c.strokeStyle = styles.stroke;
   c.lineWidth = 3;
-  drawPolygon(c, 4, radius);
+  drawPolygon(c, outerSides, radius);
   c.fill();
   c.stroke();
 
   c.shadowBlur = 0;
   c.strokeStyle = withAlpha(config.color, 0.45);
   c.lineWidth = 1;
-  drawPolygon(c, 4, radius * 0.62);
+  drawPolygon(c, innerSides, radius * 0.62);
   c.stroke();
 
   c.save();
@@ -364,10 +372,11 @@ function drawDrone(
   c.strokeStyle = withAlpha(config.color, 0.7);
   c.lineWidth = 2;
   c.beginPath();
-  c.moveTo(-radius * 0.5, 0);
-  c.lineTo(radius * 0.5, 0);
-  c.moveTo(0, -radius * 0.5);
-  c.lineTo(0, radius * 0.5);
+  for (let i = 0; i < propArms; i++) {
+    const a = (i / propArms) * Math.PI * 2;
+    c.moveTo(0, 0);
+    c.lineTo(Math.cos(a) * radius * 0.5, Math.sin(a) * radius * 0.5);
+  }
   c.stroke();
   c.restore();
 
@@ -375,17 +384,18 @@ function drawDrone(
   c.shadowBlur = 10;
   c.strokeStyle = styles.stroke;
   c.lineWidth = 2;
-  for (const ang of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
-    const tipX = Math.cos(ang) * radius * 1.55;
-    const tipY = Math.sin(ang) * radius * 1.55;
+  for (let i = 0; i < cornerCount; i++) {
+    const ang = (i / cornerCount) * Math.PI * 2;
+    const tipX = Math.cos(ang) * radius * 1.45;
+    const tipY = Math.sin(ang) * radius * 1.45;
     c.beginPath();
-    c.moveTo(Math.cos(ang) * radius * 1.05, Math.sin(ang) * radius * 1.05);
+    c.moveTo(Math.cos(ang) * radius * 1.02, Math.sin(ang) * radius * 1.02);
     c.lineTo(tipX, tipY);
     c.stroke();
 
     c.fillStyle = styles.fill;
     c.beginPath();
-    c.arc(tipX, tipY, 2.2 + e.pulse * 1.2, 0, Math.PI * 2);
+    c.arc(tipX, tipY, 2.0 + e.pulse * 1.2, 0, Math.PI * 2);
     c.fill();
   }
 

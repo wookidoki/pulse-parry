@@ -243,7 +243,18 @@ export function playStageBgm(stageIndex: number): void {
   stopMenuBgm();
   resetBossPhase();
   const safeIdx = Math.min(stageIndex, stagePools.length - 1);
-  if (currentStageIdx === safeIdx) return;
+
+  // Same stage already selected: just ensure the existing track is actually playing.
+  // First call often happens before user gesture and play() is blocked silently;
+  // this lets the second call (after gesture) recover instead of early-returning.
+  if (currentStageIdx === safeIdx) {
+    const cur = currentAudio();
+    if (cur && cur.paused && !isPaused) {
+      cur.play().catch(() => {});
+      fade(cur, targetVolume(), CROSSFADE_MS);
+    }
+    return;
+  }
 
   const prev = currentAudio();
   if (prev) {

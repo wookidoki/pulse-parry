@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { playUiTap } from "../audio";
 import { initialLocale, t, type Locale, type I18nKey } from "../i18n";
 import { MenuBackground } from "./MenuBackground";
 import { Button, ButtonLink } from "./Button";
@@ -49,7 +50,10 @@ export function Tutorial() {
             <button
               key={i}
               className={`${styles.progressDot} ${i === step ? styles.progressDotActive : ""} ${i < step ? styles.progressDotDone : ""}`}
-              onClick={() => setStep(i)}
+              onClick={() => {
+                playUiTap();
+                setStep(i);
+              }}
               aria-label={`step ${i + 1}`}
             />
           ))}

@@ -348,6 +348,14 @@ export function playUiClick() {
   playSample("uiClick", { gain: 0.22, pitch: 1.4 });
 }
 
+// Convenience for any clickable element — ensures context started + resumed
+// before playing the click. Safe to call from any UI handler.
+export function playUiTap() {
+  if (!ensureAudio()) return;
+  resumeAudio();
+  playUiClick();
+}
+
 // ───────── Cutscene SFX ─────────
 export function playIntroWarp() {
   playSample("forceField", { gain: 0.5, pitch: 0.65 });

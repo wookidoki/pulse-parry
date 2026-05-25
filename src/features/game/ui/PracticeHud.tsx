@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useHud } from "../state";
+import { playUiTap } from "../audio";
 import { initialLocale, type Locale } from "../i18n";
 import styles from "./PracticeHud.module.css";
 
@@ -57,7 +58,14 @@ export function PracticeHud({ active }: Props) {
     <div className={styles.banner}>
       <div className={styles.row}>
         <div className={styles.label}>▶ {label}</div>
-        <Link href="/" className={styles.exitBtn} onClick={() => reset()}>
+        <Link
+          href="/"
+          className={styles.exitBtn}
+          onClick={() => {
+            playUiTap();
+            reset();
+          }}
+        >
           {exitLabel}
         </Link>
       </div>
