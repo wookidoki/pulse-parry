@@ -200,22 +200,13 @@ function advanceStage(state: EngineState, nowMs: number, cb: EngineCallbacks): b
   const elapsed = nowMs - state.stageStartMs;
   if (elapsed < stage.durationMs) return false;
 
-  // Endless: when reaching the second-to-last stage (just before the boss),
-  // loop back to stage 1 instead, bumping the difficulty boost.
   if (state.endlessMode) {
-    const isLastNonBoss = state.stageIndex === FINAL_STAGE_INDEX - 1;
-    if (isLastNonBoss) {
+    if (state.stageIndex === FINAL_STAGE_INDEX - 1) {
       state.stageIndex = 1;
       state.endlessLoop += 1;
       cb.onEndlessLoop(state.endlessLoop);
     } else {
       state.stageIndex += 1;
-      // Skip boss stage entirely in endless mode.
-      if (state.stageIndex === FINAL_STAGE_INDEX) {
-        state.stageIndex = 1;
-        state.endlessLoop += 1;
-        cb.onEndlessLoop(state.endlessLoop);
-      }
     }
   } else {
     if (state.stageIndex >= FINAL_STAGE_INDEX) return false;

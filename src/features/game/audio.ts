@@ -33,7 +33,6 @@ export function getAudioContext(): AudioContext | null {
   return ctx;
 }
 
-// ───────── Sample pool ─────────
 type SampleKey =
   | "slash"
   | "clash"
@@ -164,7 +163,6 @@ function playSample(
   };
 }
 
-// ───────── Synth helpers ─────────
 function envOsc(
   freqStart: number,
   freqEnd: number,
@@ -209,7 +207,6 @@ function noiseBurst(durSec: number, gainPeak: number, filterFreq: number) {
 
 const PITCH_VAR = () => 0.92 + Math.random() * 0.16;
 
-// ───────── Player-side SFX ─────────
 export function playParryHit() {
   playSample("clash", { gain: 0.35, pitch: PITCH_VAR() });
   envOsc(1400, 2400, 0.06, "square", 0.05);
@@ -226,17 +223,9 @@ export function playSlashWoosh() {
   playSample("slash", { gain: 0.4, pitch: 1.05 + Math.random() * 0.15 });
 }
 
-export function playEnemyShoot() {
-  playSample("laserSmall", { gain: 0.28, pitch: PITCH_VAR() });
-}
-
-export function playEnemyShootHeavy() {
-  playSample("laserHeavy", { gain: 0.4, pitch: PITCH_VAR() });
-}
-
-// ───────── Race-specific shoots — distinct timbres ─────────
-// omnic = clean digital pulse, virus = noise glitch (no laser sample),
-// drone = low thud, boss = heavy sub.
+// Race-specific shoots use distinct timbres so overlapping fire reads
+// individually: omnic = clean pulse, virus = noise glitch, drone = low thud.
+// All enemy fire goes through these race variants — no generic shoot helper.
 export function playOmnicShoot() {
   playSample("laserSmall", { gain: 0.3, pitch: 0.95 + Math.random() * 0.15 });
   envOsc(880, 660, 0.04, "square", 0.03);
@@ -263,20 +252,15 @@ export function playBossShoot() {
   envOsc(140, 80, 0.2, "sawtooth", 0.1);
 }
 
-// ───────── Enemy deaths — distinct first-100ms per race ─────────
-export function playEnemyDie() {
-  playSample("explode", { gain: 0.38, pitch: PITCH_VAR() });
-  envOsc(60, 28, 0.22, "sine", 0.2);
-}
-
-// omnic = digital shutdown (metal + descending square — no explode)
+// Race-specific deaths diverge in the first 100ms so chained kills stay
+// distinguishable: omnic = digital shutdown, virus = glitch implosion,
+// drone = heavy mech crash, boss = epic chain.
 export function playOmnicDie() {
   playSample("impact", { gain: 0.32, pitch: 1.1 + Math.random() * 0.1 });
   envOsc(880, 110, 0.32, "square", 0.16);
   envOsc(440, 90, 0.28, "sine", 0.12);
 }
 
-// virus = glitch implosion (noise + sawtooth — no explode)
 export function playVirusDie() {
   noiseBurst(0.18, 0.16, 2200);
   noiseBurst(0.1, 0.12, 5800);
@@ -284,7 +268,6 @@ export function playVirusDie() {
   envOsc(660, 60, 0.36, "square", 0.08);
 }
 
-// drone = heavy mech crash (explodeDeep + impact, not stacked explode)
 export function playDroneDie() {
   playSample("explodeDeep", { gain: 0.45, pitch: 0.78 + Math.random() * 0.08 });
   playSample("impact", { gain: 0.28, pitch: 0.8, delayMs: 70 });
@@ -292,7 +275,6 @@ export function playDroneDie() {
   envOsc(80, 30, 0.4, "sine", 0.22);
 }
 
-// boss = epic chain (kept layered, slightly trimmed)
 export function playBossDie() {
   playSample("explode", { gain: 0.6, pitch: 1.0 });
   playSample("explodeDeep", { gain: 0.6, pitch: 0.75, delayMs: 80 });
@@ -326,7 +308,6 @@ export function playDashWhoosh() {
   noiseBurst(0.16, 0.1, 1800);
 }
 
-// ───────── HUD / cutscene cues (no uiClick reuse) ─────────
 export function playStageUp() {
   if (!ctx) return;
   [392, 523, 784, 1046].forEach((f, i) => {
@@ -348,15 +329,14 @@ export function playUiClick() {
   playSample("uiClick", { gain: 0.22, pitch: 1.4 });
 }
 
-// Convenience for any clickable element — ensures context started + resumed
-// before playing the click. Safe to call from any UI handler.
+// Wrap audio init + the click so any clickable element can fire it from a
+// pre-gesture state without checking context status itself.
 export function playUiTap() {
   if (!ensureAudio()) return;
   resumeAudio();
   playUiClick();
 }
 
-// ───────── Cutscene SFX ─────────
 export function playIntroWarp() {
   playSample("forceField", { gain: 0.5, pitch: 0.65 });
   playSample("explodeDeep", { gain: 0.35, pitch: 1.5, delayMs: 700 });

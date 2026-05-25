@@ -87,12 +87,6 @@ export function getBestScore(stageIndex: number, difficulty: Difficulty): number
   return loadProgress().bestScores[scoreKey(stageIndex, difficulty, false)] ?? 0;
 }
 
-export function getEndlessBestScore(difficulty: Difficulty): number {
-  return loadProgress().bestScores[scoreKey(0, difficulty, true)] ?? 0;
-}
-
-// ───────── Achievements ─────────
-
 export interface RunStats {
   isVictory: boolean;
   isBossKill: boolean;
@@ -121,7 +115,6 @@ function unlockOne(p: Progress, id: AchievementId, newlyUnlocked: AchievementId[
   newlyUnlocked.push(id);
 }
 
-// Returns the list of achievement IDs newly unlocked by this run.
 export function checkAchievements(stats: RunStats): AchievementId[] {
   const p = loadProgress();
   const newlyUnlocked: AchievementId[] = [];
@@ -149,7 +142,6 @@ export function checkAchievements(stats: RunStats): AchievementId[] {
     dirty = true;
   }
 
-  // Per-run achievements
   if (stats.enemiesKilled >= 10) unlockOne(p, "FIRST_BLOOD", newlyUnlocked);
   if (stats.isVictory) unlockOne(p, "FIRST_STAGE", newlyUnlocked);
   if (stats.maxCombo >= 100) unlockOne(p, "RHYTHM_MASTER", newlyUnlocked);
@@ -173,7 +165,6 @@ export function checkAchievements(stats: RunStats): AchievementId[] {
   if (p.endlessBestLoop >= 3) unlockOne(p, "ENDLESS_3", newlyUnlocked);
   if (p.endlessBestLoop >= 5) unlockOne(p, "ENDLESS_5", newlyUnlocked);
 
-  // Cumulative achievements
   if (CHARACTER_ORDER.every((id) => p.charactersCleared.includes(id))) {
     unlockOne(p, "ALL_CHARACTERS", newlyUnlocked);
   }

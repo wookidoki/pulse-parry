@@ -1,53 +1,45 @@
 import { attachAnalyser, resetAnalysisState } from "./audioAnalysis";
 import { getAudioContext } from "./audio";
 
-// One pool per stage. Pools are picked at random per run; boss stage cycles
-// pool entries by phase (see setBossPhase).
+// Indexed by stage. Boss pool is indexed by phase (see setBossPhase), so
+// the final entry must hold one track per supported phase.
 const STAGE_TRACK_POOLS: string[][] = [
-  // 0 INFILTRATION (118-122 BPM, calm intro)
   [
     "/audio/stage1_breach.mp3",
     "/audio/stage1_awaken.ogg",
     "/audio/oga_chill_100.ogg",
   ],
-  // 1 ECHO (122-126 BPM, mysterious)
   [
     "/audio/oga1_simulation.ogg",
     "/audio/oga1_anti_matter.ogg",
     "/audio/oga_moonlight.mp3",
   ],
-  // 2 FACTORY (128-132 BPM)
   [
     "/audio/stage2_coldrain.mp3",
     "/audio/stage2_pulse.ogg",
     "/audio/oga_welcome_110.ogg",
     "/audio/oga_jumping_110.ogg",
   ],
-  // 3 BLOOM (138-144 BPM, energetic)
   [
     "/audio/oga_casino_120.ogg",
     "/audio/oga1_currents.ogg",
     "/audio/oga_synth_remix.ogg",
   ],
-  // 4 OVERDRIVE (150-158 BPM)
   [
     "/audio/stage3_factory.ogg",
     "/audio/stage3_overdrive.ogg",
     "/audio/oga_15k.mp3",
     "/audio/oga1_experiment_g.ogg",
   ],
-  // 5 TRIAGE (162-168 BPM, urgent)
   [
     "/audio/oga1_caves.ogg",
     "/audio/oga1_test_subject.ogg",
     "/audio/oga_synth_remix_lo.ogg",
   ],
-  // 6 CHAOS (172-178 BPM)
   [
     "/audio/stage4_chaos.ogg",
     "/audio/oga1_space_collisions.ogg",
   ],
-  // 7 REVOLT / BOSS (176-184 BPM, 3 tracks for 3 phases)
   [
     "/audio/boss_electric.ogg",
     "/audio/oga1_tribal_chaos.ogg",
@@ -99,8 +91,6 @@ let masterVolume = 0.5;
 let isPaused = false;
 let bossPhase = 0;
 let bossPhaseAudio: HTMLAudioElement | null = null;
-// 0.75 (combo break) → 1.15 (sustained combo). Reinforces the rhythm payoff
-// without making low-combo runs feel quiet on purpose.
 let intensityMul = 1;
 
 export function initMusic(): void {
@@ -239,7 +229,6 @@ export function cycleMenuTrack(): MenuTrackInfo {
       /* ignore */
     }
   }
-  // Crossfade to new track
   const prev = menuAudio;
   const wasPlaying = prev && !prev.paused;
   buildMenuAudio();
@@ -279,7 +268,7 @@ export function setBossPhase(phase: number): void {
   resetAnalysisState();
 }
 
-export function resetBossPhase(): void {
+function resetBossPhase(): void {
   bossPhase = 0;
   bossPhaseAudio = null;
 }
@@ -337,15 +326,3 @@ export function resumeMusic(): void {
   if (cur) cur.play().catch(() => {});
 }
 
-export function stopMusic(): void {
-  for (const pool of stagePools) {
-    for (const a of pool) {
-      a.pause();
-      a.currentTime = 0;
-    }
-  }
-  currentStageIdx = -1;
-  currentTrackIdx = -1;
-  isPaused = false;
-  resetBossPhase();
-}

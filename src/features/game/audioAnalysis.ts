@@ -28,10 +28,6 @@ export function attachAnalyser(
   }
 }
 
-export function hasAnalyser(key: number): boolean {
-  return analysers.has(key);
-}
-
 export function tickKickDetection(currentIndex: number, nowMs: number): boolean {
   const analyser = analysers.get(currentIndex);
   if (!analyser) return false;

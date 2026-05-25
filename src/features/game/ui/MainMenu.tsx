@@ -24,8 +24,8 @@ import { Button, ButtonLink } from "./Button";
 import styles from "./MainMenu.module.css";
 import { useEffect as useReactEffect } from "react";
 
-// Button/ButtonLink handle their own click SFX via playUiTap. This helper only
-// ensures the audio context is running and (re)starts the menu BGM if needed.
+// Button/ButtonLink play the click SFX themselves; this is only for audio
+// init + menu BGM resume that the raw button elements still need.
 function click() {
   ensureAudio();
   resumeAudio();

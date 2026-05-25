@@ -340,9 +340,8 @@ function drawDrone(
   const spriteColor = e.hitFlashMsLeft > 0 ? "#ffffff" : config.color;
   drawEnemySprite(c, e.kind, x, y, radius * 0.95, spriteColor, 0.85, 22 + e.pulse * 18);
 
-  // Sub-kind shape differentiation within drone race:
-  // bomber = triangle (aggressive, pointing motion), mortar = hex (chunky launcher),
-  // charger = octagon (heavy mech). All distinct from omnic hex / virus star / core octagon-large.
+  // Sub-kind shapes diverge so the three drone variants read distinctly:
+  // bomber = triangle, mortar = hex, charger = octagon.
   const outerSides = e.kind === "bomber" ? 3 : e.kind === "mortar" ? 6 : 8;
   const innerSides = outerSides;
   const propArms = e.kind === "bomber" ? 3 : 6;
@@ -969,8 +968,6 @@ function drawRazorBlade(
   c.restore();
 }
 
-// Conductor's baton — thin tapered stick with a bright tip orb and
-// trailing music-note particles when intense (the "beat" tells).
 function drawBatonBlade(
   c: CanvasRenderingContext2D,
   angle: number,
@@ -993,7 +990,6 @@ function drawBatonBlade(
   c.shadowColor = intense ? PALETTE.yellow : bladeColor;
   c.shadowBlur = intense ? 30 : 20;
 
-  // Tapered stick — wider at base, thin at tip.
   const segs = 6;
   const baseW = intense ? 7 : 5;
   for (let i = 0; i < segs; i++) {
@@ -1009,7 +1005,6 @@ function drawBatonBlade(
     c.stroke();
   }
 
-  // White core
   c.shadowBlur = 0;
   c.strokeStyle = "rgba(255, 255, 255, 0.95)";
   c.lineWidth = intense ? 2 : 1.4;
@@ -1018,7 +1013,6 @@ function drawBatonBlade(
   c.lineTo(tipX, tipY);
   c.stroke();
 
-  // Bright tip orb
   c.shadowColor = "#ffffff";
   c.shadowBlur = intense ? 26 : 16;
   c.fillStyle = "#ffffff";
@@ -1031,7 +1025,6 @@ function drawBatonBlade(
   c.arc(tipX, tipY, intense ? 3 : 2.2, 0, Math.PI * 2);
   c.fill();
 
-  // Music-note particle trail when parrying (intense)
   if (intense) {
     for (let i = 0; i < 4; i++) {
       const phase = ((nowMs / 240) + i * 0.27) % 1;

@@ -108,8 +108,8 @@ export function EndOverlay() {
     };
     const unlocks = checkAchievements(stats);
     if (unlocks.length === 0) return;
-    // Defer the state update past the effect body so React's "set-state-in-effect"
-    // lint rule and double-render concerns are avoided.
+    // Deferred to avoid set-state-in-effect: lets the side effect run, then
+    // queues the visible-toast update for the next tick.
     const id = window.setTimeout(() => setNewlyUnlocked(unlocks), 0);
     return () => window.clearTimeout(id);
   }, [
