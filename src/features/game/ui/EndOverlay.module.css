@@ -287,3 +287,23 @@
   letter-spacing: 0.06em;
   color: rgba(240, 246, 255, 0.7);
 }
+
+.hardcoreBadge {
+  display: inline-block;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  color: var(--neon-yellow, #f7ff3a);
+  background: rgba(255, 56, 99, 0.12);
+  border: 1px solid rgba(255, 56, 99, 0.6);
+  border-radius: 4px;
+  text-shadow: 0 0 12px rgba(247, 255, 58, 0.7);
+  box-shadow: 0 0 16px rgba(255, 56, 99, 0.3);
+  animation: hardcorePulse 1.6s ease-in-out infinite;
+}
+
+@keyframes hardcorePulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}

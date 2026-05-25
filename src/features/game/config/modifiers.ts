@@ -23,6 +23,7 @@ export interface RunModifierConfig {
   perfectWindowMul: number;
   forcedHold: boolean;
   burstShotsBonus: number;
+  dashCooldownMul: number;
 }
 
 export const MODIFIERS: Record<RunModifierId, RunModifierConfig> = {
@@ -38,6 +39,7 @@ export const MODIFIERS: Record<RunModifierId, RunModifierConfig> = {
     perfectWindowMul: 1,
     forcedHold: false,
     burstShotsBonus: 0,
+    dashCooldownMul: 1,
   },
   rapidFire: {
     id: "rapidFire",
@@ -54,6 +56,7 @@ export const MODIFIERS: Record<RunModifierId, RunModifierConfig> = {
     perfectWindowMul: 2,
     forcedHold: false,
     burstShotsBonus: 0,
+    dashCooldownMul: 1,
   },
   metalRain: {
     id: "metalRain",
@@ -71,6 +74,7 @@ export const MODIFIERS: Record<RunModifierId, RunModifierConfig> = {
     perfectWindowMul: 1,
     forcedHold: false,
     burstShotsBonus: 0,
+    dashCooldownMul: 1,
   },
   purist: {
     id: "purist",
@@ -87,6 +91,7 @@ export const MODIFIERS: Record<RunModifierId, RunModifierConfig> = {
     perfectWindowMul: 1,
     forcedHold: true,
     burstShotsBonus: 0,
+    dashCooldownMul: 1,
   },
   stoneHeart: {
     id: "stoneHeart",
@@ -103,6 +108,7 @@ export const MODIFIERS: Record<RunModifierId, RunModifierConfig> = {
     perfectWindowMul: 1,
     forcedHold: false,
     burstShotsBonus: 0,
+    dashCooldownMul: 1,
   },
   doubleTime: {
     id: "doubleTime",
@@ -119,13 +125,14 @@ export const MODIFIERS: Record<RunModifierId, RunModifierConfig> = {
     perfectWindowMul: 0.85,
     forcedHold: false,
     burstShotsBonus: 0,
+    dashCooldownMul: 1,
   },
   glassCannon: {
     id: "glassCannon",
     name: { ko: "글래스 캐논", en: "GLASS CANNON" },
     description: {
-      ko: "시작 HP 1 + 탄속 0.9배 + 점수 3배",
-      en: "Start HP 1, 0.9× bullet speed, 3× score",
+      ko: "시작 HP 1 + 탄속 0.9배 + 대시 쿨 0.7배 + 점수 3배",
+      en: "Start HP 1, 0.9× bullet speed, 0.7× dash cooldown, 3× score",
     },
     enemyFireRateMul: 1,
     bulletSpeedMul: 0.9,
@@ -135,6 +142,7 @@ export const MODIFIERS: Record<RunModifierId, RunModifierConfig> = {
     perfectWindowMul: 1.2,
     forcedHold: false,
     burstShotsBonus: 0,
+    dashCooldownMul: 0.7,
   },
   bulletStorm: {
     id: "bulletStorm",
@@ -151,6 +159,7 @@ export const MODIFIERS: Record<RunModifierId, RunModifierConfig> = {
     perfectWindowMul: 1,
     forcedHold: false,
     burstShotsBonus: 1,
+    dashCooldownMul: 1,
   },
 };
 

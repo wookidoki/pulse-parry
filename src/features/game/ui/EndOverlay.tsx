@@ -72,6 +72,7 @@ export function EndOverlay() {
   const playEndMs = useHud((s) => s.playEndMs);
   const endlessLoop = useHud((s) => s.endlessLoop);
   const reset = useHud((s) => s.reset);
+  const restart = useHud((s) => s.restart);
 
   const isVictory = status === "victory";
   const accuracy = totalParries > 0 ? perfectParries / totalParries : 0;
@@ -157,6 +158,13 @@ export function EndOverlay() {
           <span className={styles.scoreValue}>{score.toString().padStart(6, "0")}</span>
         </div>
 
+        {difficulty === "hard" &&
+          (modifierId === "doubleTime" ||
+            modifierId === "bulletStorm" ||
+            modifierId === "glassCannon") && (
+            <div className={styles.hardcoreBadge}>{t("hardcoreBadge", locale)}</div>
+          )}
+
         <div className={styles.statGrid}>
           <Stat label={t("perfect", locale)} value={`${perfectParries}`} accent="#ffffff" />
           <Stat label={t("accuracy", locale)} value={`${Math.round(accuracy * 100)}%`} accent="#f7ff3a" />
@@ -209,10 +217,7 @@ export function EndOverlay() {
             variant={isVictory ? "primary" : "danger"}
             size="md"
             bracket
-            onClick={() => {
-              reset();
-              window.location.reload();
-            }}
+            onClick={() => restart()}
           >
             {t("retry", locale)}
           </Button>

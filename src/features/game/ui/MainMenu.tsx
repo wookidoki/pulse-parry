@@ -6,7 +6,14 @@ import { STAGES, tempoRangeOf } from "../config/stages";
 import { CHARACTERS, CHARACTER_ORDER, type CharacterId } from "../config/characters";
 import { DIFFICULTIES, DIFFICULTY_ORDER } from "../config/difficulty";
 import { MODIFIERS, MODIFIER_ORDER, type RunModifierId } from "../config/modifiers";
-import { getBestScore, getUnlockedAchievements, loadProgress, totalAchievements } from "../progress";
+import {
+  getBestScore,
+  getUnlockedAchievements,
+  loadProgress,
+  loadSelection,
+  saveSelection,
+  totalAchievements,
+} from "../progress";
 import { ACHIEVEMENTS, ACHIEVEMENT_ORDER } from "../config/achievements";
 import type { Difficulty } from "../types";
 import { loadLocale, saveLocale, t, type Locale } from "../i18n";
@@ -66,9 +73,28 @@ export function MainMenu() {
   const router = useRouter();
   const [view, setView] = useState<View>("title");
   const [locale, setLocale] = useState<Locale>(() => loadLocale());
-  const [characterId, setCharacterId] = useState<CharacterId>("ninja");
-  const [difficulty, setDifficulty] = useState<Difficulty>("normal");
-  const [modifierId, setModifierId] = useState<RunModifierId>("none");
+  const initialSelection = loadSelection();
+  const [characterId, setCharacterIdRaw] = useState<CharacterId>(
+    initialSelection.characterId,
+  );
+  const [difficulty, setDifficultyRaw] = useState<Difficulty>(
+    initialSelection.difficulty,
+  );
+  const [modifierId, setModifierIdRaw] = useState<RunModifierId>(
+    initialSelection.modifierId,
+  );
+  const setCharacterId = (id: CharacterId) => {
+    setCharacterIdRaw(id);
+    saveSelection({ characterId: id });
+  };
+  const setDifficulty = (d: Difficulty) => {
+    setDifficultyRaw(d);
+    saveSelection({ difficulty: d });
+  };
+  const setModifierId = (id: RunModifierId) => {
+    setModifierIdRaw(id);
+    saveSelection({ modifierId: id });
+  };
   const [unlockedStage] = useState<number>(() =>
     typeof window === "undefined" ? 0 : loadProgress().unlockedStage,
   );
@@ -263,6 +289,8 @@ function AchievementsView({
         {ACHIEVEMENT_ORDER.map((id) => {
           const a = ACHIEVEMENTS[id];
           const got = unlocked.has(id);
+          const lockedLabel = locale === "ko" ? "??? (잠김)" : "??? (LOCKED)";
+          const lockedDesc = locale === "ko" ? "해금되면 표시됩니다" : "Hidden until unlocked";
           return (
             <div
               key={id}
@@ -271,8 +299,12 @@ function AchievementsView({
             >
               <div className={styles.achievementGlyphBig}>{got ? a.glyph : "?"}</div>
               <div className={styles.achievementTileText}>
-                <div className={styles.achievementTileName}>{a.name[locale]}</div>
-                <div className={styles.achievementTileDesc}>{a.desc[locale]}</div>
+                <div className={styles.achievementTileName}>
+                  {got ? a.name[locale] : lockedLabel}
+                </div>
+                <div className={styles.achievementTileDesc}>
+                  {got ? a.desc[locale] : lockedDesc}
+                </div>
               </div>
             </div>
           );

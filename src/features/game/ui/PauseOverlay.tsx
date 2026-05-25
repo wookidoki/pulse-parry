@@ -11,7 +11,7 @@ export function PauseOverlay() {
 
   const status = useHud((s) => s.status);
   const resume = useHud((s) => s.resume);
-  const reset = useHud((s) => s.reset);
+  const restart = useHud((s) => s.restart);
   const musicVolume = useHud((s) => s.musicVolume);
   const sfxVolume = useHud((s) => s.sfxVolume);
   const setMusicVolume = useHud((s) => s.setMusicVolume);
@@ -44,10 +44,7 @@ export function PauseOverlay() {
           <Button
             variant="secondary"
             size="md"
-            onClick={() => {
-              reset();
-              window.location.reload();
-            }}
+            onClick={() => restart()}
           >
             {t("restart", locale)}
           </Button>

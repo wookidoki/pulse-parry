@@ -84,44 +84,38 @@ export function GameCanvas({
   const stageIndex = useHud((s) => s.stageIndex);
   const status = useHud((s) => s.status);
   const combo = useHud((s) => s.combo);
-
-  useEffect(() => {
-    const char = CHARACTERS[characterId];
-    const mod = MODIFIERS[modifierId];
-    start(char.maxHp + mod.startHpDelta);
-    preloadEnemySprites();
-  }, [start, characterId, modifierId]);
-
-  useEffect(() => {
-    setMasterVolume(sfxVolume);
-  }, [sfxVolume]);
-
-  useEffect(() => {
-    setMusicVolume(musicVolume);
-  }, [musicVolume]);
+  const restartKey = useHud((s) => s.restartKey);
 
   useEffect(() => {
     initMusic();
   }, []);
 
   useEffect(() => {
-    if (status === "playing") playStageBgm(stageIndex);
+    const char = CHARACTERS[characterId];
+    const mod = MODIFIERS[modifierId];
+    start(char.maxHp + mod.startHpDelta);
+    preloadEnemySprites();
+  }, [start, characterId, modifierId, restartKey]);
+
+  useEffect(() => {
+    setMasterVolume(sfxVolume);
+    setMusicVolume(musicVolume);
+  }, [sfxVolume, musicVolume]);
+
+  useEffect(() => {
+    if (status === "playing") {
+      playStageBgm(stageIndex);
+      resumeMusic();
+    } else if (status === "paused") {
+      pauseMusic();
+    } else if (status === "gameover" || status === "victory" || status === "menu") {
+      resetBgmIntensity();
+    }
   }, [stageIndex, status]);
 
   useEffect(() => {
     if (status === "playing") setBgmIntensity(combo);
   }, [combo, status]);
-
-  useEffect(() => {
-    if (status === "menu" || status === "gameover" || status === "victory") {
-      resetBgmIntensity();
-    }
-  }, [status]);
-
-  useEffect(() => {
-    if (status === "paused") pauseMusic();
-    else if (status === "playing") resumeMusic();
-  }, [status]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -241,7 +235,13 @@ export function GameCanvas({
       const hudState = useHud.getState();
 
       if (hudState.status === "playing") {
-        const scoreMul = MODIFIERS[engine.modifierId].scoreMul;
+        const baseMul = MODIFIERS[engine.modifierId].scoreMul;
+        const isHardcore =
+          engine.difficulty === "hard" &&
+          (engine.modifierId === "doubleTime" ||
+            engine.modifierId === "bulletStorm" ||
+            engine.modifierId === "glassCannon");
+        const scoreMul = baseMul * (isHardcore ? 1.5 : 1);
         update({
           state: engine,
           input: inputRef.current,
@@ -284,7 +284,7 @@ export function GameCanvas({
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, triggerBossPhaseAlert, setEndlessLoop, startStage, difficulty, characterId, modifierId, tutorialMode, endlessMode]);
+  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, triggerBossPhaseAlert, setEndlessLoop, startStage, difficulty, characterId, modifierId, tutorialMode, endlessMode, restartKey]);
 
   return <canvas ref={canvasRef} className={styles.canvas} />;
 }

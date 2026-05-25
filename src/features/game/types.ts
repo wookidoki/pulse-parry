@@ -288,4 +288,5 @@ export interface HudState {
   playStartMs: number;
   playEndMs: number;
   endlessLoop: number;
+  restartKey: number;
 }

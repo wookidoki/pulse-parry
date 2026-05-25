@@ -144,7 +144,7 @@ export const ENEMY_KINDS: Record<EnemyKind, EnemyKindConfig> = {
     glowColor: PALETTE.magenta,
   },
   healer: {
-    hp: 4,
+    hp: 3,
     beatsPerShot: 10,
     bulletKind: "normal",
     flightBeats: 3,

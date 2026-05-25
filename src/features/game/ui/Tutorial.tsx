@@ -23,6 +23,9 @@ const STEPS: StepDef[] = [
   { titleKey: "tutDashT", descKey: "tutDashD", glyph: "⇶", glyphColor: "#1cf0ff" },
   { titleKey: "tutHazardT", descKey: "tutHazardD", glyph: "⚠", glyphColor: "#ff3863" },
   { titleKey: "tutHealT", descKey: "tutHealD", glyph: "+", glyphColor: "#1cf78f" },
+  { titleKey: "tutMirrorT", descKey: "tutMirrorD", glyph: "◇", glyphColor: "#ffffff" },
+  { titleKey: "tutHealerT", descKey: "tutHealerD", glyph: "✚", glyphColor: "#1cf78f" },
+  { titleKey: "tutPulserT", descKey: "tutPulserD", glyph: "✺", glyphColor: "#1cf0ff" },
   { titleKey: "tutReadyT", descKey: "tutReadyD", glyph: "◆", glyphColor: "#ff2bd6" },
 ];
 

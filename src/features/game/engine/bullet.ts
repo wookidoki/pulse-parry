@@ -254,8 +254,14 @@ export function updateBullets(
         // Mirror enemies bounce non-charged reflects back at the player.
         // Only a CHARGED reflect breaks through and damages a mirror.
         if (e.kind === "mirror" && !b.isCharged) {
+          // Bounce capped so high-reflectSpeed characters (netrunner) can still
+          // react. Otherwise a 1140 px/s return on a 130ms PERFECT window is
+          // effectively un-parry-able.
+          const MIRROR_BOUNCE_SPEED_MUL = 0.55;
+          const MIRROR_BOUNCE_MAX_SPEED = 620;
           const { ux, uy } = unitVector(px - b.x, py - b.y);
-          const speed = magnitude(b.vx, b.vy);
+          const inSpeed = magnitude(b.vx, b.vy);
+          const speed = Math.min(MIRROR_BOUNCE_MAX_SPEED, inSpeed * MIRROR_BOUNCE_SPEED_MUL);
           b.vx = ux * speed;
           b.vy = uy * speed;
           b.state = "incoming";

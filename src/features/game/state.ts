@@ -6,6 +6,7 @@ import { unlockStage } from "./progress";
 
 interface HudActions {
   reset: () => void;
+  restart: () => void;
   start: (maxHp?: number) => void;
   damage: (amount: number) => void;
   heal: (amount: number) => void;
@@ -87,6 +88,7 @@ const INITIAL: HudState = {
   playStartMs: 0,
   playEndMs: 0,
   endlessLoop: 0,
+  restartKey: 0,
 };
 
 const stageNameOf = (index: number): string =>
@@ -102,7 +104,19 @@ function nextMilestoneCrossed(prev: number, next: number): number | null {
 export const useHud = create<HudState & HudActions>((set) => ({
   ...INITIAL,
   reset: () =>
-    set((s) => ({ ...INITIAL, musicVolume: s.musicVolume, sfxVolume: s.sfxVolume })),
+    set((s) => ({
+      ...INITIAL,
+      musicVolume: s.musicVolume,
+      sfxVolume: s.sfxVolume,
+      restartKey: s.restartKey,
+    })),
+  restart: () =>
+    set((s) => ({
+      ...INITIAL,
+      musicVolume: s.musicVolume,
+      sfxVolume: s.sfxVolume,
+      restartKey: s.restartKey + 1,
+    })),
   start: (maxHp?: number) =>
     set((s) => {
       const hp = maxHp ?? INITIAL.maxHp;
@@ -110,10 +124,11 @@ export const useHud = create<HudState & HudActions>((set) => ({
         ...INITIAL,
         musicVolume: s.musicVolume,
         sfxVolume: s.sfxVolume,
+        restartKey: s.restartKey,
         status: "intro",
         hp,
         maxHp: hp,
-        playStartMs: Date.now(),
+        playStartMs: performance.now(),
         playEndMs: 0,
       };
     }),
@@ -154,15 +169,17 @@ export const useHud = create<HudState & HudActions>((set) => ({
     })),
   bumpEnemiesKilled: (n) =>
     set((s) => ({ enemiesKilled: s.enemiesKilled + n })),
-  gameOver: () => set({ status: "gameover", playEndMs: Date.now() }),
+  gameOver: () => set({ status: "gameover", playEndMs: performance.now() }),
   victory: () =>
     set((s) => {
       if (s.status !== "playing") return s;
       unlockStage(s.stageIndex);
       return { status: "winning" };
     }),
-  setStage: (index) =>
-    set({ stageIndex: index, stageName: stageNameOf(index) }),
+  setStage: (index) => {
+    if (index > 0) unlockStage(index - 1);
+    set({ stageIndex: index, stageName: stageNameOf(index) });
+  },
   pause: () =>
     set((s) => (s.status === "playing" ? { status: "paused" } : s)),
   resume: () =>
@@ -193,12 +210,12 @@ export const useHud = create<HudState & HudActions>((set) => ({
     set((s) => (s.status === "bossCutscene" ? { status: "playing" } : s)),
   finalizeDeath: () =>
     set((s) =>
-      s.status === "dying" ? { status: "gameover", playEndMs: Date.now() } : s,
+      s.status === "dying" ? { status: "gameover", playEndMs: performance.now() } : s,
     ),
   finalizeVictory: () =>
     set((s) =>
       s.status === "winning"
-        ? { status: "victory", playEndMs: Date.now() }
+        ? { status: "victory", playEndMs: performance.now() }
         : s,
     ),
   triggerBossPhaseAlert: (phase) =>

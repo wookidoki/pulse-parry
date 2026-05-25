@@ -180,3 +180,44 @@ export function checkAchievements(stats: RunStats): AchievementId[] {
 export function totalAchievements(): number {
   return Object.keys(ACHIEVEMENTS).length;
 }
+
+const SELECTION_STORAGE_KEY = "pulse-parry-selection";
+
+export interface RunSelection {
+  characterId: CharacterId;
+  modifierId: RunModifierId;
+  difficulty: Difficulty;
+}
+
+const DEFAULT_SELECTION: RunSelection = {
+  characterId: "ninja",
+  modifierId: "none",
+  difficulty: "normal",
+};
+
+export function loadSelection(): RunSelection {
+  if (typeof window === "undefined") return DEFAULT_SELECTION;
+  try {
+    const raw = localStorage.getItem(SELECTION_STORAGE_KEY);
+    if (!raw) return DEFAULT_SELECTION;
+    const parsed = JSON.parse(raw) as Partial<RunSelection>;
+    return {
+      characterId: parsed.characterId ?? DEFAULT_SELECTION.characterId,
+      modifierId: parsed.modifierId ?? DEFAULT_SELECTION.modifierId,
+      difficulty: parsed.difficulty ?? DEFAULT_SELECTION.difficulty,
+    };
+  } catch {
+    return DEFAULT_SELECTION;
+  }
+}
+
+export function saveSelection(sel: Partial<RunSelection>): void {
+  if (typeof window === "undefined") return;
+  try {
+    const current = loadSelection();
+    const next = { ...current, ...sel };
+    localStorage.setItem(SELECTION_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    /* ignore */
+  }
+}

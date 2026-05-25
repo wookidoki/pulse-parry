@@ -195,6 +195,22 @@ function tickTempoCurve(state: EngineState, nowMs: number): void {
   }
 }
 
+function wrapEndlessToStartOrBoss(state: EngineState, cb: EngineCallbacks): void {
+  // Every 3rd loop the player gets the boss as a treat. Loop counter is
+  // bumped on the boss clear (see checkVictory) so the boss fight itself
+  // still belongs to the loop that earned it.
+  const nextLoop = state.endlessLoop + 1;
+  if (nextLoop > 0 && nextLoop % 3 === 0) {
+    state.stageIndex = FINAL_STAGE_INDEX;
+    state.bossSpawned = false;
+    state.bossPhase = 0;
+  } else {
+    state.stageIndex = 1;
+    state.endlessLoop = nextLoop;
+    cb.onEndlessLoop(state.endlessLoop);
+  }
+}
+
 function advanceStage(state: EngineState, nowMs: number, cb: EngineCallbacks): boolean {
   const stage = currentStage(state.stageIndex);
   const elapsed = nowMs - state.stageStartMs;
@@ -202,7 +218,12 @@ function advanceStage(state: EngineState, nowMs: number, cb: EngineCallbacks): b
 
   if (state.endlessMode) {
     if (state.stageIndex === FINAL_STAGE_INDEX - 1) {
+      wrapEndlessToStartOrBoss(state, cb);
+    } else if (state.stageIndex === FINAL_STAGE_INDEX) {
+      // Boss timed out without dying — abandon and continue the run.
       state.stageIndex = 1;
+      state.bossSpawned = false;
+      state.bossPhase = 0;
       state.endlessLoop += 1;
       cb.onEndlessLoop(state.endlessLoop);
     } else {
@@ -400,7 +421,25 @@ function checkVictory(state: EngineState, nowMs: number, cb: EngineCallbacks): v
   if (stage.isBoss) {
     if (!state.bossSpawned) return;
     const bossExists = state.enemies.some((e) => e.kind === "boss");
-    if (!bossExists) cb.onVictory();
+    if (bossExists) return;
+    if (state.endlessMode) {
+      // Endless boss cleared → wrap back to stage 1 instead of ending the game.
+      state.stageIndex = 1;
+      state.stageStartMs = nowMs;
+      state.lastEnemySpawnBeat = state.beat.currentBeat;
+      state.bossSpawned = false;
+      state.bossPhase = 0;
+      state.endlessLoop += 1;
+      const next = STAGES[1];
+      setBpm(state.beat, next.tempoMap[0]?.bpm ?? 120, nowMs);
+      applyShake(state, SHAKE_ON_STAGE_UP);
+      spawnScreenFlash(state, PALETTE.yellow, 0.6);
+      sfx.playStageUp();
+      cb.onEndlessLoop(state.endlessLoop);
+      cb.onStageUp(state.stageIndex);
+    } else {
+      cb.onVictory();
+    }
     return;
   }
   const elapsed = nowMs - state.stageStartMs;
@@ -454,7 +493,7 @@ function processDashTrigger(state: EngineState, input: PlayerInput): void {
   state.dashDirX = dx / mag;
   state.dashDirY = dy / mag;
   state.dashActiveMsLeft = DASH_DURATION_MS;
-  state.dashCooldownMsLeft = char.dashCooldownMs;
+  state.dashCooldownMsLeft = char.dashCooldownMs * MODIFIERS[state.modifierId].dashCooldownMul;
   sfx.playDashWhoosh();
 }
 

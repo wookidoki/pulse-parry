@@ -259,7 +259,7 @@ function maybeTeleportPhantom(
   enemy.pulse = 1;
 }
 
-const BOMBER_SPEED = 60;
+const BOMBER_SPEED = 95;
 const BOMBER_DETONATE_RADIUS = 80;
 const HEALER_PULSE_BEATS = 4;
 
@@ -283,6 +283,7 @@ function maybeHealNeighbors(
   healer: Enemy,
   state: EngineState,
   result: EnemyTickResult,
+  nowMs: number,
 ): void {
   if (!state.beat.isBeatTick) return;
   if (state.beat.currentBeat % HEALER_PULSE_BEATS !== 0) return;
@@ -302,6 +303,13 @@ function maybeHealNeighbors(
   closest.hp = Math.min(closest.maxHp, closest.hp + 1);
   closest.pulse = 1;
   healer.pulse = 1;
+  // Self-cost: healing burns the healer's own life. Lets a focused player
+  // outlast a healer chain instead of getting locked into infinite stall.
+  healer.hp -= 1;
+  healer.hitFlashMsLeft = 80;
+  if (healer.hp <= 0) {
+    killEnemy(healer, nowMs);
+  }
   result.healerPulses.push({
     healerId: healer.id,
     targetId: closest.id,
@@ -376,7 +384,7 @@ export function updateEnemies(
     if (e.state !== "alive") continue;
 
     maybeTeleportPhantom(e, state, canvasW, canvasH, result);
-    if (e.kind === "healer") maybeHealNeighbors(e, state, result);
+    if (e.kind === "healer") maybeHealNeighbors(e, state, result, nowMs);
 
     if (isBomber) continue;
 

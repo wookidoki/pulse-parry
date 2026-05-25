@@ -55,7 +55,7 @@ export default async function PlayPage({ searchParams }: PageProps) {
   return (
     <>
       <GameCanvas
-        startStage={endlessMode ? 0 : stageIdx}
+        startStage={endlessMode ? 1 : stageIdx}
         difficulty={parseDifficulty(params.diff)}
         characterId={parseCharacter(params.char)}
         modifierId={parseModifier(params.mod)}
