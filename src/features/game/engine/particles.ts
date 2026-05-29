@@ -79,12 +79,17 @@ export const BURSTS = {
   }),
 };
 
+// Hard cap so dense action (fast BPM, many kills) can't let the particle array
+// grow unbounded and tank the frame rate.
+const MAX_PARTICLES = 700;
+
 export function emitBurst(
   state: EngineState,
   x: number,
   y: number,
   spec: BurstSpec,
 ): void {
+  if (state.particles.length >= MAX_PARTICLES) return;
   const sizeMin = spec.sizeMin ?? 2;
   const sizeMax = spec.sizeMax ?? 4;
   for (let i = 0; i < spec.count; i++) {

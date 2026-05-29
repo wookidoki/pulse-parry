@@ -13,7 +13,6 @@ import {
 } from "../config/tuning";
 import { CHARACTERS } from "../config/characters";
 import { magnitude, unitVector } from "../engine/geometry";
-import { drawEnemySprite } from "./enemy-sprites";
 
 export function drawMovementRing(
   c: CanvasRenderingContext2D,
@@ -270,9 +269,6 @@ function drawCore(
   const jitter = phase >= 2 ? 2.2 : 0;
   const jx = x + Math.sin(nowMs * 0.05) * jitter;
   const jy = y + Math.cos(nowMs * 0.057) * jitter;
-  const spriteColor = e.hitFlashMsLeft > 0 ? "#ffffff" : config.color;
-  drawEnemySprite(c, e.kind, jx, jy, baseR * 0.85, spriteColor, 0.78, 36 + e.pulse * 26 + phase * 18);
-
   c.save();
   c.translate(jx, jy);
 
@@ -373,8 +369,6 @@ function drawOmnic(
   const rotation = nowMs * 0.0006;
   const styles = flashStyles(e);
   const visorPulse = 0.7 + Math.sin(nowMs / 180) * 0.3;
-  const spriteColor = e.hitFlashMsLeft > 0 ? "#ffffff" : config.color;
-  drawEnemySprite(c, e.kind, x, y, radius, spriteColor, 0.9, 18 + e.pulse * 18);
 
   c.save();
   c.translate(x, y);
@@ -448,8 +442,6 @@ function drawVirus(
   const jitterX = Math.sin(nowMs * 0.022) * 1.8;
   const jitterY = Math.cos(nowMs * 0.024) * 1.8;
   const glitchOffset = Math.floor(nowMs / 120) % 4;
-  const spriteColor = e.hitFlashMsLeft > 0 ? "#ffffff" : config.color;
-  drawEnemySprite(c, e.kind, x + jitterX, y + jitterY, radius, spriteColor, 0.88, 18 + e.pulse * 18);
 
   c.save();
   c.translate(x + jitterX, y + jitterY);
@@ -523,8 +515,6 @@ function drawDrone(
   const rotation = nowMs * 0.0003;
   const propRotation = nowMs * 0.012;
   const styles = flashStyles(e);
-  const spriteColor = e.hitFlashMsLeft > 0 ? "#ffffff" : config.color;
-  drawEnemySprite(c, e.kind, x, y, radius * 0.95, spriteColor, 0.85, 22 + e.pulse * 18);
 
   // Sub-kind shapes diverge so the three drone variants read distinctly:
   // bomber = triangle, mortar = hex, charger = octagon.
