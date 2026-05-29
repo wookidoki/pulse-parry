@@ -224,7 +224,7 @@ export function updateHazards(
 }
 
 export function getHazardPhaseAlpha(h: Hazard, nowMs: number): number {
-  const age = nowMs - h.startedAtMs;
+  const age = Math.max(0, nowMs - h.startedAtMs);
   if (h.state === "telegraph") {
     return Math.min(1, age / telegraphMs(h));
   }
@@ -236,5 +236,8 @@ export function getHazardPhaseAlpha(h: Hazard, nowMs: number): number {
 
 export function getTelegraphProgress(h: Hazard, nowMs: number): number {
   if (h.state !== "telegraph") return 1;
-  return Math.min(1, (nowMs - h.startedAtMs) / telegraphMs(h));
+  // Lower clamp is critical: staggered hazards spawn with a FUTURE startedAtMs,
+  // so before they start this would go negative → negative arc radius in the
+  // renderer → IndexSizeError → the whole frame throws and the canvas freezes.
+  return Math.max(0, Math.min(1, (nowMs - h.startedAtMs) / telegraphMs(h)));
 }

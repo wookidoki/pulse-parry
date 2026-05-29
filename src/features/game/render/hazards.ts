@@ -9,6 +9,9 @@ export function drawHazards(
   nowMs: number,
 ): void {
   for (const haz of state.hazards) {
+    // Staggered barrage members spawn with a future startedAtMs; don't draw
+    // them until they begin or telegraph progress goes negative (→ throw).
+    if (nowMs < haz.startedAtMs) continue;
     if (haz.kind === "laserSweep") drawLaserSweep(c, haz, w, h, nowMs);
     else if (haz.kind === "missile") drawMissile(c, haz, nowMs);
     else if (haz.kind === "shockwave") drawShockwave(c, haz, nowMs);
