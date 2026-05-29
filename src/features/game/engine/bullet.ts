@@ -177,6 +177,11 @@ export interface BulletTickEffects {
   shieldCaught: number;
 }
 
+// Incoming bullets that miss fly straight forever — without these they pile up
+// (esp. 360° pulser/spiraler fire at high BPM) and tank the frame rate.
+const BULLET_MAX_LIFE_MS = 6000;
+const MAX_BULLETS = 360;
+
 function radiusOf(kind: BulletKind): number {
   return BULLET_KINDS[kind].radius;
 }
@@ -209,12 +214,34 @@ export function updateBullets(
   const char = CHARACTERS[state.characterId];
   const modConfig = MODIFIERS[state.modifierId];
 
+  // Hard safety cap: if bullets somehow overflow, retire the oldest incoming
+  // ones (player-owned absorbed/reflected are kept).
+  if (state.bullets.length > MAX_BULLETS) {
+    let toRemove = state.bullets.length - MAX_BULLETS;
+    for (const b of state.bullets) {
+      if (toRemove <= 0) break;
+      if (b.state === "incoming") {
+        b.state = "dead";
+        toRemove--;
+      }
+    }
+  }
+
   for (const b of state.bullets) {
     if (b.state === "dead") continue;
     const radius = radiusOf(b.kind);
 
     if (b.state === "incoming") {
       applyIncomingMotion(b, dt, beatPhase, nowMs);
+      // Retire bullets that flew off-screen or lingered too long.
+      if (
+        Math.abs(b.x) > offscreenLimit ||
+        Math.abs(b.y) > offscreenLimit ||
+        nowMs - b.spawnedAt > BULLET_MAX_LIFE_MS
+      ) {
+        b.state = "dead";
+        continue;
+      }
       const distToPlayer = magnitude(b.x - px, b.y - py);
       if (distToPlayer < b.minDist) b.minDist = distToPlayer;
       const inCone =

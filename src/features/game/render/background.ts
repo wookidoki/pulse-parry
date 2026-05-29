@@ -118,7 +118,10 @@ function drawRhythmStreaks(
   stageIndex: number,
   bpmIntensity: number = 1,
 ): void {
-  const streakCount = Math.round((12 + stageIndex * 3) * bpmIntensity);
+  // Fixed count (no BPM scaling — more streaks at high BPM is exactly the wrong
+  // direction for perf). BPM/beat drives brightness + speed instead. No per-
+  // streak shadowBlur (expensive); brightness carries the glow.
+  const streakCount = 12 + stageIndex * 3;
   const baseSpeed = (0.18 + stageIndex * 0.04) * bpmIntensity;
   const beatBoost = (1 - beatPhase) * 0.5;
   c.save();
@@ -130,18 +133,15 @@ function drawRhythmStreaks(
     const cycle = h + 200;
     const y = ((nowMs * speed + seed * cycle) % cycle) - 100;
     const len = 60 + seed * 80;
-    const alpha = 0.06 + seed * 0.12 + beatBoost * 0.05;
+    const alpha = 0.08 + seed * 0.14 + beatBoost * 0.06;
     const hue = i % 3 === 0 ? "247, 255, 58" : i % 3 === 1 ? "28, 240, 255" : "255, 43, 214";
     c.strokeStyle = `rgba(${hue}, ${alpha})`;
     c.lineWidth = 1 + seed * 1.5;
-    c.shadowColor = `rgba(${hue}, 0.5)`;
-    c.shadowBlur = 6;
     c.beginPath();
     c.moveTo(x, y);
     c.lineTo(x, y + len);
     c.stroke();
   }
-  c.shadowBlur = 0;
   c.restore();
 }
 

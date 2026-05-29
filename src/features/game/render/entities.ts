@@ -31,17 +31,19 @@ export function drawMovementRing(
 }
 
 export function drawParticles(c: CanvasRenderingContext2D, state: EngineState): void {
+  if (state.particles.length === 0) return;
+  // No per-particle shadowBlur/save-restore: with up to 700 particles that was
+  // the single biggest render cost (canvas blur is ~10× a plain fill). One
+  // save/restore for the whole batch, alpha set inline.
+  c.save();
   for (const p of state.particles) {
-    c.save();
     c.globalAlpha = Math.max(0, p.life);
-    c.shadowColor = p.color;
-    c.shadowBlur = 12;
     c.fillStyle = p.color;
     c.beginPath();
     c.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
     c.fill();
-    c.restore();
   }
+  c.restore();
 }
 
 export function drawEnemies(

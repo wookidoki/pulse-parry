@@ -335,9 +335,9 @@ function processEnemyShots(
   nowMs: number,
 ): void {
   if (shots.length === 0) return;
-  const enemyById = new Map(state.enemies.map((e) => [e.id, e]));
   for (const s of shots) {
-    const enemy = enemyById.get(s.enemyId);
+    // Linear find over a tiny enemy list (≤ ~5) avoids a per-frame Map alloc.
+    const enemy = state.enemies.find((e) => e.id === s.enemyId);
     if (!enemy) continue;
     const bullet = createBullet(state, enemy, nowMs, s.angleOffset);
     state.bullets.push(bullet);
