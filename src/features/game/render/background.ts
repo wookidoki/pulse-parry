@@ -49,6 +49,7 @@ export function drawBackground(
   // BPM-aware streak intensity
   const bpmIntensity = Math.max(0.6, Math.min(1.6, state.beat.bpm / 120));
   drawRhythmStreaks(c, w, h, nowMs, state.beat.beatPhase, state.stageIndex, bpmIntensity);
+  drawTunnel(c, cx, cy, w, h, nowMs, state.stageIndex, state.beat.beatPhase);
   drawDriftingGrid(c, w, h, nowMs);
   drawCityscape(c, w, h, nowMs, state.stageIndex);
   drawParallaxRadialLines(c, cx, cy, nowMs, state.stageIndex, pulseEnv);
@@ -151,9 +152,9 @@ function drawCityscape(
   nowMs: number,
   stageIndex: number,
 ): void {
-  drawCityLayer(c, w, h, nowMs, 0.012, 0.92, 22, 60, "rgba(5, 3, 18, 0.55)", "rgba(28, 240, 255, 0.10)");
-  drawCityLayer(c, w, h, nowMs, 0.028, 0.86, 32, 90, "rgba(10, 5, 26, 0.65)", "rgba(255, 43, 214, 0.14)");
-  drawCityLayer(c, w, h, nowMs, 0.055, 0.78, 50, 140, "rgba(15, 8, 32, 0.7)", "rgba(247, 255, 58, 0.12)");
+  drawCityLayer(c, w, h, nowMs, 0.022, 0.92, 22, 60, "rgba(5, 3, 18, 0.55)", "rgba(28, 240, 255, 0.10)");
+  drawCityLayer(c, w, h, nowMs, 0.05, 0.86, 32, 90, "rgba(10, 5, 26, 0.65)", "rgba(255, 43, 214, 0.14)");
+  drawCityLayer(c, w, h, nowMs, 0.092, 0.78, 50, 140, "rgba(15, 8, 32, 0.7)", "rgba(247, 255, 58, 0.12)");
   drawRoadLines(c, w, h, nowMs, stageIndex);
 }
 
@@ -221,6 +222,50 @@ function drawRoadLines(
     c.beginPath();
     c.moveTo(x1, y1);
     c.lineTo(x2, y2);
+    c.stroke();
+  }
+  c.restore();
+}
+
+// Perspective tunnel: rings + spokes accelerating outward from the center to
+// sell "flying forward into the system". Speed/density scale with stage so the
+// run reads as descending deeper. Kept low-alpha so it never fights gameplay.
+function drawTunnel(
+  c: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  w: number,
+  h: number,
+  nowMs: number,
+  stageIndex: number,
+  beatPhase: number,
+): void {
+  const maxR = Math.hypot(cx, cy) * 1.1;
+  const ringCount = 5 + stageIndex;
+  const speed = 0.00026 + stageIndex * 0.00009;
+  const beatBoost = 1 + (1 - beatPhase) * 0.35;
+  const hue =
+    stageIndex >= 6 ? "255, 56, 99" : stageIndex >= 3 ? "177, 75, 255" : "28, 240, 255";
+  c.save();
+  for (let i = 0; i < ringCount; i++) {
+    const phase = ((nowMs * speed * beatBoost) + i / ringCount) % 1;
+    const r = phase * phase * maxR; // ease-out → perspective acceleration
+    if (r < 20) continue;
+    const alpha = (1 - phase) * 0.1;
+    c.strokeStyle = `rgba(${hue}, ${alpha})`;
+    c.lineWidth = 1 + (1 - phase) * 1.5;
+    c.beginPath();
+    c.arc(cx, cy, r, 0, Math.PI * 2);
+    c.stroke();
+  }
+  const spokes = 12;
+  c.strokeStyle = `rgba(${hue}, 0.05)`;
+  c.lineWidth = 1;
+  for (let i = 0; i < spokes; i++) {
+    const a = (i / spokes) * Math.PI * 2;
+    c.beginPath();
+    c.moveTo(cx + Math.cos(a) * 40, cy + Math.sin(a) * 40);
+    c.lineTo(cx + Math.cos(a) * maxR, cy + Math.sin(a) * maxR);
     c.stroke();
   }
   c.restore();

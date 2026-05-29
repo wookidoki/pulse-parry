@@ -101,6 +101,153 @@ function drawEnemyByRace(
       drawCore(c, e, x, y, nowMs);
       break;
   }
+  drawKindMark(c, e, x, y, nowMs);
+}
+
+// Per-kind signature drawn over the shared race body so each of the 15 kinds
+// reads by SHAPE, not just color (sniper barrel, healer cross, bomber fuse...).
+function drawKindMark(
+  c: CanvasRenderingContext2D,
+  e: Enemy,
+  x: number,
+  y: number,
+  nowMs: number,
+): void {
+  const color = e.hitFlashMsLeft > 0 ? "#ffffff" : ENEMY_KINDS[e.kind].color;
+  const r = ENEMY_RADIUS;
+  c.save();
+  c.translate(x, y);
+  c.shadowColor = color;
+  c.shadowBlur = 10;
+  c.strokeStyle = color;
+  c.fillStyle = color;
+  c.lineWidth = 2;
+  switch (e.kind) {
+    case "sniper": {
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(0, 0, r * 1.5, 0, Math.PI * 2);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(-r * 1.9, 0);
+      c.lineTo(r * 1.9, 0);
+      c.moveTo(0, -r * 1.9);
+      c.lineTo(0, r * 1.9);
+      c.stroke();
+      break;
+    }
+    case "spreader": {
+      for (const a of [-0.6, 0, 0.6]) {
+        const ang = a - Math.PI / 2;
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.lineTo(Math.cos(ang) * r * 1.7, Math.sin(ang) * r * 1.7);
+        c.stroke();
+      }
+      break;
+    }
+    case "phantom": {
+      c.globalAlpha = 0.25 + Math.abs(Math.sin(nowMs / 300)) * 0.45;
+      c.lineWidth = 1.2;
+      c.beginPath();
+      c.arc(0, 0, r * 1.35, 0, Math.PI * 2);
+      c.stroke();
+      break;
+    }
+    case "mirror": {
+      const sweep = (nowMs / 700) % 1;
+      c.strokeStyle = "rgba(255, 255, 255, 0.75)";
+      c.lineWidth = 2;
+      const sx = -r + sweep * 2 * r;
+      c.beginPath();
+      c.moveTo(sx, -r);
+      c.lineTo(sx - r * 0.5, r);
+      c.stroke();
+      break;
+    }
+    case "spiraler": {
+      c.lineWidth = 1.5;
+      c.beginPath();
+      for (let t = 0; t <= 1.0001; t += 0.1) {
+        const ang = t * Math.PI * 2 + nowMs * 0.002;
+        const rr = t * r * 1.6;
+        const px = Math.cos(ang) * rr;
+        const py = Math.sin(ang) * rr;
+        if (t === 0) c.moveTo(px, py);
+        else c.lineTo(px, py);
+      }
+      c.stroke();
+      break;
+    }
+    case "splitter": {
+      c.strokeStyle = "rgba(5, 3, 10, 0.85)";
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(-r * 0.7, -r * 0.5);
+      c.lineTo(0, 0);
+      c.lineTo(r * 0.6, -r * 0.6);
+      c.moveTo(0, 0);
+      c.lineTo(-r * 0.3, r * 0.7);
+      c.stroke();
+      break;
+    }
+    case "pulser": {
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        c.beginPath();
+        c.arc(Math.cos(a) * r * 1.3, Math.sin(a) * r * 1.3, 2.2, 0, Math.PI * 2);
+        c.fill();
+      }
+      break;
+    }
+    case "mortar": {
+      c.lineWidth = 3;
+      c.beginPath();
+      c.arc(0, r * 0.2, r * 1.2, Math.PI * 1.15, Math.PI * 1.85);
+      c.stroke();
+      break;
+    }
+    case "bomber": {
+      if (Math.floor(nowMs / 180) % 2 === 0) {
+        c.fillStyle = "#ff3863";
+        c.shadowColor = "#ff3863";
+        c.shadowBlur = 16;
+        c.beginPath();
+        c.arc(0, -r * 1.25, 3.5, 0, Math.PI * 2);
+        c.fill();
+      }
+      break;
+    }
+    case "charger": {
+      c.globalAlpha = 0.4 + Math.sin(nowMs / 120) * 0.4 + 0.2;
+      c.lineWidth = 2.5;
+      c.beginPath();
+      c.arc(0, 0, r * 0.5, 0, Math.PI * 2);
+      c.stroke();
+      break;
+    }
+    case "healer": {
+      c.strokeStyle = "#1cf78f";
+      c.shadowColor = "#1cf78f";
+      c.lineWidth = 3;
+      c.beginPath();
+      c.moveTo(0, -r * 0.6);
+      c.lineTo(0, r * 0.6);
+      c.moveTo(-r * 0.6, 0);
+      c.lineTo(r * 0.6, 0);
+      c.stroke();
+      const pr = (nowMs / 700) % 1;
+      c.globalAlpha = (1 - pr) * 0.5;
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(0, 0, r + pr * r * 1.6, 0, Math.PI * 2);
+      c.stroke();
+      break;
+    }
+    default:
+      break;
+  }
+  c.restore();
 }
 
 function drawCore(
@@ -114,22 +261,41 @@ function drawCore(
   const baseR = ENEMY_RADIUS * 1.9;
   const styles = flashStyles(e);
   const beat = Math.sin(nowMs / 240) * 0.08 + 1;
-  const rot = nowMs * 0.0004;
+
+  // Phase from boss HP (matches engine tickBossPhase): the shell visibly
+  // destabilizes — faster spin, cracked/broken rings, emerging spikes, jitter.
+  const hpFrac = e.maxHp > 0 ? Math.max(0, e.hp / e.maxHp) : 0;
+  const phase = hpFrac > 0.66 ? 0 : hpFrac > 0.33 ? 1 : 2;
+  const rot = nowMs * 0.0004 * (1 + phase * 0.9);
+  const jitter = phase >= 2 ? 2.2 : 0;
+  const jx = x + Math.sin(nowMs * 0.05) * jitter;
+  const jy = y + Math.cos(nowMs * 0.057) * jitter;
   const spriteColor = e.hitFlashMsLeft > 0 ? "#ffffff" : config.color;
-  drawEnemySprite(c, e.kind, x, y, baseR * 0.85, spriteColor, 0.78, 36 + e.pulse * 26);
+  drawEnemySprite(c, e.kind, jx, jy, baseR * 0.85, spriteColor, 0.78, 36 + e.pulse * 26 + phase * 18);
 
   c.save();
-  c.translate(x, y);
+  c.translate(jx, jy);
 
   c.shadowColor = config.glowColor;
-  c.shadowBlur = 28 + e.pulse * 30;
+  c.shadowBlur = 28 + e.pulse * 30 + phase * 16;
   c.strokeStyle = styles.stroke;
   c.lineWidth = 2;
+  // Rings: intact in P0, outer ring dashes in P1, broken arcs in P2.
   for (let i = 0; i < 3; i++) {
-    const r = baseR + i * 14 + Math.sin(nowMs / 200 + i) * 4;
+    const r = (baseR + i * 14 + Math.sin(nowMs / 200 + i) * 4) * beat;
     c.beginPath();
-    c.arc(0, 0, r * beat, 0, Math.PI * 2);
+    if (phase >= 2 && i === 2) {
+      const gap = 0.5 + Math.sin(nowMs / 90) * 0.2;
+      c.arc(0, 0, r, 0, Math.PI * gap);
+      c.arc(0, 0, r, Math.PI, Math.PI + Math.PI * gap);
+    } else if (phase >= 1 && i === 2) {
+      c.setLineDash([10, 8]);
+      c.arc(0, 0, r, 0, Math.PI * 2);
+    } else {
+      c.arc(0, 0, r, 0, Math.PI * 2);
+    }
     c.stroke();
+    c.setLineDash([]);
   }
 
   c.save();
@@ -142,6 +308,26 @@ function drawCore(
   c.stroke();
   c.restore();
 
+  // Spikes emerge as the core breaks down (P1: 4, P2: 8).
+  if (phase >= 1) {
+    const spikes = phase >= 2 ? 8 : 4;
+    c.save();
+    c.rotate(-rot * 0.7);
+    c.fillStyle = styles.fill;
+    c.shadowBlur = 18;
+    for (let i = 0; i < spikes; i++) {
+      const a = (i / spikes) * Math.PI * 2;
+      const tip = baseR * (1.3 + Math.sin(nowMs / 150 + i) * 0.12);
+      c.beginPath();
+      c.moveTo(Math.cos(a - 0.12) * baseR, Math.sin(a - 0.12) * baseR);
+      c.lineTo(Math.cos(a) * tip, Math.sin(a) * tip);
+      c.lineTo(Math.cos(a + 0.12) * baseR, Math.sin(a + 0.12) * baseR);
+      c.closePath();
+      c.fill();
+    }
+    c.restore();
+  }
+
   c.save();
   c.rotate(-rot * 1.4);
   c.strokeStyle = styles.stroke;
@@ -150,10 +336,10 @@ function drawCore(
   c.stroke();
   c.restore();
 
-  c.shadowBlur = 32;
+  c.shadowBlur = 32 + phase * 14;
   c.fillStyle = "#ffffff";
   c.beginPath();
-  c.arc(0, 0, 7 + e.pulse * 6, 0, Math.PI * 2);
+  c.arc(0, 0, 7 + e.pulse * 6 + phase * 2, 0, Math.PI * 2);
   c.fill();
   c.fillStyle = styles.fill;
   c.beginPath();
