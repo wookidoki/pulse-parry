@@ -334,7 +334,8 @@ export function playCountdownBeep(final = false) {
 }
 
 export function playUiClick() {
-  playSample("uiClick", { gain: 0.22, pitch: 1.4 });
+  // Short, quiet synth tick — the ui_click sample read as too loud/long.
+  envOsc(1280, 920, 0.04, "triangle", 0.04);
 }
 
 // Wrap audio init + the click so any clickable element can fire it from a
