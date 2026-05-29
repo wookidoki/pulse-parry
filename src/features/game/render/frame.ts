@@ -9,6 +9,7 @@ import {
 } from "./entities";
 import {
   drawAimLine,
+  drawBeatGuide,
   drawBossHpBar,
   drawParryCone,
   drawStageProgress,
@@ -69,6 +70,7 @@ export function render(
   c.save();
   c.translate(state.playerX, state.playerY);
   drawAimLine(c, state, w, h);
+  drawBeatGuide(c, state);
   drawParryCone(c, state, nowMs);
   drawSlashes(c, state, nowMs);
   drawPlayer(c, state, nowMs);

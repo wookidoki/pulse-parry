@@ -161,6 +161,7 @@ export interface EngineState {
   nextBulletId: number;
   parryHeld: boolean;
   parryStartedAt: number;
+  parryPressBeatPhase: number;
   aimAngle: number;
   playerX: number;
   playerY: number;

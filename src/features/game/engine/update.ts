@@ -20,6 +20,8 @@ import {
   HIT_STOP_MS_PLAYER_HIT,
   HIT_STOP_MS_REFLECT_HIT,
   MASH_COOLDOWN_MS,
+  ON_BEAT_WINDOW,
+  SCORE_ONBEAT_BONUS,
   HEAL_BULLET_SPEED,
   HEAL_COMBO_MILESTONES,
   HEAL_SPAWN_INTERVAL_MS,
@@ -96,6 +98,7 @@ export function createEngineState(
     nextBulletId: 1,
     parryHeld: false,
     parryStartedAt: 0,
+    parryPressBeatPhase: 0,
     aimAngle: 0,
     playerX: 0,
     playerY: 0,
@@ -271,7 +274,10 @@ function handleParryInputTransitions(
   const justPressed = input.parryHeld && !state.parryHeld;
   const justReleased = !input.parryHeld && state.parryHeld;
   state.parryHeld = input.parryHeld;
-  if (justPressed) state.parryStartedAt = nowMs;
+  if (justPressed) {
+    state.parryStartedAt = nowMs;
+    state.parryPressBeatPhase = state.beat.beatPhase;
+  }
   return { justReleased };
 }
 
@@ -395,6 +401,17 @@ function handleParryRelease(
           ? PALETTE.yellow
           : PALETTE.cyan;
     spawnSlash(state, state.aimAngle, CHARACTERS[state.characterId].coneAngleRad, nowMs, slashColor);
+
+    // Rhythm reward: parrying ON the beat grants bonus score + extra juice.
+    // This is what makes it a *rhythm* parry game — timing to the beat pays off.
+    const beatOff = Math.min(state.parryPressBeatPhase, 1 - state.parryPressBeatPhase);
+    if (beatOff <= ON_BEAT_WINDOW) {
+      cb.onScore(SCORE_ONBEAT_BONUS * result.count);
+      cb.onCombo(1);
+      applyHitStop(state, 24);
+      spawnScreenFlash(state, PALETTE.yellow, 0.22);
+      spawnScorePop(state, state.playerX, state.playerY - 66, "ON BEAT!", PALETTE.yellow, 1.1);
+    }
 
     if (isCharged) {
       cb.onScore(SCORE_CHARGED_BONUS * result.count);

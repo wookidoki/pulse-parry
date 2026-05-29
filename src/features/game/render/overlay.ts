@@ -1,7 +1,31 @@
 import type { EngineState } from "../types";
 import { STAGES, currentStage } from "../config/stages";
 import { CHARACTERS } from "../config/characters";
+import { ON_BEAT_WINDOW } from "../config/tuning";
 import { bpmAt } from "../engine/tempo";
+
+// Contracting beat ring: reaches the parry range exactly on the downbeat so the
+// player can time SPACE to the beat. Turns yellow inside the ON-BEAT window.
+export function drawBeatGuide(c: CanvasRenderingContext2D, state: EngineState): void {
+  const char = CHARACTERS[state.characterId];
+  const phase = state.beat.beatPhase;
+  const r = char.parryRange * (1 + (1 - phase) * 0.85);
+  const onBeat = Math.min(phase, 1 - phase) <= ON_BEAT_WINDOW;
+  c.save();
+  if (onBeat) {
+    c.strokeStyle = "rgba(247, 255, 58, 0.5)";
+    c.lineWidth = 2.5;
+    c.shadowColor = "rgba(247, 255, 58, 0.6)";
+    c.shadowBlur = 10;
+  } else {
+    c.strokeStyle = "rgba(28, 240, 255, 0.16)";
+    c.lineWidth = 1.5;
+  }
+  c.beginPath();
+  c.arc(0, 0, r, 0, Math.PI * 2);
+  c.stroke();
+  c.restore();
+}
 
 export function drawAimLine(
   c: CanvasRenderingContext2D,

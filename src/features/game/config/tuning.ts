@@ -70,4 +70,9 @@ export const BOSS_PHASE_ZOOM_MS = 520;
 
 export const DEFAULT_BPM = 120;
 
+// Rhythm core: a parry counts as ON-BEAT when the SPACE press lands within this
+// fraction of a beat from the downbeat (each side). Drives bonus score + juice.
+export const ON_BEAT_WINDOW = 0.16;
+export const SCORE_ONBEAT_BONUS = 20;
+
 export const COMBO_MILESTONES = [10, 25, 50, 100, 200] as const;
