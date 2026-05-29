@@ -197,6 +197,17 @@ function drawShockwave(c: CanvasRenderingContext2D, haz: Hazard, nowMs: number):
     const tp = getTelegraphProgress(haz, nowMs);
     const pulse = 0.5 + Math.sin(nowMs / 80) * 0.5;
     c.save();
+    // Faint concentric preview so the player reads "ring expands outward from
+    // the center" and clears the dead-center instant-hit zone in time.
+    c.setLineDash([5, 12]);
+    c.lineWidth = 1;
+    for (let i = 1; i <= 3; i++) {
+      c.strokeStyle = `rgba(255, 56, 99, ${0.12 * tp})`;
+      c.beginPath();
+      c.arc(0, 0, haz.blastRadius * (i / 3) * (0.3 + tp * 0.7), 0, Math.PI * 2);
+      c.stroke();
+    }
+    c.setLineDash([]);
     c.strokeStyle = `rgba(255, 56, 99, ${0.4 + pulse * 0.4 * tp})`;
     c.lineWidth = 3;
     c.shadowColor = "#ff3863";

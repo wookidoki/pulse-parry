@@ -1,4 +1,4 @@
-import type { BulletKind } from "../types";
+import type { BulletKind, Difficulty } from "../types";
 
 export type RunModifierId =
   | "none"
@@ -162,6 +162,19 @@ export const MODIFIERS: Record<RunModifierId, RunModifierConfig> = {
     dashCooldownMul: 1,
   },
 };
+
+// A run counts as hardcore (1.5× score bonus) when hard difficulty is paired
+// with one of the high-pressure modifiers. Single source of truth for both the
+// live score multiplier and the end-screen badge.
+const HARDCORE_MODIFIERS: ReadonlySet<RunModifierId> = new Set([
+  "doubleTime",
+  "bulletStorm",
+  "glassCannon",
+]);
+
+export function isHardcoreRun(difficulty: Difficulty, modifierId: RunModifierId): boolean {
+  return difficulty === "hard" && HARDCORE_MODIFIERS.has(modifierId);
+}
 
 export const MODIFIER_ORDER: RunModifierId[] = [
   "none",

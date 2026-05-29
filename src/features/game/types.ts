@@ -35,24 +35,6 @@ export const KIND_RACE: Record<EnemyKind, EnemyRace> = {
   pulser: "virus",
 };
 
-export const KIND_LABEL: Record<EnemyKind, string> = {
-  shooter: "OMNIC",
-  burster: "VIRUS",
-  charger: "DRONE",
-  boss: "THE CORE",
-  sniper: "OMNIC.SNIPER",
-  spreader: "OMNIC.SPREADER",
-  spiraler: "VIRUS.SPIRALER",
-  phantom: "OMNIC.PHANTOM",
-  mortar: "DRONE.MORTAR",
-  bomber: "DRONE.BOMBER",
-  splitter: "VIRUS.SPLITTER",
-  shard: "VIRUS.SHARD",
-  mirror: "OMNIC.MIRROR",
-  healer: "DRONE.HEALER",
-  pulser: "VIRUS.PULSER",
-};
-
 export const RACE_LABEL: Record<EnemyRace, string> = {
   omnic: "OMNIC",
   virus: "VIRUS",
@@ -247,6 +229,7 @@ export interface EngineCallbacks {
   onBossAppear: () => void;
   onBossPhaseChange: (phase: number) => void;
   onEndlessLoop: (loop: number) => void;
+  onEnemyCount: (n: number) => void;
 }
 
 export type GameStatus =
@@ -285,6 +268,7 @@ export interface HudState {
   perfectParries: number;
   damageTaken: number;
   enemiesKilled: number;
+  enemyCount: number;
   playStartMs: number;
   playEndMs: number;
   endlessLoop: number;

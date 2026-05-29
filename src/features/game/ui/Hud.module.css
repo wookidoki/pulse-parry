@@ -95,6 +95,23 @@
   .comboNum { font-size: 18px; }
 }
 
+.enemyCount {
+  margin-top: 8px;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: rgba(240, 246, 255, 0.45);
+}
+
+.enemyCountNum {
+  color: var(--neon-red, #ff3863);
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(255, 56, 99, 0.5);
+}
+
+@media (max-width: 720px) {
+  .enemyCount { font-size: 9px; }
+}
+
 .combo {
   margin-top: 12px;
   display: flex;

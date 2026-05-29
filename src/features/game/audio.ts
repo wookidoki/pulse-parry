@@ -21,8 +21,12 @@ export function ensureAudio(): boolean {
   }
 }
 
+// SFX sit under the BGM (the core of this rhythm game). 0.55 ceiling keeps
+// dense fire/death stacks from drowning the music or fatiguing the player.
+const SFX_MASTER_CEILING = 0.55;
+
 export function setMasterVolume(v: number) {
-  if (masterGain) masterGain.gain.value = Math.max(0, Math.min(1, v)) * 0.75;
+  if (masterGain) masterGain.gain.value = Math.max(0, Math.min(1, v)) * SFX_MASTER_CEILING;
 }
 
 export function resumeAudio() {
@@ -72,8 +76,8 @@ let samplesLoaded = false;
 
 // Max concurrent voices per sample key — older voices culled when exceeded.
 const MAX_VOICES: Record<SampleKey, number> = {
-  slash: 3,
-  clash: 3,
+  slash: 2,
+  clash: 2,
   laserSmall: 2,
   laserHeavy: 1,
   forceField: 2,
@@ -85,13 +89,16 @@ const MAX_VOICES: Record<SampleKey, number> = {
 };
 
 // Per-key throttle: repeats within this window get ducked to avoid stacking.
+// Widened on the dense-fire keys (enemy shots, clashes) so a swarm reads as one
+// texture instead of an ear-fatiguing wall of identical hits.
 const THROTTLE_MS: Partial<Record<SampleKey, number>> = {
-  laserSmall: 45,
-  laserHeavy: 80,
-  explode: 90,
-  explodeDeep: 90,
-  impact: 60,
-  clash: 35,
+  slash: 40,
+  laserSmall: 70,
+  laserHeavy: 90,
+  explode: 100,
+  explodeDeep: 100,
+  impact: 75,
+  clash: 55,
 };
 
 const activeVoices: Partial<Record<SampleKey, AudioBufferSourceNode[]>> = {};
@@ -99,6 +106,7 @@ const lastPlayedAtMs: Partial<Record<SampleKey, number>> = {};
 
 async function preloadSamples(): Promise<void> {
   if (samplesLoaded || !ctx) return;
+  const audioCtx = ctx;
   samplesLoaded = true;
   await Promise.all(
     (Object.entries(SAMPLE_URLS) as [SampleKey, string[]][]).map(async ([key, urls]) => {
@@ -107,7 +115,7 @@ async function preloadSamples(): Promise<void> {
           try {
             const res = await fetch(url);
             const ab = await res.arrayBuffer();
-            return await ctx!.decodeAudioData(ab);
+            return await audioCtx.decodeAudioData(ab);
           } catch {
             return null;
           }

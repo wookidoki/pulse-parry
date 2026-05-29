@@ -261,6 +261,12 @@ function maybeTeleportPhantom(
 
 const BOMBER_SPEED = 95;
 const BOMBER_DETONATE_RADIUS = 80;
+// Bomber glows brighter as it closes inside this multiple of the detonate
+// radius — a telegraph so the player can dash clear before it blows.
+const BOMBER_WARN_RADIUS_MUL = 2.6;
+// Spawning enemies start this far beyond their orbit (off-screen) and ease in,
+// so they visibly fly into view instead of popping in at the ring.
+const ENTRY_RADIUS_MUL = 0.95;
 const HEALER_PULSE_BEATS = 4;
 
 export interface BomberDetonation {
@@ -359,6 +365,12 @@ export function updateEnemies(
       e.y += (dy / dist) * BOMBER_SPEED * dt;
       e.orbitAngle = Math.atan2(e.y, e.x);
 
+      const warnRadius = BOMBER_DETONATE_RADIUS * BOMBER_WARN_RADIUS_MUL;
+      if (dist < warnRadius) {
+        const t = (warnRadius - dist) / (warnRadius - BOMBER_DETONATE_RADIUS);
+        e.pulse = Math.min(1.5, Math.max(e.pulse, t * 1.5));
+      }
+
       if (dist <= BOMBER_DETONATE_RADIUS) {
         result.bomberDetonations.push({
           enemyId: e.id,
@@ -366,13 +378,21 @@ export function updateEnemies(
           y: e.y,
           hitPlayer: state.dashActiveMsLeft <= 0,
         });
-        e.hp = 0;
+        // Mark dying now (not just hp=0) so a reflected bullet landing the same
+        // frame can't re-kill it for double score/FX — collisions skip non-alive.
+        killEnemy(e, nowMs);
       }
     } else {
       e.orbitAngle += ENEMY_ORBIT_DRIFT_RAD_PER_SEC * dt;
       const orbR = e.kind === "boss" ? bossRadius : r;
-      e.x = Math.cos(e.orbitAngle) * orbR;
-      e.y = Math.sin(e.orbitAngle) * orbR;
+      let drawR = orbR;
+      if (e.state === "spawning" && e.kind !== "boss") {
+        const p = Math.min(1, (nowMs - e.stateEnteredAt) / ENEMY_SPAWN_DELAY_MS);
+        const ease = 1 - (1 - p) * (1 - p); // easeOutQuad
+        drawR = orbR * (1 + ENTRY_RADIUS_MUL * (1 - ease));
+      }
+      e.x = Math.cos(e.orbitAngle) * drawR;
+      e.y = Math.sin(e.orbitAngle) * drawR;
     }
 
     e.pulse = Math.max(0, e.pulse - dt * 3);
@@ -400,7 +420,6 @@ export function createShard(
   nowMs: number,
   x: number,
   y: number,
-  baseAngle: number,
   angleOffset: number,
 ): Enemy {
   const id = state.nextEnemyId++;
@@ -417,7 +436,7 @@ export function createShard(
     lastShotBeat: state.beat.currentBeat,
     telegraphMsLeft: 0,
     pulse: 1,
-    orbitAngle: r > 0 ? baseAngle + angleOffset : Math.random() * Math.PI * 2,
+    orbitAngle: r > 0 ? Math.atan2(y, x) + angleOffset : Math.random() * Math.PI * 2,
     burstShotsRemaining: 0,
     burstNextShotAtMs: 0,
     knockbackX: Math.cos(angleOffset) * 80,

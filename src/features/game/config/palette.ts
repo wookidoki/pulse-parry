@@ -7,5 +7,3 @@ export const PALETTE = {
   red: "#ff3863",
   purple: "#b14bff",
 } as const;
-
-export type PaletteKey = keyof typeof PALETTE;

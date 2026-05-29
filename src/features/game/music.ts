@@ -132,15 +132,63 @@ function currentAudio(): HTMLAudioElement | null {
   return stagePools[currentStageIdx][currentTrackIdx] ?? null;
 }
 
+const clamp01 = (v: number): number => Math.max(0, Math.min(1, v));
+
+// Pending pause + active fade tokens, keyed by element. A new fade supersedes
+// any in-flight fade on the same element (token mismatch stops the old loop),
+// and starting a track cancels its scheduled pause so transitions can't race
+// into a "fully faded in but immediately paused" state.
+const pauseTimers = new Map<HTMLAudioElement, number>();
+const fadeTokens = new Map<HTMLAudioElement, number>();
+
 function fade(el: HTMLAudioElement, target: number, durationMs: number): void {
+  const token = (fadeTokens.get(el) ?? 0) + 1;
+  fadeTokens.set(el, token);
   const start = el.volume;
+  const goal = clamp01(target);
   const startT = performance.now();
   const step = () => {
+    if (fadeTokens.get(el) !== token) return;
     const t = Math.min(1, (performance.now() - startT) / durationMs);
-    el.volume = start + (target - start) * t;
+    el.volume = clamp01(start + (goal - start) * t);
     if (t < 1) requestAnimationFrame(step);
   };
   step();
+}
+
+function scheduleStop(el: HTMLAudioElement, durationMs: number): void {
+  fade(el, 0, durationMs);
+  const existing = pauseTimers.get(el);
+  if (existing != null) window.clearTimeout(existing);
+  const id = window.setTimeout(() => {
+    el.pause();
+    pauseTimers.delete(el);
+  }, durationMs);
+  pauseTimers.set(el, id);
+}
+
+function cancelPendingStop(el: HTMLAudioElement): void {
+  const existing = pauseTimers.get(el);
+  if (existing != null) {
+    window.clearTimeout(existing);
+    pauseTimers.delete(el);
+  }
+}
+
+function startTrack(el: HTMLAudioElement, durationMs: number): void {
+  cancelPendingStop(el);
+  el.currentTime = 0;
+  el.volume = 0;
+  el.play().catch(() => {});
+  fade(el, targetVolume(), durationMs);
+}
+
+// Resume a track from its current position (no rewind) — used to recover a
+// track whose first play() was blocked before the user gesture.
+function resumeTrack(el: HTMLAudioElement, durationMs: number): void {
+  cancelPendingStop(el);
+  el.play().catch(() => {});
+  fade(el, targetVolume(), durationMs);
 }
 
 function targetVolume(): number {
@@ -174,10 +222,10 @@ export function resetBgmIntensity(): void {
 }
 
 export function setMusicVolume(v: number): void {
-  masterVolume = Math.max(0, Math.min(1, v));
-  const cur = currentAudio();
-  if (cur && !cur.paused) cur.volume = targetVolume();
-  if (menuAudio && !menuAudio.paused) menuAudio.volume = masterVolume * MENU_VOLUME_FACTOR;
+  masterVolume = clamp01(v);
+  const cur = bossPhaseAudio ?? currentAudio();
+  if (cur && !cur.paused) cur.volume = clamp01(targetVolume());
+  if (menuAudio && !menuAudio.paused) menuAudio.volume = clamp01(masterVolume * MENU_VOLUME_FACTOR);
 }
 
 function buildMenuAudio(): void {
@@ -192,18 +240,18 @@ export function playMenuBgm(): void {
   if (typeof window === "undefined") return;
   if (!menuAudio) buildMenuAudio();
   if (!menuAudio) return;
-  menuAudio.currentTime = menuAudio.currentTime || 0;
+  const pending = pauseTimers.get(menuAudio);
+  if (pending != null) {
+    window.clearTimeout(pending);
+    pauseTimers.delete(menuAudio);
+  }
   menuAudio.play().catch(() => {});
   fade(menuAudio, masterVolume * MENU_VOLUME_FACTOR, CROSSFADE_MS);
 }
 
 export function stopMenuBgm(): void {
   if (!menuAudio) return;
-  const a = menuAudio;
-  fade(a, 0, CROSSFADE_MS);
-  window.setTimeout(() => {
-    a.pause();
-  }, CROSSFADE_MS);
+  scheduleStop(menuAudio, CROSSFADE_MS);
 }
 
 export interface MenuTrackInfo {
@@ -235,10 +283,7 @@ export function cycleMenuTrack(): MenuTrackInfo {
   if (wasPlaying && menuAudio) {
     menuAudio.play().catch(() => {});
     fade(menuAudio, masterVolume * MENU_VOLUME_FACTOR, CROSSFADE_MS);
-    if (prev) {
-      fade(prev, 0, CROSSFADE_MS);
-      window.setTimeout(() => prev.pause(), CROSSFADE_MS);
-    }
+    if (prev) scheduleStop(prev, CROSSFADE_MS);
   }
   return getMenuTrackInfo();
 }
@@ -254,14 +299,10 @@ export function setBossPhase(phase: number): void {
     return;
   }
   const prev = bossPhaseAudio ?? currentAudio();
-  if (prev && !prev.paused) {
-    fade(prev, 0, PHASE_CROSSFADE_MS);
-    window.setTimeout(() => prev.pause(), PHASE_CROSSFADE_MS);
+  if (prev && prev !== nextTrack && !prev.paused) {
+    scheduleStop(prev, PHASE_CROSSFADE_MS);
   }
-  nextTrack.currentTime = 0;
-  nextTrack.volume = 0;
-  nextTrack.play().catch(() => {});
-  fade(nextTrack, targetVolume(), PHASE_CROSSFADE_MS);
+  startTrack(nextTrack, PHASE_CROSSFADE_MS);
   bossPhaseAudio = nextTrack;
   currentTrackIdx = trackIdx;
   bossPhase = phase;
@@ -269,6 +310,11 @@ export function setBossPhase(phase: number): void {
 }
 
 function resetBossPhase(): void {
+  // Boss phase tracks live in the shared stage5 pool, so leaving the boss
+  // fight must stop the phase track or it keeps playing under the next BGM.
+  if (bossPhaseAudio && !bossPhaseAudio.paused) {
+    scheduleStop(bossPhaseAudio, CROSSFADE_MS);
+  }
   bossPhase = 0;
   bossPhaseAudio = null;
 }
@@ -284,28 +330,19 @@ export function playStageBgm(stageIndex: number): void {
   // this lets the second call (after gesture) recover instead of early-returning.
   if (currentStageIdx === safeIdx) {
     const cur = currentAudio();
-    if (cur && cur.paused && !isPaused) {
-      cur.play().catch(() => {});
-      fade(cur, targetVolume(), CROSSFADE_MS);
-    }
+    if (cur && cur.paused && !isPaused) resumeTrack(cur, CROSSFADE_MS);
     return;
   }
 
   const prev = currentAudio();
-  if (prev) {
-    fade(prev, 0, CROSSFADE_MS);
-    window.setTimeout(() => prev.pause(), CROSSFADE_MS);
-  }
+  if (prev) scheduleStop(prev, CROSSFADE_MS);
 
   const pool = stagePools[safeIdx];
   if (pool.length === 0) return;
   const trackIdx = Math.floor(Math.random() * pool.length);
   const next = pool[trackIdx];
   next.preload = "auto";
-  next.currentTime = 0;
-  next.volume = 0;
-  next.play().catch(() => {});
-  fade(next, targetVolume(), CROSSFADE_MS);
+  startTrack(next, CROSSFADE_MS);
 
   currentStageIdx = safeIdx;
   currentTrackIdx = trackIdx;
@@ -315,14 +352,28 @@ export function playStageBgm(stageIndex: number): void {
 
 export function pauseMusic(): void {
   isPaused = true;
-  const cur = currentAudio();
+  const cur = bossPhaseAudio ?? currentAudio();
   if (cur) cur.pause();
 }
 
 export function resumeMusic(): void {
   if (!isPaused) return;
   isPaused = false;
-  const cur = currentAudio();
+  const cur = bossPhaseAudio ?? currentAudio();
   if (cur) cur.play().catch(() => {});
+}
+
+// Hard stop for run end / unmount: fade out every live track and reset state so
+// nothing bleeds into the next screen (death/victory/menu) or overlaps a restart.
+export function stopAllMusic(): void {
+  const cur = currentAudio();
+  if (cur) scheduleStop(cur, CROSSFADE_MS);
+  if (bossPhaseAudio) scheduleStop(bossPhaseAudio, CROSSFADE_MS);
+  if (menuAudio) scheduleStop(menuAudio, CROSSFADE_MS);
+  currentStageIdx = -1;
+  currentTrackIdx = -1;
+  bossPhase = 0;
+  bossPhaseAudio = null;
+  isPaused = false;
 }
 

@@ -12,11 +12,12 @@ export function Hud() {
   const maxHp = useHud((s) => s.maxHp);
   const score = useHud((s) => s.score);
   const combo = useHud((s) => s.combo);
+  const enemyCount = useHud((s) => s.enemyCount);
 
   return (
     <div className={styles.hud}>
       <HpRow hp={hp} maxHp={maxHp} />
-      <ScoreBox score={score} combo={combo} locale={locale} />
+      <ScoreBox score={score} combo={combo} enemyCount={enemyCount} locale={locale} />
     </div>
   );
 }
@@ -39,16 +40,23 @@ function HpRow({ hp, maxHp }: { hp: number; maxHp: number }) {
 function ScoreBox({
   score,
   combo,
+  enemyCount,
   locale,
 }: {
   score: number;
   combo: number;
+  enemyCount: number;
   locale: Locale;
 }) {
   return (
     <div className={styles.scoreBox}>
       <div className={styles.scoreLabel}>{t("score", locale)}</div>
       <div className={styles.scoreValue}>{score.toString().padStart(6, "0")}</div>
+      {enemyCount > 0 && (
+        <div className={styles.enemyCount}>
+          {t("enemies", locale)} <span className={styles.enemyCountNum}>×{enemyCount}</span>
+        </div>
+      )}
       {combo > 1 && (
         <div className={styles.combo}>
           <span className={styles.comboX}>×</span>

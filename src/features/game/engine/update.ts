@@ -6,12 +6,15 @@ import { getCurrentTrackIndex, setBossPhase } from "../music";
 import { CHARACTERS, type CharacterId } from "../config/characters";
 import { MODIFIERS, type RunModifierId } from "../config/modifiers";
 import { maybeSpawnHazard, updateHazards } from "./hazards";
+import { HAZARD_FIRST_SPAWN_DELAY_MS } from "../config/hazards";
 import {
   BG_PULSE_DECAY_PER_SEC,
+  BOSS_PHASE_ZOOM_MS,
   CAMERA_ZOOM_LERP_PER_SEC,
   CAMERA_ZOOM_PUNCH,
   CHARGE_THRESHOLD_MS,
   DASH_DURATION_MS,
+  DEFAULT_BPM,
   HIT_STOP_MS_ENEMY_KILL,
   HIT_STOP_MS_PARRY,
   HIT_STOP_MS_PLAYER_HIT,
@@ -75,7 +78,7 @@ export function createEngineState(
 ): EngineState {
   const safeStage = Math.max(0, Math.min(STAGES.length - 1, startStage));
   const stage = STAGES[safeStage];
-  const initialBpm = stage.tempoMap[0]?.bpm ?? 120;
+  const initialBpm = stage.tempoMap[0]?.bpm ?? DEFAULT_BPM;
   return {
     enemies: [],
     bullets: [],
@@ -119,7 +122,7 @@ export function createEngineState(
     characterId,
     modifierId,
     hazards: [],
-    nextHazardAtMs: nowMs + 18000,
+    nextHazardAtMs: nowMs + HAZARD_FIRST_SPAWN_DELAY_MS,
     tutorialMode,
     countdownMsLeft: 2300,
     countdownLastSecond: 3,
@@ -140,8 +143,8 @@ function tickBossPhase(state: EngineState, cb: EngineCallbacks): void {
     state.bossPhase = phase;
     setBossPhase(phase);
     cb.onBossPhaseChange(phase);
-    state.bossPhaseZoomMsLeft = 520;
-    applyShake(state, 18);
+    state.bossPhaseZoomMsLeft = BOSS_PHASE_ZOOM_MS;
+    applyShake(state, SHAKE_ON_STAGE_UP);
   }
 }
 
@@ -236,7 +239,7 @@ function advanceStage(state: EngineState, nowMs: number, cb: EngineCallbacks): b
   state.stageStartMs = nowMs;
   state.lastEnemySpawnBeat = state.beat.currentBeat;
   const next = STAGES[state.stageIndex];
-  setBpm(state.beat, next.tempoMap[0]?.bpm ?? 120, nowMs);
+  setBpm(state.beat, next.tempoMap[0]?.bpm ?? DEFAULT_BPM, nowMs);
   applyShake(state, SHAKE_ON_STAGE_UP);
   emitBurst(state, 0, 0, BURSTS.stageUp());
   spawnScreenFlash(state, PALETTE.cyan, 0.5);
@@ -431,7 +434,7 @@ function checkVictory(state: EngineState, nowMs: number, cb: EngineCallbacks): v
       state.bossPhase = 0;
       state.endlessLoop += 1;
       const next = STAGES[1];
-      setBpm(state.beat, next.tempoMap[0]?.bpm ?? 120, nowMs);
+      setBpm(state.beat, next.tempoMap[0]?.bpm ?? DEFAULT_BPM, nowMs);
       applyShake(state, SHAKE_ON_STAGE_UP);
       spawnScreenFlash(state, PALETTE.yellow, 0.6);
       sfx.playStageUp();
@@ -458,7 +461,7 @@ function updateCameraZoom(state: EngineState, dt: number): void {
   let target = state.hitStopMsLeft > 0 ? CAMERA_ZOOM_PUNCH : 1;
   state.bossPhaseZoomMsLeft = Math.max(0, state.bossPhaseZoomMsLeft - dt * 1000);
   if (state.bossPhaseZoomMsLeft > 0) {
-    const progress = 1 - state.bossPhaseZoomMsLeft / 520;
+    const progress = 1 - state.bossPhaseZoomMsLeft / BOSS_PHASE_ZOOM_MS;
     const wave = Math.sin(progress * Math.PI);
     target = Math.max(target, 1 + 0.14 * wave);
   }
@@ -646,10 +649,10 @@ export function update(ctx: UpdateContext): void {
 
     if (kill.kind === "splitter") {
       state.enemies.push(
-        createShard(state, nowMs, kill.x, kill.y, 0, Math.PI * 0.55),
+        createShard(state, nowMs, kill.x, kill.y, Math.PI * 0.55),
       );
       state.enemies.push(
-        createShard(state, nowMs, kill.x, kill.y, 0, -Math.PI * 0.55),
+        createShard(state, nowMs, kill.x, kill.y, -Math.PI * 0.55),
       );
     }
   }
@@ -700,6 +703,12 @@ export function update(ctx: UpdateContext): void {
 
   cleanupBullets(state);
   cleanupEnemies(state, nowMs);
+
+  let activeEnemies = 0;
+  for (const e of state.enemies) {
+    if (e.state === "alive" || e.state === "spawning") activeEnemies += 1;
+  }
+  ctx.onEnemyCount(activeEnemies);
 
   checkVictory(state, nowMs, ctx);
 }

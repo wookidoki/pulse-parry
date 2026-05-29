@@ -12,6 +12,7 @@ export function createBeatClock(bpm: number, startedAtMs: number): BeatClock {
 }
 
 export function setBpm(clock: BeatClock, bpm: number, nowMs: number): void {
+  if (!Number.isFinite(bpm) || bpm <= 0) return;
   const totalElapsedBeats = clock.currentBeat + clock.beatPhase;
   clock.bpm = bpm;
   clock.beatPeriodMs = 60000 / bpm;
@@ -19,6 +20,7 @@ export function setBpm(clock: BeatClock, bpm: number, nowMs: number): void {
 }
 
 export function tickBeat(clock: BeatClock, nowMs: number): void {
+  if (!Number.isFinite(clock.beatPeriodMs) || clock.beatPeriodMs <= 0) return;
   const elapsed = nowMs - clock.startedAtMs;
   const beat = Math.floor(elapsed / clock.beatPeriodMs);
   const phase = (elapsed % clock.beatPeriodMs) / clock.beatPeriodMs;

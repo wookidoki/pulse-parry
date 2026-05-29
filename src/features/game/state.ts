@@ -15,10 +15,9 @@ interface HudActions {
   breakCombo: () => void;
   bumpParries: (total: number, perfect: number) => void;
   bumpEnemiesKilled: (n: number) => void;
-  gameOver: () => void;
+  setEnemyCount: (n: number) => void;
   victory: () => void;
   setStage: (index: number) => void;
-  pause: () => void;
   resume: () => void;
   togglePause: () => void;
   setMusicVolume: (v: number) => void;
@@ -85,6 +84,7 @@ const INITIAL: HudState = {
   perfectParries: 0,
   damageTaken: 0,
   enemiesKilled: 0,
+  enemyCount: 0,
   playStartMs: 0,
   playEndMs: 0,
   endlessLoop: 0,
@@ -119,7 +119,9 @@ export const useHud = create<HudState & HudActions>((set) => ({
     })),
   start: (maxHp?: number) =>
     set((s) => {
-      const hp = maxHp ?? INITIAL.maxHp;
+      // Clamp to ≥1: glassCannon's startHpDelta (-4) drives most characters'
+      // start HP negative, which crashes the HUD (Array.from of negative length).
+      const hp = Math.max(1, maxHp ?? INITIAL.maxHp);
       return {
         ...INITIAL,
         musicVolume: s.musicVolume,
@@ -169,7 +171,8 @@ export const useHud = create<HudState & HudActions>((set) => ({
     })),
   bumpEnemiesKilled: (n) =>
     set((s) => ({ enemiesKilled: s.enemiesKilled + n })),
-  gameOver: () => set({ status: "gameover", playEndMs: performance.now() }),
+  // Dedupe: return same state when unchanged so the HUD doesn't re-render every frame.
+  setEnemyCount: (n) => set((s) => (s.enemyCount === n ? s : { enemyCount: n })),
   victory: () =>
     set((s) => {
       if (s.status !== "playing") return s;
@@ -180,8 +183,6 @@ export const useHud = create<HudState & HudActions>((set) => ({
     if (index > 0) unlockStage(index - 1);
     set({ stageIndex: index, stageName: stageNameOf(index) });
   },
-  pause: () =>
-    set((s) => (s.status === "playing" ? { status: "paused" } : s)),
   resume: () =>
     set((s) => (s.status === "paused" ? { status: "playing" } : s)),
   togglePause: () =>

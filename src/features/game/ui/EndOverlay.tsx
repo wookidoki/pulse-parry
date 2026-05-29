@@ -6,7 +6,7 @@ import { useHud } from "../state";
 import { checkAchievements, recordScore, type RunStats } from "../progress";
 import { ACHIEVEMENTS, type AchievementId } from "../config/achievements";
 import { CHARACTERS, type CharacterId } from "../config/characters";
-import { MODIFIERS, type RunModifierId } from "../config/modifiers";
+import { MODIFIERS, isHardcoreRun, type RunModifierId } from "../config/modifiers";
 import { FINAL_STAGE_INDEX } from "../config/stages";
 import { initialLocale, t, type Locale } from "../i18n";
 import type { Difficulty } from "../types";
@@ -158,12 +158,9 @@ export function EndOverlay() {
           <span className={styles.scoreValue}>{score.toString().padStart(6, "0")}</span>
         </div>
 
-        {difficulty === "hard" &&
-          (modifierId === "doubleTime" ||
-            modifierId === "bulletStorm" ||
-            modifierId === "glassCannon") && (
-            <div className={styles.hardcoreBadge}>{t("hardcoreBadge", locale)}</div>
-          )}
+        {isHardcoreRun(difficulty, modifierId) && (
+          <div className={styles.hardcoreBadge}>{t("hardcoreBadge", locale)}</div>
+        )}
 
         <div className={styles.statGrid}>
           <Stat label={t("perfect", locale)} value={`${perfectParries}`} accent="#ffffff" />

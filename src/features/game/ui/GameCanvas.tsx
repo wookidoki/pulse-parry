@@ -12,12 +12,13 @@ import {
   setBgmIntensity,
   setMusicVolume,
   setupAudioAnalysis,
+  stopAllMusic,
 } from "../music";
 import { useHud } from "../state";
 import { preloadEnemySprites } from "../render/enemy-sprites";
 import type { Difficulty, EngineState, PlayerInput } from "../types";
 import { CHARACTERS, type CharacterId } from "../config/characters";
-import { MODIFIERS, type RunModifierId } from "../config/modifiers";
+import { MODIFIERS, isHardcoreRun, type RunModifierId } from "../config/modifiers";
 import { render } from "../render/frame";
 import styles from "./GameCanvas.module.css";
 
@@ -73,6 +74,7 @@ export function GameCanvas({
   const breakCombo = useHud((s) => s.breakCombo);
   const bumpParries = useHud((s) => s.bumpParries);
   const bumpEnemiesKilled = useHud((s) => s.bumpEnemiesKilled);
+  const setEnemyCount = useHud((s) => s.setEnemyCount);
   const setStage = useHud((s) => s.setStage);
   const victory = useHud((s) => s.victory);
   const togglePause = useHud((s) => s.togglePause);
@@ -110,6 +112,7 @@ export function GameCanvas({
       pauseMusic();
     } else if (status === "gameover" || status === "victory" || status === "menu") {
       resetBgmIntensity();
+      stopAllMusic();
     }
   }, [stageIndex, status]);
 
@@ -156,7 +159,9 @@ export function GameCanvas({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space") {
         e.preventDefault();
-        inputRef.current.parryHeld = true;
+        // Cutscenes share the Space key (skip). Only arm the parry while
+        // actually playing, or skipping a cutscene leaves parryHeld stuck true.
+        if (useHud.getState().status === "playing") inputRef.current.parryHeld = true;
         return;
       }
       if (e.code === "Escape") {
@@ -167,7 +172,7 @@ export function GameCanvas({
       }
       if (isDashKey(e.code)) {
         e.preventDefault();
-        inputRef.current.dashPressed = true;
+        if (useHud.getState().status === "playing") inputRef.current.dashPressed = true;
         return;
       }
       const moveKey = MOVE_KEYS[e.code];
@@ -200,6 +205,8 @@ export function GameCanvas({
       inputRef.current.moveLeft = false;
       inputRef.current.moveRight = false;
       inputRef.current.dashPressed = false;
+      // Leaving the window mid-fight shouldn't cost HP — auto-pause.
+      if (useHud.getState().status === "playing") togglePause();
     };
 
     window.addEventListener("resize", resize);
@@ -222,60 +229,74 @@ export function GameCanvas({
     );
     setStage(startStage);
     let prevTime = startTime;
+    // Game time excludes paused spans so engine clocks (beat, enemy fire,
+    // hazard spawns) freeze on pause/blur instead of jumping ahead on resume.
+    let pausedAccumMs = 0;
+    let pauseStartedAt = 0;
+    let wasPaused = false;
 
     const loop = (t: number) => {
-      const nowMs = t - startTime;
       const dt = Math.min(MAX_DT_SEC, (t - prevTime) / 1000);
       prevTime = t;
       const engine = engineRef.current;
-      if (!engine) return;
+      // A thrown frame must never kill the loop: always re-register the RAF in
+      // finally, so one bad tick degrades to a dropped frame, not a freeze.
+      try {
+        if (!engine) return;
 
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const hudState = useHud.getState();
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const hudState = useHud.getState();
 
-      if (hudState.status === "playing") {
-        const baseMul = MODIFIERS[engine.modifierId].scoreMul;
-        const isHardcore =
-          engine.difficulty === "hard" &&
-          (engine.modifierId === "doubleTime" ||
-            engine.modifierId === "bulletStorm" ||
-            engine.modifierId === "glassCannon");
-        const scoreMul = baseMul * (isHardcore ? 1.5 : 1);
-        update({
-          state: engine,
-          input: inputRef.current,
-          nowMs,
-          dt,
-          canvasW: w,
-          canvasH: h,
-          currentComboHint: hudState.combo,
-          onScore: (n) => addScore(Math.round(n * scoreMul)),
-          onCombo: bumpCombo,
-          onComboBreak: breakCombo,
-          onDamage: damage,
-          onHeal: heal,
-          onStageUp: setStage,
-          onVictory: victory,
-          onParries: bumpParries,
-          onEnemyKilled: bumpEnemiesKilled,
-          onBossAppear: startBossCutscene,
-          onBossPhaseChange: triggerBossPhaseAlert,
-          onEndlessLoop: setEndlessLoop,
+        const isPaused = hudState.status === "paused";
+        if (isPaused && !wasPaused) pauseStartedAt = t;
+        else if (!isPaused && wasPaused) pausedAccumMs += t - pauseStartedAt;
+        wasPaused = isPaused;
+        const nowMs = t - startTime - pausedAccumMs;
+
+        if (hudState.status === "playing") {
+          const baseMul = MODIFIERS[engine.modifierId].scoreMul;
+          const scoreMul =
+            baseMul * (isHardcoreRun(engine.difficulty, engine.modifierId) ? 1.5 : 1);
+          update({
+            state: engine,
+            input: inputRef.current,
+            nowMs,
+            dt,
+            canvasW: w,
+            canvasH: h,
+            currentComboHint: hudState.combo,
+            onScore: (n) => addScore(Math.round(n * scoreMul)),
+            onCombo: bumpCombo,
+            onComboBreak: breakCombo,
+            onDamage: damage,
+            onHeal: heal,
+            onStageUp: setStage,
+            onVictory: victory,
+            onParries: bumpParries,
+            onEnemyKilled: bumpEnemiesKilled,
+            onBossAppear: startBossCutscene,
+            onBossPhaseChange: triggerBossPhaseAlert,
+            onEndlessLoop: setEndlessLoop,
+            onEnemyCount: setEnemyCount,
+          });
+        }
+
+        render(ctx, engine, w, h, dprRef.current, nowMs, {
+          combo: hudState.combo,
+          paused: hudState.status === "paused",
         });
+      } catch (err) {
+        console.error("[game loop] frame error:", err);
+      } finally {
+        rafRef.current = requestAnimationFrame(loop);
       }
-
-      render(ctx, engine, w, h, dprRef.current, nowMs, {
-        combo: hudState.combo,
-        paused: hudState.status === "paused",
-      });
-
-      rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
 
     return () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      stopAllMusic();
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointerdown", gestureHandler);
       window.removeEventListener("keydown", gestureHandler);
@@ -284,7 +305,7 @@ export function GameCanvas({
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, triggerBossPhaseAlert, setEndlessLoop, startStage, difficulty, characterId, modifierId, tutorialMode, endlessMode, restartKey]);
+  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, triggerBossPhaseAlert, setEndlessLoop, setEnemyCount, startStage, difficulty, characterId, modifierId, tutorialMode, endlessMode, restartKey]);
 
   return <canvas ref={canvasRef} className={styles.canvas} />;
 }

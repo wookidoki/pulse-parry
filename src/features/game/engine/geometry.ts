@@ -1,7 +1,9 @@
 export function normalizeAngle(a: number): number {
-  let v = a;
-  while (v > Math.PI) v -= Math.PI * 2;
-  while (v < -Math.PI) v += Math.PI * 2;
+  if (!Number.isFinite(a)) return 0;
+  const twoPi = Math.PI * 2;
+  let v = a % twoPi;
+  if (v > Math.PI) v -= twoPi;
+  else if (v < -Math.PI) v += twoPi;
   return v;
 }
 
