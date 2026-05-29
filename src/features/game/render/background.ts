@@ -31,8 +31,8 @@ export function drawBackground(
       innerColor = "rgba(255, 56, 99, 0.20)";
       outerColor = "rgba(255, 56, 99, 0.10)";
     } else if (bossPhase >= 2) {
-      const flicker = 0.5 + Math.sin(nowMs / 90) * 0.3;
-      innerColor = `rgba(255, 56, 99, ${0.32 * flicker})`;
+      const flicker = 0.62 + Math.sin(nowMs / 200) * 0.18;
+      innerColor = `rgba(255, 56, 99, ${0.3 * flicker})`;
       outerColor = `rgba(255, 56, 99, 0.18)`;
     }
   }
@@ -73,8 +73,8 @@ function drawBossVignette(
 ): void {
   const cx = w / 2;
   const cy = h / 2;
-  const pulse = 0.55 + Math.sin(nowMs / (phase >= 2 ? 110 : 220)) * 0.45;
-  const intensity = phase >= 2 ? 0.55 * pulse : 0.32 * pulse;
+  const pulse = 0.68 + Math.sin(nowMs / (phase >= 2 ? 200 : 280)) * 0.32;
+  const intensity = phase >= 2 ? 0.45 * pulse : 0.3 * pulse;
   const grad = c.createRadialGradient(
     cx,
     cy,

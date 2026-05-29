@@ -488,7 +488,7 @@ function drawEnemyHpRing(c: CanvasRenderingContext2D, e: Enemy, x: number, y: nu
 }
 
 function drawTelegraphBeam(c: CanvasRenderingContext2D, e: Enemy, x: number, y: number): void {
-  const progress = 1 - e.telegraphMsLeft / TELEGRAPH_MS;
+  const progress = Math.max(0, Math.min(1, 1 - e.telegraphMsLeft / TELEGRAPH_MS));
   const dist = magnitude(x, y);
   const { ux, uy } = unitVector(-x, -y);
   const beamLen = dist * progress;
@@ -542,6 +542,8 @@ export function drawBullets(
     }
     if (b.kind === "heal") {
       drawHealCross(c, b.x, b.y, kindConfig.radius, nowMs, color);
+    } else if (b.kind === "shield") {
+      drawShieldIcon(c, b.x, b.y, kindConfig.radius, nowMs, color);
     } else {
       drawShuriken(c, b.x, b.y, kindConfig.radius, b.kind, nowMs, color);
     }
@@ -574,6 +576,44 @@ function drawHealCross(
   c.fillStyle = "rgba(255, 255, 255, 0.85)";
   c.fillRect(-thickness / 4, -arm * 0.85, thickness / 2, arm * 1.7);
   c.fillRect(-arm * 0.85, -thickness / 4, arm * 1.7, thickness / 2);
+  c.restore();
+}
+
+function drawShieldIcon(
+  c: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  nowMs: number,
+  color: string,
+): void {
+  const pulse = 0.85 + Math.sin(nowMs / 130) * 0.15;
+  const r = radius * 1.05 * pulse;
+  c.save();
+  c.translate(x, y);
+  c.shadowColor = color;
+  c.shadowBlur = 22;
+  // Shield outline: pointed crest at top, rounded tip at bottom.
+  c.beginPath();
+  c.moveTo(0, -r);
+  c.lineTo(r * 0.8, -r * 0.4);
+  c.lineTo(r * 0.8, r * 0.3);
+  c.quadraticCurveTo(r * 0.8, r * 0.9, 0, r);
+  c.quadraticCurveTo(-r * 0.8, r * 0.9, -r * 0.8, r * 0.3);
+  c.lineTo(-r * 0.8, -r * 0.4);
+  c.closePath();
+  c.fillStyle = withAlpha(color, 0.35);
+  c.fill();
+  c.lineWidth = 2;
+  c.strokeStyle = color;
+  c.stroke();
+  c.shadowBlur = 0;
+  c.strokeStyle = "rgba(255, 255, 255, 0.85)";
+  c.lineWidth = 1.5;
+  c.beginPath();
+  c.moveTo(0, -r * 0.5);
+  c.lineTo(0, r * 0.5);
+  c.stroke();
   c.restore();
 }
 
@@ -661,6 +701,12 @@ export function drawPlayer(
   const hexRot = nowMs * 0.0006;
 
   c.save();
+
+  // I-frame blink: flicker the whole player while invulnerable (post-hit or
+  // shield pickup) so the immunity reads clearly.
+  if (state.invulnMsLeft > 0 && !dashing) {
+    c.globalAlpha = 0.4 + Math.abs(Math.sin(nowMs / 60)) * 0.6;
+  }
 
   // Hex energy field (rotating)
   c.shadowColor = auraColor;

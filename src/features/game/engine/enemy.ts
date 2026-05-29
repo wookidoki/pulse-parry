@@ -376,7 +376,7 @@ export function updateEnemies(
           enemyId: e.id,
           x: e.x,
           y: e.y,
-          hitPlayer: state.dashActiveMsLeft <= 0,
+          hitPlayer: state.dashActiveMsLeft <= 0 && state.invulnMsLeft <= 0,
         });
         // Mark dying now (not just hp=0) so a reflected bullet landing the same
         // frame can't re-kill it for double score/FX — collisions skip non-alive.

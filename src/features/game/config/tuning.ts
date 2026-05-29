@@ -39,6 +39,13 @@ export const HEAL_SPAWN_INTERVAL_MS = 45000;
 export const HEAL_BULLET_SPEED = 140;
 export const HEAL_COMBO_MILESTONES = [25, 50, 100, 200] as const;
 
+export const SHIELD_SPAWN_INTERVAL_MS = 70000;
+export const SHIELD_BULLET_SPEED = 140;
+export const SHIELD_INVULN_MS = 5000;
+// I-frames after taking a hit — player blinks and is immune so a single hazard
+// or bullet can't chain into instant death.
+export const POST_HIT_INVULN_MS = 2200;
+
 export const HIT_STOP_MS_PLAYER_HIT = 50;
 export const HIT_STOP_MS_ENEMY_KILL = 55;
 export const HIT_STOP_MS_REFLECT_HIT = 25;
@@ -53,7 +60,7 @@ export const SLASH_RADIUS = 130;
 export const SCOREPOP_RISE_VY = -120;
 export const SCOREPOP_LIFE_MS = 800;
 
-export const SCREEN_FLASH_LIFE_MS = 220;
+export const SCREEN_FLASH_LIFE_MS = 150;
 
 export const NEAR_MISS_RADIUS = 22;
 

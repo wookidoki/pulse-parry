@@ -8,6 +8,7 @@ import {
   ENEMY_RADIUS,
   HIT_RADIUS,
   NEAR_MISS_RADIUS,
+  PLAYER_RADIUS,
   SCORE_ENEMY_KILL,
   SCORE_REFLECT_HIT,
 } from "../config/tuning";
@@ -89,6 +90,37 @@ export function createHealItem(
   };
 }
 
+export function createShieldItem(
+  state: EngineState,
+  nowMs: number,
+  canvasW: number,
+  canvasH: number,
+  speed: number,
+): Bullet {
+  const angle = Math.random() * Math.PI * 2;
+  const spawnR = Math.max(canvasW, canvasH) * 0.55;
+  const x = Math.cos(angle) * spawnR;
+  const y = Math.sin(angle) * spawnR;
+  const dx = state.playerX - x;
+  const dy = state.playerY - y;
+  const { ux, uy } = unitVector(dx, dy);
+  return {
+    id: state.nextBulletId++,
+    x,
+    y,
+    vx: ux * speed,
+    vy: uy * speed,
+    kind: "shield",
+    state: "incoming",
+    spawnedAt: nowMs,
+    ownerEnemyId: -1,
+    minDist: Infinity,
+    nearMissFired: false,
+    isPerfect: false,
+    isCharged: false,
+  };
+}
+
 function isInParryCone(
   bx: number,
   by: number,
@@ -107,7 +139,8 @@ function isInParryCone(
 }
 
 function speedMulForBeat(beatPhase: number): number {
-  return 0.4 + 1.6 * Math.exp(-beatPhase * 14);
+  // Higher floor so heavy (purple) bullets don't crawl between beats.
+  return 0.72 + 1.3 * Math.exp(-beatPhase * 14);
 }
 
 function applyIncomingMotion(b: Bullet, dt: number, beatPhase: number, nowMs: number): void {
@@ -141,6 +174,7 @@ export interface BulletTickEffects {
   enemyKills: { x: number; y: number; kind: import("../types").EnemyKind }[];
   nearMisses: number;
   healCaught: number;
+  shieldCaught: number;
 }
 
 function radiusOf(kind: BulletKind): number {
@@ -166,6 +200,7 @@ export function updateBullets(
     enemyKills: [],
     nearMisses: 0,
     healCaught: 0,
+    shieldCaught: 0,
   };
   const offscreenLimit = Math.max(canvasW, canvasH);
   const beatPhase = state.beat.beatPhase;
@@ -193,10 +228,11 @@ export function updateBullets(
           char.parryRange,
           char.coneAngleRad,
         );
-      if (b.kind === "heal") {
+      if (b.kind === "heal" || b.kind === "shield") {
         if (inCone) {
           b.state = "dead";
-          effects.healCaught += 1;
+          if (b.kind === "heal") effects.healCaught += 1;
+          else effects.shieldCaught += 1;
           emitBurst(state, b.x, b.y, BURSTS.healCatch());
         } else if (distToPlayer <= HIT_RADIUS + radius) {
           b.state = "dead";
@@ -214,7 +250,7 @@ export function updateBullets(
         emitBurst(state, b.x, b.y, BURSTS.parryCatch());
       } else if (distToPlayer <= HIT_RADIUS + radius) {
         b.state = "dead";
-        if (state.dashActiveMsLeft > 0) {
+        if (state.dashActiveMsLeft > 0 || state.invulnMsLeft > 0) {
           emitBurst(state, b.x, b.y, BURSTS.parryCatch());
         } else {
           effects.damageDealt += damageOf(b.kind);
@@ -322,12 +358,20 @@ export function reflectAbsorbedBullets(state: EngineState): ReleaseResult {
   const char = CHARACTERS[state.characterId];
   const cos = Math.cos(state.aimAngle);
   const sin = Math.sin(state.aimAngle);
+  // Snap absorbed bullets onto the aim axis, staggered out from the player, so
+  // a charged release fires one focused stream toward the cursor instead of a
+  // scattered fan from wherever each bullet was caught.
+  let index = 0;
   for (const b of state.bullets) {
     if (b.state !== "absorbed") continue;
     b.state = "reflected";
+    const offset = PLAYER_RADIUS + index * 14;
+    b.x = state.playerX + cos * offset;
+    b.y = state.playerY + sin * offset;
     b.vx = cos * char.reflectSpeed;
     b.vy = sin * char.reflectSpeed;
     count++;
+    index++;
     if (b.isPerfect) perfectCount++;
   }
   if (count > 0) {

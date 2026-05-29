@@ -20,6 +20,8 @@ import { PLAYER_MAX_DIST } from "../config/tuning";
 
 let nextHazardId = 1;
 
+const SHOCKWAVE_DAMAGE_GRACE_MS = 150;
+
 function pickKind(state: EngineState): HazardKind {
   const stage = state.stageIndex;
   const choices: HazardKind[] = ["laserSweep"];
@@ -40,6 +42,7 @@ function spawnLaser(nowMs: number): Hazard {
     centerY: 0,
     blastRadius: 0,
     currentRadius: 0,
+    consumed: false,
   };
 }
 
@@ -59,6 +62,7 @@ function spawnMissile(nowMs: number, state: EngineState): Hazard {
     centerY: aimY,
     blastRadius: HAZARD_MISSILE_BLAST_RADIUS,
     currentRadius: 0,
+    consumed: false,
   };
 }
 
@@ -74,6 +78,7 @@ function spawnShockwave(nowMs: number): Hazard {
     centerY: 0,
     blastRadius: HAZARD_SHOCKWAVE_MAX_RADIUS,
     currentRadius: 0,
+    consumed: false,
   };
 }
 
@@ -181,12 +186,27 @@ export function updateHazards(
       h.currentRadius = progress;
     }
 
-    if (h.state === "active" && !damaged && state.dashActiveMsLeft <= 0) {
+    // A hazard damages the player at most once (h.consumed). Without this the
+    // beam/ring stays "active" and re-hits every frame → continuous damage +
+    // a red flash that never clears. Dash i-frames and post-hit invuln also
+    // suppress the hit. Shockwave gets a short activation grace so the ring is
+    // never an unavoidable point-blank hit the instant it spawns.
+    const shockwaveGrace =
+      h.kind === "shockwave" && nowMs - h.startedAtMs < SHOCKWAVE_DAMAGE_GRACE_MS;
+    if (
+      h.state === "active" &&
+      !damaged &&
+      !h.consumed &&
+      state.dashActiveMsLeft <= 0 &&
+      state.invulnMsLeft <= 0 &&
+      !shockwaveGrace
+    ) {
       const scanProg = h.kind === "laserSweep" ? h.currentRadius : 1;
       if (hits(state, h, scanProg)) {
         damaged = true;
         damageId = h.id;
         damageKind = h.kind;
+        h.consumed = true;
         if (h.kind !== "shockwave" && h.kind !== "laserSweep") {
           h.state = "fading";
           h.startedAtMs = nowMs;

@@ -42,7 +42,7 @@ export const RACE_LABEL: Record<EnemyRace, string> = {
   core: "THE CORE",
 };
 
-export type BulletKind = "normal" | "rapid" | "heavy" | "heal";
+export type BulletKind = "normal" | "rapid" | "heavy" | "heal" | "shield";
 export type BulletState = "incoming" | "absorbed" | "reflected" | "dead";
 
 export interface Enemy {
@@ -177,6 +177,8 @@ export interface EngineState {
   difficulty: Difficulty;
   lastHealSpawnAtMs: number;
   lastHealMilestone: number;
+  lastShieldSpawnAtMs: number;
+  invulnMsLeft: number;
   bossSpawned: boolean;
   bossPhase: number;
   bossPhaseZoomMsLeft: number;
@@ -214,6 +216,7 @@ export interface Hazard {
   centerY: number;
   blastRadius: number;
   currentRadius: number;
+  consumed: boolean;
 }
 
 export interface EngineCallbacks {

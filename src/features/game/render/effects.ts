@@ -82,10 +82,16 @@ export function drawScreenFlashes(
   w: number,
   h: number,
 ): void {
+  // Hard ceiling on combined flash opacity so stacked flashes (hazard + kills +
+  // hits in one burst) can never wash the screen out to a solid color.
+  let budget = 0.42;
   for (const f of state.flashes) {
-    const alpha = Math.max(0, f.life) * f.intensity;
+    if (budget <= 0) break;
+    const alpha = Math.min(budget, Math.max(0, f.life) * f.intensity);
+    if (alpha <= 0) continue;
     c.fillStyle = withAlpha(f.color, alpha);
     c.fillRect(0, 0, w, h);
+    budget -= alpha;
   }
 }
 

@@ -23,12 +23,16 @@ import {
   HEAL_BULLET_SPEED,
   HEAL_COMBO_MILESTONES,
   HEAL_SPAWN_INTERVAL_MS,
+  POST_HIT_INVULN_MS,
   PLAYER_MAX_DIST,
   PLAYER_MOVE_SPEED,
   SCORE_CHARGED_BONUS,
   SCORE_HEAL_CATCH,
   SCORE_PARRY_PER_BULLET,
   SCORE_PERFECT_BONUS,
+  SHIELD_BULLET_SPEED,
+  SHIELD_INVULN_MS,
+  SHIELD_SPAWN_INTERVAL_MS,
   SHAKE_DECAY_PER_SEC,
   SHAKE_ON_ENEMY_KILL,
   SHAKE_ON_PLAYER_HIT,
@@ -44,6 +48,7 @@ import {
   cleanupBullets,
   createBullet,
   createHealItem,
+  createShieldItem,
   reflectAbsorbedBullets,
   updateBullets,
 } from "./bullet";
@@ -107,6 +112,8 @@ export function createEngineState(
     difficulty,
     lastHealSpawnAtMs: nowMs,
     lastHealMilestone: 0,
+    lastShieldSpawnAtMs: nowMs,
+    invulnMsLeft: 0,
     bossSpawned: false,
     bossPhase: 0,
     bossPhaseZoomMsLeft: 0,
@@ -309,6 +316,19 @@ function spawnHealIfNeeded(
   if (dueByCombo > 0) state.lastHealMilestone = dueByCombo;
 }
 
+function spawnShieldIfNeeded(
+  state: EngineState,
+  nowMs: number,
+  canvasW: number,
+  canvasH: number,
+): void {
+  if (nowMs - state.lastShieldSpawnAtMs < SHIELD_SPAWN_INTERVAL_MS) return;
+  state.bullets.push(
+    createShieldItem(state, nowMs, canvasW, canvasH, SHIELD_BULLET_SPEED),
+  );
+  state.lastShieldSpawnAtMs = nowMs;
+}
+
 function processEnemyShots(
   state: EngineState,
   shots: EnemyShot[],
@@ -490,8 +510,19 @@ function processDashTrigger(state: EngineState, input: PlayerInput): void {
   if (state.dashActiveMsLeft > 0 || state.dashCooldownMsLeft > 0) return;
 
   const char = CHARACTERS[state.characterId];
-  const dx = input.rawMouseX - state.playerX;
-  const dy = input.rawMouseY - state.playerY;
+  // Dash follows movement keys (WASD/arrows); falls back to cursor direction
+  // when no movement key is held.
+  const mx = (input.moveRight ? 1 : 0) - (input.moveLeft ? 1 : 0);
+  const my = (input.moveDown ? 1 : 0) - (input.moveUp ? 1 : 0);
+  let dx: number;
+  let dy: number;
+  if (mx !== 0 || my !== 0) {
+    dx = mx;
+    dy = my;
+  } else {
+    dx = input.rawMouseX - state.playerX;
+    dy = input.rawMouseY - state.playerY;
+  }
   const mag = Math.hypot(dx, dy) || 1;
   state.dashDirX = dx / mag;
   state.dashDirY = dy / mag;
@@ -541,6 +572,7 @@ export function update(ctx: UpdateContext): void {
   state.bgPulse = Math.max(0, state.bgPulse - dt * BG_PULSE_DECAY_PER_SEC);
   state.bladeSwingMsLeft = Math.max(0, state.bladeSwingMsLeft - dt * 1000);
   state.perfectFlashMsLeft = Math.max(0, state.perfectFlashMsLeft - dt * 1000);
+  state.invulnMsLeft = Math.max(0, state.invulnMsLeft - dt * 1000);
   updateCameraZoom(state, dt);
 
   if (processHitStop(state, dt)) {
@@ -563,10 +595,11 @@ export function update(ctx: UpdateContext): void {
   if (hazardInfo.damaged) {
     applyShake(state, SHAKE_ON_PLAYER_HIT);
     applyHitStop(state, HIT_STOP_MS_PLAYER_HIT);
-    spawnScreenFlash(state, PALETTE.red, 0.55);
+    spawnScreenFlash(state, PALETTE.red, 0.4);
     if (hazardInfo.hazardKind === "missile") sfx.playMissileExplode();
     else sfx.playPlayerHit();
     ctx.onDamage(1);
+    state.invulnMsLeft = POST_HIT_INVULN_MS;
   }
   for (const h of state.hazards) {
     if (h.state === "telegraph" && nowMs - h.startedAtMs < 30) {
@@ -594,6 +627,7 @@ export function update(ctx: UpdateContext): void {
 
   spawnEnemyIfNeeded(state, nowMs, canvasW, canvasH, ctx);
   spawnHealIfNeeded(state, nowMs, canvasW, canvasH, ctx.currentComboHint);
+  spawnShieldIfNeeded(state, nowMs, canvasW, canvasH);
   tickBossPhase(state, ctx);
 
   const enemyResult = updateEnemies(state, dt, nowMs, canvasW, canvasH);
@@ -612,8 +646,9 @@ export function update(ctx: UpdateContext): void {
   if (bulletEffects.damageDealt > 0) {
     applyShake(state, SHAKE_ON_PLAYER_HIT);
     applyHitStop(state, HIT_STOP_MS_PLAYER_HIT);
-    spawnScreenFlash(state, PALETTE.red, 0.5);
+    spawnScreenFlash(state, PALETTE.red, 0.4);
     sfx.playPlayerHit();
+    state.invulnMsLeft = POST_HIT_INVULN_MS;
   }
   if (bulletEffects.reflectHits.length > 0) {
     applyHitStop(state, HIT_STOP_MS_REFLECT_HIT);
@@ -668,6 +703,7 @@ export function update(ctx: UpdateContext): void {
     sfx.playMissileExplode();
     if (det.hitPlayer) {
       ctx.onDamage(1);
+      state.invulnMsLeft = POST_HIT_INVULN_MS;
     }
     const bomberEnemy = state.enemies.find((e) => e.id === det.enemyId);
     if (bomberEnemy && bomberEnemy.state !== "dying" && bomberEnemy.state !== "dead") {
@@ -693,6 +729,19 @@ export function update(ctx: UpdateContext): void {
       1.3,
     );
     sfx.playPerfectHeal();
+  }
+  if (bulletEffects.shieldCaught > 0) {
+    state.invulnMsLeft = Math.max(state.invulnMsLeft, SHIELD_INVULN_MS);
+    spawnScreenFlash(state, PALETTE.cyan, 0.3);
+    spawnScorePop(
+      state,
+      state.playerX,
+      state.playerY - 36,
+      "SHIELD 5s",
+      PALETTE.cyan,
+      1.3,
+    );
+    sfx.playPerfectChime();
   }
   applyBulletEffects(bulletEffects, ctx);
 
