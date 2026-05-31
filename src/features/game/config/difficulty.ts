@@ -6,10 +6,12 @@ export interface DifficultyConfig {
   perfectWindowMul: number;
   enemyCountDelta: number;
   scoreMul: number;
-  // Bullet arrival is quantized to this beat subdivision so enemy fire reads
-  // like a score. Coarser grid = more predictable/rhythmic (easier to parry on
-  // beat); finer grid = denser, off-beat notes allowed (harder).
-  beatGridSub: number;
+  // Bullet arrival is quantized to a beat subdivision so enemy fire reads like a
+  // score. The grid VARIES per beat within a 4-beat bar (groove) instead of a
+  // flat subdivision — a constant quarter grid feels loose/monotonous. Each
+  // entry is the subdivision for arrivals landing in that beat of the bar.
+  // Coarser (1=quarter) = predictable/easy to parry on beat; finer (0.25) = dense.
+  beatGridPattern: number[];
 }
 
 export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
@@ -19,7 +21,8 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     perfectWindowMul: 1.6,
     enemyCountDelta: -1,
     scoreMul: 0.7,
-    beatGridSub: 1, // quarter notes — every shot lands on a downbeat
+    // strong downbeat, eighth-note lift on 2 & 4 — grooves without crowding
+    beatGridPattern: [1, 0.5, 1, 0.5],
   },
   normal: {
     label: "NORMAL",
@@ -27,7 +30,7 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     perfectWindowMul: 1.0,
     enemyCountDelta: 0,
     scoreMul: 1.0,
-    beatGridSub: 0.5, // eighth notes — on/off beat
+    beatGridPattern: [0.5, 0.5, 0.25, 0.5],
   },
   hard: {
     label: "HARD",
@@ -35,7 +38,7 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     perfectWindowMul: 0.65,
     enemyCountDelta: 1,
     scoreMul: 1.5,
-    beatGridSub: 0.25, // sixteenth notes — dense, syncopated
+    beatGridPattern: [0.25, 0.5, 0.25, 0.25],
   },
 };
 
