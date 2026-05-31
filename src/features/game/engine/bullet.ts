@@ -19,6 +19,26 @@ import { BURSTS, emitBurst } from "./particles";
 import { spawnScorePop } from "./effects";
 import { PALETTE } from "../config/palette";
 
+// Snap a bullet's arrival to the beat grid so enemy fire reads like a score:
+// the player can parry on the beat. The granularity comes from difficulty.
+function quantizeFlightMs(
+  state: EngineState,
+  flightBeats: number,
+  nowMs: number,
+  gridSub: number,
+): number {
+  const period = state.beat.beatPeriodMs;
+  if (gridSub <= 0 || !Number.isFinite(period) || period <= 0) {
+    return flightBeats * period;
+  }
+  const elapsedBeats = (nowMs - state.beat.startedAtMs) / period;
+  const rawArrival = elapsedBeats + flightBeats;
+  let snappedBeats = Math.round(rawArrival / gridSub) * gridSub - elapsedBeats;
+  // Never let snapping shorten the flight so much the bullet teleports in.
+  while (snappedBeats < flightBeats * 0.6) snappedBeats += gridSub;
+  return snappedBeats * period;
+}
+
 export function createBullet(
   state: EngineState,
   enemy: Enemy,
@@ -33,7 +53,7 @@ export function createBullet(
   const dy = state.playerY - enemy.y;
   const distance = magnitude(dx, dy);
   const flightBeats = enemyConfig.flightBeats * diffConfig.flightBeatsMul;
-  const flightMs = flightBeats * state.beat.beatPeriodMs;
+  const flightMs = quantizeFlightMs(state, flightBeats, nowMs, diffConfig.beatGridSub);
   const speed =
     (distance / Math.max(0.05, flightMs / 1000)) *
     modConfig.bulletSpeedMul *
