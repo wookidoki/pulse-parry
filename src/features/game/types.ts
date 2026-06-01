@@ -13,7 +13,8 @@ export type EnemyKind =
   | "shard"
   | "mirror"
   | "healer"
-  | "pulser";
+  | "pulser"
+  | "rusher";
 export type EnemyRace = "omnic" | "virus" | "drone" | "core";
 export type EnemyState = "spawning" | "alive" | "dying" | "dead";
 
@@ -33,6 +34,7 @@ export const KIND_RACE: Record<EnemyKind, EnemyRace> = {
   mirror: "omnic",
   healer: "drone",
   pulser: "virus",
+  rusher: "drone",
 };
 
 export const RACE_LABEL: Record<EnemyRace, string> = {
@@ -65,6 +67,9 @@ export interface Enemy {
   knockbackY: number;
   hitFlashMsLeft: number;
   beatOffsetFraction: number;
+  // Melee "rusher" lunge state: counts down while charging the player; 0 = orbiting.
+  lungeMsLeft: number;
+  nextLungeAtMs: number;
 }
 
 export interface ScorePop {

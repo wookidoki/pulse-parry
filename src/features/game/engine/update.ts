@@ -726,6 +726,20 @@ export function update(ctx: UpdateContext): void {
       bomberEnemy.stateEnteredAt = nowMs;
     }
   }
+
+  for (const m of enemyResult.meleeHits) {
+    applyShake(state, SHAKE_ON_PLAYER_HIT);
+    spawnShockwave(state, m.x, m.y, nowMs, PALETTE.red);
+    emitBurst(state, m.x, m.y, BURSTS.playerHit());
+    if (m.hit) {
+      applyHitStop(state, HIT_STOP_MS_PLAYER_HIT);
+      spawnScreenFlash(state, PALETTE.red, 0.4);
+      sfx.playPlayerHit();
+      ctx.onDamage(1);
+      state.invulnMsLeft = POST_HIT_INVULN_MS;
+    }
+  }
+
   if (bulletEffects.nearMisses > 0) {
     spawnScreenFlash(state, PALETTE.cyan, 0.22);
     applyShake(state, 4);

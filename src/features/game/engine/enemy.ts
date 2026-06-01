@@ -26,7 +26,13 @@ function orbitRadius(canvasW: number, canvasH: number): number {
   return Math.max(320, Math.min(min * ENEMY_ORBIT_FACTOR, min / 2 - ENEMY_ORBIT_MARGIN));
 }
 
-const ORBIT_RINGS = [0.82, 0.91, 1.0];
+// 7 orbital rings (solar-system spread) so many enemies share the field at
+// distinct depths without crowding.
+const ORBIT_RINGS = [0.62, 0.68, 0.75, 0.82, 0.88, 0.94, 1.0];
+// Inner rings never come closer than this (keeps space around the player).
+const MIN_ORBIT_R = 230;
+// Extra concurrent enemies on top of the stage base, now that rings give room.
+const ENEMY_COUNT_BONUS = 3;
 
 function pickOrbitRing(id: number): number {
   return ORBIT_RINGS[id % ORBIT_RINGS.length];
@@ -123,6 +129,8 @@ export function createEnemy(
     knockbackY: 0,
     hitFlashMsLeft: 0,
     beatOffsetFraction: ((id - 1) % 4) * 0.25,
+    lungeMsLeft: 0,
+    nextLungeAtMs: kind === "rusher" ? nowMs + 4000 + Math.random() * 4000 : 0,
   };
 }
 
@@ -148,7 +156,8 @@ export function shouldSpawnEnemy(
     : Math.max(
         1,
         Math.round(
-          (stage.maxEnemies + diffConfig.enemyCountDelta) * effectiveSpawnRate,
+          (stage.maxEnemies + ENEMY_COUNT_BONUS + diffConfig.enemyCountDelta) *
+            effectiveSpawnRate,
         ),
       );
   if (alive >= maxEnemies) return false;
@@ -172,6 +181,7 @@ export interface EnemyTickResult {
   teleported: { enemyId: number; oldX: number; oldY: number }[];
   bomberDetonations: BomberDetonation[];
   healerPulses: HealerPulse[];
+  meleeHits: { x: number; y: number; hit: boolean }[];
 }
 
 function tryFireMainShot(
@@ -273,6 +283,17 @@ const BOMBER_DETONATE_RADIUS = 80;
 // Bomber glows brighter as it closes inside this multiple of the detonate
 // radius — a telegraph so the player can dash clear before it blows.
 const BOMBER_WARN_RADIUS_MUL = 2.6;
+// Rusher: melee enemy that orbits far, then every 5–10s charges in on the beat.
+// Forces the player to aim reflected bullets at it (or dash) before it lands.
+const RUSHER_LUNGE_SPEED = 430;
+const RUSHER_LUNGE_MS = 1100;
+const RUSHER_HIT_R = 40;
+const RUSHER_INTERVAL_MIN = 5000;
+const RUSHER_INTERVAL_MAX = 10000;
+
+function rusherNextLunge(nowMs: number): number {
+  return nowMs + RUSHER_INTERVAL_MIN + Math.random() * (RUSHER_INTERVAL_MAX - RUSHER_INTERVAL_MIN);
+}
 // Spawning enemies start this far beyond their orbit (off-screen) and ease in,
 // so they visibly fly into view instead of popping in at the ring.
 const ENTRY_RADIUS_MUL = 0.95;
@@ -347,6 +368,7 @@ export function updateEnemies(
     teleported: [],
     bomberDetonations: [],
     healerPulses: [],
+    meleeHits: [],
   };
   const baseR = orbitRadius(canvasW, canvasH);
   const burstBonus = MODIFIERS[state.modifierId].burstShotsBonus;
@@ -364,8 +386,45 @@ export function updateEnemies(
     }
 
     const isBomber = e.kind === "bomber";
+    const isRusher = e.kind === "rusher";
 
-    if (isBomber && e.state === "alive") {
+    if (isRusher && e.state === "alive") {
+      if (e.lungeMsLeft > 0) {
+        e.lungeMsLeft -= dt * 1000;
+        const dx = state.playerX - e.x;
+        const dy = state.playerY - e.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        e.x += (dx / dist) * RUSHER_LUNGE_SPEED * dt;
+        e.y += (dy / dist) * RUSHER_LUNGE_SPEED * dt;
+        e.orbitAngle = Math.atan2(e.y, e.x);
+        e.pulse = 1;
+        if (dist <= RUSHER_HIT_R) {
+          result.meleeHits.push({
+            x: e.x,
+            y: e.y,
+            hit: state.dashActiveMsLeft <= 0 && state.invulnMsLeft <= 0,
+          });
+          e.lungeMsLeft = 0;
+          e.nextLungeAtMs = rusherNextLunge(nowMs);
+        } else if (e.lungeMsLeft <= 0) {
+          e.nextLungeAtMs = rusherNextLunge(nowMs);
+        }
+      } else {
+        e.orbitAngle += ENEMY_ORBIT_DRIFT_RAD_PER_SEC * dt;
+        const orbR = Math.max(MIN_ORBIT_R, baseR * e.orbitRingMul);
+        const tx = Math.cos(e.orbitAngle) * orbR;
+        const ty = Math.sin(e.orbitAngle) * orbR;
+        e.x += (tx - e.x) * Math.min(1, dt * 4);
+        e.y += (ty - e.y) * Math.min(1, dt * 4);
+        const toLunge = e.nextLungeAtMs - nowMs;
+        if (toLunge < 1200) {
+          e.pulse = Math.min(1.4, Math.max(e.pulse, ((1200 - toLunge) / 1200) * 1.4));
+        }
+        if (nowMs >= e.nextLungeAtMs && state.beat.isBeatTick) {
+          e.lungeMsLeft = RUSHER_LUNGE_MS;
+        }
+      }
+    } else if (isBomber && e.state === "alive") {
       const dx = state.playerX - e.x;
       const dy = state.playerY - e.y;
       const dist = Math.hypot(dx, dy) || 1;
@@ -394,7 +453,7 @@ export function updateEnemies(
       // Drift speed scales mildly with ring so inner/outer orbits don't lock
       // into a static pattern (solar-system feel).
       e.orbitAngle += ENEMY_ORBIT_DRIFT_RAD_PER_SEC * (1.3 - e.orbitRingMul * 0.4) * dt;
-      const orbR = baseR * e.orbitRingMul;
+      const orbR = Math.max(MIN_ORBIT_R, baseR * e.orbitRingMul);
       let drawR = orbR;
       if (e.state === "spawning" && e.kind !== "boss") {
         const p = Math.min(1, (nowMs - e.stateEnteredAt) / ENEMY_SPAWN_DELAY_MS);
@@ -416,7 +475,7 @@ export function updateEnemies(
     maybeTeleportPhantom(e, state, canvasW, canvasH, result);
     if (e.kind === "healer") maybeHealNeighbors(e, state, result, nowMs);
 
-    if (isBomber) continue;
+    if (isBomber || isRusher) continue;
 
     if (tryFireMainShot(e, nowMs, dt, state.beat.beatPeriodMs, result, burstBonus)) continue;
     if (tryFireBurstShot(e, nowMs, state.beat.beatPeriodMs, result, burstBonus)) continue;
@@ -454,6 +513,8 @@ export function createShard(
     knockbackY: Math.sin(angleOffset) * 80,
     hitFlashMsLeft: 0,
     beatOffsetFraction: ((id - 1) % 4) * 0.25,
+    lungeMsLeft: 0,
+    nextLungeAtMs: 0,
   };
 }
 

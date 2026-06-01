@@ -163,6 +163,16 @@ export const ENEMY_KINDS: Record<EnemyKind, EnemyKindConfig> = {
     color: PALETTE.cyan,
     glowColor: PALETTE.cyan,
   },
+  rusher: {
+    hp: 3,
+    beatsPerShot: 999, // melee — never fires
+    bulletKind: "normal",
+    flightBeats: 2,
+    burstShots: 1,
+    burstIntervalBeatFraction: 0,
+    color: PALETTE.red,
+    glowColor: PALETTE.purple,
+  },
 };
 
 export interface BulletKindConfig {

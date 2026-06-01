@@ -21,6 +21,7 @@ const SVG_URLS: Record<EnemyKind, string> = {
   mirror: "/assets/enemies/omnic.svg",
   healer: "/assets/enemies/drone.svg",
   pulser: "/assets/enemies/spiraler.svg",
+  rusher: "/assets/enemies/drone.svg",
 };
 
 const cache: Map<EnemyKind, SpriteCache> = new Map();

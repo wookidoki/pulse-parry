@@ -245,6 +245,27 @@ function drawKindMark(
       c.stroke();
       break;
     }
+    case "rusher": {
+      const lunging = e.lungeMsLeft > 0;
+      c.strokeStyle = lunging ? "#ff3863" : color;
+      c.shadowColor = "#ff3863";
+      c.shadowBlur = lunging ? 18 : 10;
+      c.lineWidth = lunging ? 3 : 2;
+      const spin = lunging ? 0 : nowMs * 0.001;
+      // Inward-pointing chevrons — reads as an inbound charger.
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + spin;
+        const cx = Math.cos(a);
+        const cy = Math.sin(a);
+        const tip = r * 1.45;
+        c.beginPath();
+        c.moveTo(cx * tip - cy * r * 0.35, cy * tip + cx * r * 0.35);
+        c.lineTo(cx * r * 0.85, cy * r * 0.85);
+        c.lineTo(cx * tip + cy * r * 0.35, cy * tip - cx * r * 0.35);
+        c.stroke();
+      }
+      break;
+    }
     default:
       break;
   }
