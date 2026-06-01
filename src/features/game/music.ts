@@ -1,5 +1,13 @@
 import { attachAnalyser, resetAnalysisState } from "./audioAnalysis";
 import { getAudioContext } from "./audio";
+import { bpmForUrl } from "./config/track-bpm";
+
+// BPM of the track currently playing (0 if unknown) — the engine reads this to
+// drive its beat clock so gameplay rhythm matches the actual song.
+let currentTrackBpm = 0;
+export function getCurrentTrackBpm(): number {
+  return currentTrackBpm;
+}
 
 // Indexed by stage. Boss pool is indexed by phase (see setBossPhase), so
 // the final entry must hold one track per supported phase.
@@ -177,6 +185,7 @@ function cancelPendingStop(el: HTMLAudioElement): void {
 
 function startTrack(el: HTMLAudioElement, durationMs: number): void {
   cancelPendingStop(el);
+  currentTrackBpm = bpmForUrl(el.src);
   el.currentTime = 0;
   el.volume = 0;
   el.play().catch(() => {});
@@ -187,6 +196,7 @@ function startTrack(el: HTMLAudioElement, durationMs: number): void {
 // track whose first play() was blocked before the user gesture.
 function resumeTrack(el: HTMLAudioElement, durationMs: number): void {
   cancelPendingStop(el);
+  currentTrackBpm = bpmForUrl(el.src);
   el.play().catch(() => {});
   fade(el, targetVolume(), durationMs);
 }

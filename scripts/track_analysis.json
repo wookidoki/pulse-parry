@@ -1,0 +1,127 @@
+{
+  "boss_electric.ogg": {
+    "bpm": 89.1,
+    "beats": 73,
+    "density": 0.196
+  },
+  "oga1_anti_matter.ogg": {
+    "bpm": 78.3,
+    "beats": 76,
+    "density": 0.168
+  },
+  "oga1_caves.ogg": {
+    "bpm": 107.7,
+    "beats": 87,
+    "density": 0.273
+  },
+  "oga1_currents.ogg": {
+    "bpm": 117.5,
+    "beats": 115,
+    "density": 0.217
+  },
+  "oga1_experiment_g.ogg": {
+    "bpm": 117.5,
+    "beats": 114,
+    "density": 0.212
+  },
+  "oga1_simulation.ogg": {
+    "bpm": 117.5,
+    "beats": 119,
+    "density": 0.232
+  },
+  "oga1_space_collisions.ogg": {
+    "bpm": 117.5,
+    "beats": 114,
+    "density": 0.192
+  },
+  "oga1_test_subject.ogg": {
+    "bpm": 117.5,
+    "beats": 115,
+    "density": 0.238
+  },
+  "oga1_tribal_chaos.ogg": {
+    "bpm": 117.5,
+    "beats": 108,
+    "density": 0.27
+  },
+  "oga1_wicked.ogg": {
+    "bpm": 103.4,
+    "beats": 100,
+    "density": 0.208
+  },
+  "oga_15k.mp3": {
+    "bpm": 161.5,
+    "beats": 123,
+    "density": 0.086
+  },
+  "oga_casino_120.ogg": {
+    "bpm": 117.5,
+    "beats": 109,
+    "density": 0.151
+  },
+  "oga_chill_100.ogg": {
+    "bpm": 99.4,
+    "beats": 99,
+    "density": 0.23
+  },
+  "oga_jumping_110.ogg": {
+    "bpm": 112.3,
+    "beats": 108,
+    "density": 0.233
+  },
+  "oga_moonlight.mp3": {
+    "bpm": 107.7,
+    "beats": 105,
+    "density": 0.244
+  },
+  "oga_synth_remix.ogg": {
+    "bpm": 172.3,
+    "beats": 108,
+    "density": 0.152
+  },
+  "oga_synth_remix_lo.ogg": {
+    "bpm": 172.3,
+    "beats": 109,
+    "density": 0.147
+  },
+  "oga_welcome_110.ogg": {
+    "bpm": 107.7,
+    "beats": 107,
+    "density": 0.231
+  },
+  "stage1_awaken.ogg": {
+    "bpm": 161.5,
+    "beats": 148,
+    "density": 0.175
+  },
+  "stage1_breach.mp3": {
+    "bpm": 117.5,
+    "beats": 118,
+    "density": 0.288
+  },
+  "stage2_coldrain.mp3": {
+    "bpm": 60.1,
+    "beats": 42,
+    "density": 0.209
+  },
+  "stage2_pulse.ogg": {
+    "bpm": 161.5,
+    "beats": 159,
+    "density": 0.237
+  },
+  "stage3_factory.ogg": {
+    "bpm": 129.2,
+    "beats": 126,
+    "density": 0.23
+  },
+  "stage3_overdrive.ogg": {
+    "bpm": 103.4,
+    "beats": 84,
+    "density": 0.241
+  },
+  "stage4_chaos.ogg": {
+    "bpm": 117.5,
+    "beats": 114,
+    "density": 0.255
+  }
+}
