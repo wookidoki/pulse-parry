@@ -7,7 +7,6 @@ const KICK_MIN_ENERGY = 95;
 const FFT_BUFFER = new Uint8Array(128);
 
 let lastKickAtMs = -10000;
-let recentIntervals: number[] = [];
 
 export function attachAnalyser(
   audioCtx: AudioContext,
@@ -50,26 +49,13 @@ export function tickKickDetection(currentIndex: number, nowMs: number): boolean 
     nowMs - lastKickAtMs > MIN_INTERVAL_MS;
 
   if (isKick) {
-    const interval = nowMs - lastKickAtMs;
-    if (interval > 200 && interval < 1200) {
-      recentIntervals.push(interval);
-      if (recentIntervals.length > 12) recentIntervals.shift();
-    }
     lastKickAtMs = nowMs;
     return true;
   }
   return false;
 }
 
-export function getDetectedBpm(): number {
-  if (recentIntervals.length < 4) return 0;
-  const sorted = [...recentIntervals].sort((a, b) => a - b);
-  const median = sorted[Math.floor(sorted.length / 2)];
-  return 60000 / median;
-}
-
 export function resetAnalysisState(): void {
   bassHistory.length = 0;
   lastKickAtMs = -10000;
-  recentIntervals = [];
 }

@@ -49,7 +49,7 @@ export function drawBackground(
   // BPM-aware streak intensity
   const bpmIntensity = Math.max(0.6, Math.min(1.6, state.beat.bpm / 120));
   drawRhythmStreaks(c, w, h, nowMs, state.beat.beatPhase, state.stageIndex, bpmIntensity);
-  drawTunnel(c, cx, cy, w, h, nowMs, state.stageIndex, state.beat.beatPhase);
+  drawTunnel(c, cx, cy, nowMs, state.stageIndex, state.beat.beatPhase);
   drawDriftingGrid(c, w, h, nowMs);
   drawCityscape(c, w, h, nowMs, state.stageIndex);
   drawParallaxRadialLines(c, cx, cy, nowMs, state.stageIndex, pulseEnv);
@@ -234,8 +234,6 @@ function drawTunnel(
   c: CanvasRenderingContext2D,
   cx: number,
   cy: number,
-  w: number,
-  h: number,
   nowMs: number,
   stageIndex: number,
   beatPhase: number,

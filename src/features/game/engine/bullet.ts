@@ -83,58 +83,27 @@ export function createBullet(
   };
 }
 
-export function createHealItem(
+// Heal / shield pickups are identical except for kind — one factory.
+export function createCatchItem(
   state: EngineState,
   nowMs: number,
   canvasW: number,
   canvasH: number,
   speed: number,
+  kind: "heal" | "shield",
 ): Bullet {
   const angle = Math.random() * Math.PI * 2;
   const spawnR = Math.max(canvasW, canvasH) * 0.55;
   const x = Math.cos(angle) * spawnR;
   const y = Math.sin(angle) * spawnR;
-  const dx = state.playerX - x;
-  const dy = state.playerY - y;
-  const { ux, uy } = unitVector(dx, dy);
+  const { ux, uy } = unitVector(state.playerX - x, state.playerY - y);
   return {
     id: state.nextBulletId++,
     x,
     y,
     vx: ux * speed,
     vy: uy * speed,
-    kind: "heal",
-    state: "incoming",
-    spawnedAt: nowMs,
-    ownerEnemyId: -1,
-    minDist: Infinity,
-    nearMissFired: false,
-    isPerfect: false,
-    isCharged: false,
-  };
-}
-
-export function createShieldItem(
-  state: EngineState,
-  nowMs: number,
-  canvasW: number,
-  canvasH: number,
-  speed: number,
-): Bullet {
-  const angle = Math.random() * Math.PI * 2;
-  const spawnR = Math.max(canvasW, canvasH) * 0.55;
-  const x = Math.cos(angle) * spawnR;
-  const y = Math.sin(angle) * spawnR;
-  const dx = state.playerX - x;
-  const dy = state.playerY - y;
-  const { ux, uy } = unitVector(dx, dy);
-  return {
-    id: state.nextBulletId++,
-    x,
-    y,
-    vx: ux * speed,
-    vy: uy * speed,
-    kind: "shield",
+    kind,
     state: "incoming",
     spawnedAt: nowMs,
     ownerEnemyId: -1,

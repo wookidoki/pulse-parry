@@ -49,8 +49,7 @@ import {
   autoCounterAbsorbedBullets,
   cleanupBullets,
   createBullet,
-  createHealItem,
-  createShieldItem,
+  createCatchItem,
   reflectAbsorbedBullets,
   updateBullets,
 } from "./bullet";
@@ -314,7 +313,7 @@ function spawnHealIfNeeded(
   }
   if (!dueByTime && dueByCombo === 0) return;
   state.bullets.push(
-    createHealItem(state, nowMs, canvasW, canvasH, HEAL_BULLET_SPEED),
+    createCatchItem(state, nowMs, canvasW, canvasH, HEAL_BULLET_SPEED, "heal"),
   );
   state.lastHealSpawnAtMs = nowMs;
   if (dueByCombo > 0) state.lastHealMilestone = dueByCombo;
@@ -328,7 +327,7 @@ function spawnShieldIfNeeded(
 ): void {
   if (nowMs - state.lastShieldSpawnAtMs < SHIELD_SPAWN_INTERVAL_MS) return;
   state.bullets.push(
-    createShieldItem(state, nowMs, canvasW, canvasH, SHIELD_BULLET_SPEED),
+    createCatchItem(state, nowMs, canvasW, canvasH, SHIELD_BULLET_SPEED, "shield"),
   );
   state.lastShieldSpawnAtMs = nowMs;
 }
