@@ -18,11 +18,18 @@ const PHANTOM_TELEPORT_BEATS = 4;
 const SPREAD_TOTAL_RAD = 0.42;
 const SPIRAL_STEP_RAD = 0.22;
 
+// Outer orbit radius (ring 1.0). Floored so enemies never crowd the player on
+// small screens. Rings below place enemies at several depths like a solar
+// system instead of one wall of circles.
 function orbitRadius(canvasW: number, canvasH: number): number {
   const min = Math.min(canvasW, canvasH);
-  const factored = min * ENEMY_ORBIT_FACTOR;
-  const cap = min / 2 - ENEMY_ORBIT_MARGIN;
-  return Math.min(factored, Math.max(120, cap));
+  return Math.max(320, Math.min(min * ENEMY_ORBIT_FACTOR, min / 2 - ENEMY_ORBIT_MARGIN));
+}
+
+const ORBIT_RINGS = [0.82, 0.91, 1.0];
+
+function pickOrbitRing(id: number): number {
+  return ORBIT_RINGS[id % ORBIT_RINGS.length];
 }
 
 function pickSpawnAngle(state: EngineState): number {
@@ -92,9 +99,10 @@ export function createEnemy(
   const kind = pickEnemyKind(stage);
   const angle = kind === "boss" ? -Math.PI / 2 : pickSpawnAngle(state);
   const config = ENEMY_KINDS[kind];
-  const baseR = orbitRadius(canvasW, canvasH);
-  const r = kind === "boss" ? baseR * 1.1 : baseR;
   const id = state.nextEnemyId++;
+  const baseR = orbitRadius(canvasW, canvasH);
+  const ringMul = kind === "boss" ? 1.1 : pickOrbitRing(id);
+  const r = baseR * ringMul;
   return {
     id,
     x: Math.cos(angle) * r,
@@ -108,6 +116,7 @@ export function createEnemy(
     telegraphMsLeft: 0,
     pulse: 0,
     orbitAngle: angle,
+    orbitRingMul: ringMul,
     burstShotsRemaining: 0,
     burstNextShotAtMs: 0,
     knockbackX: 0,
@@ -253,7 +262,7 @@ function maybeTeleportPhantom(
   if (state.beat.currentBeat % PHANTOM_TELEPORT_BEATS !== 0) return;
   result.teleported.push({ enemyId: enemy.id, oldX: enemy.x, oldY: enemy.y });
   enemy.orbitAngle = pickSpawnAngle(state);
-  const r = orbitRadius(canvasW, canvasH);
+  const r = orbitRadius(canvasW, canvasH) * enemy.orbitRingMul;
   enemy.x = Math.cos(enemy.orbitAngle) * r;
   enemy.y = Math.sin(enemy.orbitAngle) * r;
   enemy.pulse = 1;
@@ -339,8 +348,7 @@ export function updateEnemies(
     bomberDetonations: [],
     healerPulses: [],
   };
-  const r = orbitRadius(canvasW, canvasH);
-  const bossRadius = r * 1.1;
+  const baseR = orbitRadius(canvasW, canvasH);
   const burstBonus = MODIFIERS[state.modifierId].burstShotsBonus;
 
   for (const e of state.enemies) {
@@ -383,8 +391,10 @@ export function updateEnemies(
         killEnemy(e, nowMs);
       }
     } else {
-      e.orbitAngle += ENEMY_ORBIT_DRIFT_RAD_PER_SEC * dt;
-      const orbR = e.kind === "boss" ? bossRadius : r;
+      // Drift speed scales mildly with ring so inner/outer orbits don't lock
+      // into a static pattern (solar-system feel).
+      e.orbitAngle += ENEMY_ORBIT_DRIFT_RAD_PER_SEC * (1.3 - e.orbitRingMul * 0.4) * dt;
+      const orbR = baseR * e.orbitRingMul;
       let drawR = orbR;
       if (e.state === "spawning" && e.kind !== "boss") {
         const p = Math.min(1, (nowMs - e.stateEnteredAt) / ENEMY_SPAWN_DELAY_MS);
@@ -437,6 +447,7 @@ export function createShard(
     telegraphMsLeft: 0,
     pulse: 1,
     orbitAngle: r > 0 ? Math.atan2(y, x) + angleOffset : Math.random() * Math.PI * 2,
+    orbitRingMul: pickOrbitRing(id),
     burstShotsRemaining: 0,
     burstNextShotAtMs: 0,
     knockbackX: Math.cos(angleOffset) * 80,

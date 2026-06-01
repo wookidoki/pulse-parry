@@ -382,7 +382,9 @@ function drawOmnic(
   c.fillStyle = styles.bgFill;
   c.strokeStyle = styles.stroke;
   c.lineWidth = 2.5;
-  drawPolygon(c, 6, radius);
+  // Diamond (4-gon) instead of hexagon — reads as an angular sentinel, not a
+  // round blob, so omnic kinds are distinct from the round virus/drone bodies.
+  drawPolygon(c, 4, radius * 1.15);
   c.fill();
   c.stroke();
   c.restore();
@@ -392,7 +394,7 @@ function drawOmnic(
   c.rotate(-rotation * 0.6);
   c.strokeStyle = styles.stroke;
   c.lineWidth = 1;
-  drawPolygon(c, 6, radius * 0.62);
+  drawPolygon(c, 4, radius * 0.7);
   c.stroke();
   c.restore();
 

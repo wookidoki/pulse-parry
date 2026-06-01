@@ -58,6 +58,7 @@ export interface Enemy {
   telegraphMsLeft: number;
   pulse: number;
   orbitAngle: number;
+  orbitRingMul: number;
   burstShotsRemaining: number;
   burstNextShotAtMs: number;
   knockbackX: number;
