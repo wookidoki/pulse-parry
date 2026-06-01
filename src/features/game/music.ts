@@ -9,49 +9,58 @@ export function getCurrentTrackBpm(): number {
   return currentTrackBpm;
 }
 
-// Indexed by stage. Boss pool is indexed by phase (see setBossPhase), so
-// the final entry must hold one track per supported phase.
+// Indexed by stage, curated by measured BPM (scripts/track_analysis.json) so the
+// tempo roughly climbs across stages: calm intro → fast CHAOS. Boss pool is
+// indexed by phase (see setBossPhase) and ordered to escalate (89→162→172).
 const STAGE_TRACK_POOLS: string[][] = [
+  // 0 INFILTRATION — calm ~100 BPM
   [
-    "/audio/stage1_breach.mp3",
-    "/audio/stage1_awaken.ogg",
     "/audio/oga_chill_100.ogg",
-  ],
-  [
-    "/audio/oga1_simulation.ogg",
-    "/audio/oga1_anti_matter.ogg",
     "/audio/oga_moonlight.mp3",
-  ],
-  [
-    "/audio/stage2_coldrain.mp3",
-    "/audio/stage2_pulse.ogg",
     "/audio/oga_welcome_110.ogg",
+  ],
+  // 1 ECHO — slow/eerie ~78-112
+  [
+    "/audio/oga1_anti_matter.ogg",
+    "/audio/oga1_caves.ogg",
     "/audio/oga_jumping_110.ogg",
   ],
+  // 2 FACTORY — steady ~118
   [
+    "/audio/oga1_simulation.ogg",
+    "/audio/oga1_experiment_g.ogg",
     "/audio/oga_casino_120.ogg",
-    "/audio/oga1_currents.ogg",
-    "/audio/oga_synth_remix.ogg",
   ],
+  // 3 BLOOM — ~118
+  [
+    "/audio/oga1_currents.ogg",
+    "/audio/oga1_space_collisions.ogg",
+    "/audio/oga1_test_subject.ogg",
+    "/audio/stage1_breach.mp3",
+  ],
+  // 4 OVERDRIVE — ~118-129
   [
     "/audio/stage3_factory.ogg",
-    "/audio/stage3_overdrive.ogg",
-    "/audio/oga_15k.mp3",
-    "/audio/oga1_experiment_g.ogg",
-  ],
-  [
-    "/audio/oga1_caves.ogg",
-    "/audio/oga1_test_subject.ogg",
-    "/audio/oga_synth_remix_lo.ogg",
-  ],
-  [
     "/audio/stage4_chaos.ogg",
-    "/audio/oga1_space_collisions.ogg",
+    "/audio/stage2_coldrain.mp3",
   ],
+  // 5 TRIAGE — ~103-118
   [
-    "/audio/boss_electric.ogg",
     "/audio/oga1_tribal_chaos.ogg",
     "/audio/oga1_wicked.ogg",
+    "/audio/stage3_overdrive.ogg",
+  ],
+  // 6 CHAOS — fast ~162-172
+  [
+    "/audio/oga_15k.mp3",
+    "/audio/stage1_awaken.ogg",
+    "/audio/oga_synth_remix_lo.ogg",
+  ],
+  // 7 REVOLT (boss) — phase 0→1→2 escalates 89→162→172
+  [
+    "/audio/boss_electric.ogg",
+    "/audio/stage2_pulse.ogg",
+    "/audio/oga_synth_remix.ogg",
   ],
 ];
 

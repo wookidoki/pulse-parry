@@ -322,7 +322,8 @@ function drawCore(
   c.fillStyle = styles.bgFill;
   c.strokeStyle = styles.stroke;
   c.lineWidth = 3;
-  drawPolygon(c, 8, baseR);
+  // 6-point star core — crystalline/aggressive, not a round disc.
+  drawStar(c, 6, baseR, baseR * 0.6);
   c.fill();
   c.stroke();
   c.restore();
@@ -478,7 +479,7 @@ function drawVirus(
   c.fillStyle = styles.bgFill;
   c.strokeStyle = styles.stroke;
   c.lineWidth = 2.5;
-  drawStar(c, 3, radius, radius * 0.45);
+  drawStar(c, 5, radius * 1.18, radius * 0.34);
   c.fill();
   c.stroke();
   c.restore();
@@ -488,7 +489,7 @@ function drawVirus(
   c.rotate(counterRot);
   c.strokeStyle = withAlpha(config.color, 0.65);
   c.lineWidth = 1.4;
-  drawStar(c, 3, radius * 0.5, radius * 0.22);
+  drawStar(c, 5, radius * 0.55, radius * 0.2);
   c.stroke();
   c.restore();
 
@@ -543,7 +544,9 @@ function drawDrone(
 
   // Sub-kind shapes diverge so the three drone variants read distinctly:
   // bomber = triangle, mortar = hex, charger = octagon.
-  const outerSides = e.kind === "bomber" ? 3 : e.kind === "mortar" ? 6 : 8;
+  // Boxy/angular bodies (4-sided default) so drones don't read as round blobs:
+  // bomber = triangle, mortar = hex, others = rotated square.
+  const outerSides = e.kind === "bomber" ? 3 : e.kind === "mortar" ? 6 : 4;
   const innerSides = outerSides;
   const propArms = e.kind === "bomber" ? 3 : 6;
   const cornerCount = outerSides;

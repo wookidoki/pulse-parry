@@ -641,6 +641,17 @@ export function update(ctx: UpdateContext): void {
   if (state.beat.isBeatTick || state.audioKickThisFrame) {
     state.bgPulse = 1;
   }
+  // Phase-lock: the track BPM sets the beat RATE, but the downbeat may be offset
+  // from the song. Each detected kick gently pulls the beat phase toward 0 so
+  // the game's beat drifts into alignment with the music's actual pulse.
+  if (state.audioKickThisFrame) {
+    const period = state.beat.beatPeriodMs;
+    if (Number.isFinite(period) && period > 0) {
+      const phase = state.beat.beatPhase;
+      const correction = (phase < 0.5 ? phase : phase - 1) * period;
+      state.beat.startedAtMs += correction * 0.18;
+    }
+  }
 
   advanceStage(state, nowMs, ctx);
 

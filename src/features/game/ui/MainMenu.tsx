@@ -236,7 +236,7 @@ function TitleView({
         >
           {hasSave ? t("continueText", locale) : t("newGame", locale)}
         </Button>
-        <ButtonLink variant="secondary" size="lg" fullWidth href="/tutorial">
+        <ButtonLink variant="secondary" size="lg" fullWidth href="/play?tutorial=1">
           {t("tutorial", locale)}
         </ButtonLink>
         <Button
