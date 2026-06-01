@@ -75,6 +75,11 @@ export function GameCanvas({
   const bumpParries = useHud((s) => s.bumpParries);
   const bumpEnemiesKilled = useHud((s) => s.bumpEnemiesKilled);
   const setEnemyCount = useHud((s) => s.setEnemyCount);
+  const incTap = useHud((s) => s.incTap);
+  const incCharge = useHud((s) => s.incCharge);
+  const incDash = useHud((s) => s.incDash);
+  const incOnBeat = useHud((s) => s.incOnBeat);
+  const incGather = useHud((s) => s.incGather);
   const setStage = useHud((s) => s.setStage);
   const victory = useHud((s) => s.victory);
   const togglePause = useHud((s) => s.togglePause);
@@ -279,6 +284,11 @@ export function GameCanvas({
             onBossPhaseChange: triggerBossPhaseAlert,
             onEndlessLoop: setEndlessLoop,
             onEnemyCount: setEnemyCount,
+            onDash: incDash,
+            onTapCounter: incTap,
+            onCharge: incCharge,
+            onOnBeat: incOnBeat,
+            onGather: incGather,
           });
         }
 
@@ -305,7 +315,7 @@ export function GameCanvas({
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, triggerBossPhaseAlert, setEndlessLoop, setEnemyCount, startStage, difficulty, characterId, modifierId, tutorialMode, endlessMode, restartKey]);
+  }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, triggerBossPhaseAlert, setEndlessLoop, setEnemyCount, incTap, incCharge, incDash, incOnBeat, incGather, startStage, difficulty, characterId, modifierId, tutorialMode, endlessMode, restartKey]);
 
   return <canvas ref={canvasRef} className={styles.canvas} />;
 }

@@ -386,6 +386,10 @@ function handleParryRelease(
     cb.onScore(SCORE_PARRY_PER_BULLET * result.count);
     cb.onCombo(result.count);
     cb.onParries(result.count, result.perfectCount);
+    if (isTap) cb.onTapCounter();
+    else if (isCharged) cb.onCharge();
+    // "Gather": a held (aimed) release that reflects several bullets at once.
+    if (!isTap && result.count >= 2) cb.onGather();
     applyShake(state, SHAKE_ON_REFLECT);
     applyHitStop(state, HIT_STOP_MS_PARRY);
     sfx.playReflect();
@@ -406,6 +410,7 @@ function handleParryRelease(
     if (beatOff <= ON_BEAT_WINDOW) {
       cb.onScore(SCORE_ONBEAT_BONUS * result.count);
       cb.onCombo(1);
+      cb.onOnBeat();
       applyHitStop(state, 24);
       spawnScreenFlash(state, PALETTE.yellow, 0.22);
       spawnScorePop(state, state.playerX, state.playerY - 66, "ON BEAT!", PALETTE.yellow, 1.1);
@@ -515,7 +520,7 @@ function triggerBladeSwing(state: EngineState, isCharged: boolean): void {
   state.bladeSwingToAngle = state.aimAngle - sign * cone * 1.1;
 }
 
-function processDashTrigger(state: EngineState, input: PlayerInput): void {
+function processDashTrigger(state: EngineState, input: PlayerInput, cb: EngineCallbacks): void {
   state.dashActiveMsLeft = Math.max(0, state.dashActiveMsLeft);
   state.dashCooldownMsLeft = Math.max(0, state.dashCooldownMsLeft);
 
@@ -544,6 +549,7 @@ function processDashTrigger(state: EngineState, input: PlayerInput): void {
   state.dashActiveMsLeft = DASH_DURATION_MS;
   state.dashCooldownMsLeft = char.dashCooldownMs * MODIFIERS[state.modifierId].dashCooldownMul;
   sfx.playDashWhoosh();
+  cb.onDash();
 }
 
 function updatePlayerMovement(state: EngineState, input: PlayerInput, dt: number): void {
@@ -601,7 +607,7 @@ export function update(ctx: UpdateContext): void {
     return;
   }
 
-  processDashTrigger(state, input);
+  processDashTrigger(state, input, ctx);
   updatePlayerMovement(state, input, dt);
   recomputeAimAngle(state, input);
 

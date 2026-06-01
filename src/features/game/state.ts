@@ -16,6 +16,11 @@ interface HudActions {
   bumpParries: (total: number, perfect: number) => void;
   bumpEnemiesKilled: (n: number) => void;
   setEnemyCount: (n: number) => void;
+  incTap: () => void;
+  incCharge: () => void;
+  incDash: () => void;
+  incOnBeat: () => void;
+  incGather: () => void;
   victory: () => void;
   setStage: (index: number) => void;
   resume: () => void;
@@ -85,6 +90,11 @@ const INITIAL: HudState = {
   damageTaken: 0,
   enemiesKilled: 0,
   enemyCount: 0,
+  tapCount: 0,
+  chargeCount: 0,
+  dashCount: 0,
+  onBeatCount: 0,
+  gatherCount: 0,
   playStartMs: 0,
   playEndMs: 0,
   endlessLoop: 0,
@@ -173,6 +183,11 @@ export const useHud = create<HudState & HudActions>((set) => ({
     set((s) => ({ enemiesKilled: s.enemiesKilled + n })),
   // Dedupe: return same state when unchanged so the HUD doesn't re-render every frame.
   setEnemyCount: (n) => set((s) => (s.enemyCount === n ? s : { enemyCount: n })),
+  incTap: () => set((s) => ({ tapCount: s.tapCount + 1 })),
+  incCharge: () => set((s) => ({ chargeCount: s.chargeCount + 1 })),
+  incDash: () => set((s) => ({ dashCount: s.dashCount + 1 })),
+  incOnBeat: () => set((s) => ({ onBeatCount: s.onBeatCount + 1 })),
+  incGather: () => set((s) => ({ gatherCount: s.gatherCount + 1 })),
   victory: () =>
     set((s) => {
       if (s.status !== "playing") return s;

@@ -240,6 +240,12 @@ export interface EngineCallbacks {
   onBossPhaseChange: (phase: number) => void;
   onEndlessLoop: (loop: number) => void;
   onEnemyCount: (n: number) => void;
+  // Mechanic signals (used by the interactive tutorial to advance steps).
+  onDash: () => void;
+  onTapCounter: () => void;
+  onCharge: () => void;
+  onOnBeat: () => void;
+  onGather: () => void;
 }
 
 export type GameStatus =
@@ -279,6 +285,11 @@ export interface HudState {
   damageTaken: number;
   enemiesKilled: number;
   enemyCount: number;
+  tapCount: number;
+  chargeCount: number;
+  dashCount: number;
+  onBeatCount: number;
+  gatherCount: number;
   playStartMs: number;
   playEndMs: number;
   endlessLoop: number;
