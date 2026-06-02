@@ -27,7 +27,8 @@ const STEPS: Step[] = [
   { ko: "박자에 맞춰 막으면 ON BEAT 보너스", en: "Block on the beat for an ON BEAT bonus" },
   { ko: "여러 탄을 모았다가 원하는 방향으로 한 번에 반격", en: "Gather bullets, then reflect them all one way" },
   { ko: "SHIFT 또는 Q로 대시 — 무적 회피", en: "SHIFT or Q to dash — invincible dodge" },
-  { ko: "완료! 자유 연습 — 모든 적 패턴을 막아보세요", en: "Done! Free practice — read every pattern" },
+  { ko: "환경위험(레이저·미사일·충격파)은 패링 불가 — 대시로만 통과", en: "Hazards can't be parried — only dash through them" },
+  { ko: "완료! 자유 연습 — 곧 환경위험도 등장합니다", en: "Done! Free practice — hazards appear soon" },
 ];
 
 // Immersive enemy-pattern subtitles, cycled during free play (final step).
@@ -38,6 +39,9 @@ const PATTERN_TIPS_KO = [
   "PULSER — 8방향 일제. 중심을 비워라",
   "RUSHER — 박자에 맞춰 돌진. 반사하거나 대시",
   "BOMBER — 자폭 접근. 점멸하면 대시로 회피",
+  "LASER — 회전 빔. 대시로 통과",
+  "MISSILE — 폭격 지점 표시 후 폭발. 그 자리를 비워라",
+  "SHOCKWAVE — 중심서 확장. 링 사이로 빠져나가",
 ];
 const PATTERN_TIPS_EN = [
   "OMNIC — precise single shots. Diamond shape",
@@ -46,6 +50,9 @@ const PATTERN_TIPS_EN = [
   "PULSER — 8-way volley. Clear the center",
   "RUSHER — charges on the beat. Reflect or dash",
   "BOMBER — suicide rush. Dash when it blinks",
+  "LASER — sweeping beam. Dash through it",
+  "MISSILE — marks a spot, then blasts. Vacate it",
+  "SHOCKWAVE — expands from center. Slip between rings",
 ];
 
 export function PracticeHud({ active }: Props) {
@@ -73,6 +80,7 @@ export function PracticeHud({ active }: Props) {
     onBeatCount >= 1,
     gatherCount >= 1, // held reflect of 2+ bullets at once
     dashCount >= 1,
+    dashCount >= 2, // hazard lesson — dash once more
   ];
   const firstIncomplete = checks.findIndex((c) => !c);
   const step = firstIncomplete === -1 ? lastStep : firstIncomplete;

@@ -30,8 +30,8 @@ export const STAGES: StageConfig[] = [
     name: "INFILTRATION",
     tagline: "옴닉 보초 + 스나이퍼. 4박 텔레그래프 무거운 일격 주의.",
     lore: {
-      ko: "보안 격자가 깨졌다. 첫 옴닉 보초들이 비트에 맞춰 추적해온다.",
-      en: "The grid cracked open. Omnic sentries lock to the beat.",
+      ko: "침투 프로토콜 가동. 시스템의 심장박동이 이제 너의 박자다. 깨진 격자 너머 — 코어까지 내려가 정화하라.",
+      en: "Purge protocol live. The system's heartbeat is your beat now. Past the broken grid — descend to the core and cleanse it.",
     },
     durationMs: 60000,
     tempoMap: [
@@ -54,8 +54,8 @@ export const STAGES: StageConfig[] = [
     name: "ECHO",
     tagline: "거울이 반사된 탄을 되돌려보낸다. CHARGE로 깨라.",
     lore: {
-      ko: "거울의 방. 너의 일격이 너에게 돌아온다 — 더 강하게 휘둘러야 깨진다.",
-      en: "Halls of mirrors. Your strike returns — only charged blades shatter through.",
+      ko: "첫 방어층은 거울로 되어 있다. 네 일격이 메아리처럼 돌아온다 — 더 깊이 베어야 통과한다.",
+      en: "The first defense layer is mirrors. Your strike echoes back — cut deeper to break through.",
     },
     durationMs: 70000,
     tempoMap: [
@@ -77,8 +77,8 @@ export const STAGES: StageConfig[] = [
     name: "FACTORY",
     tagline: "바이러스 점사 + 옴닉 스프레더. 산개탄 코운으로 정리.",
     lore: {
-      ko: "변종이 깨어난 생산 라인. 코어 신호가 너의 위치를 누설하고 있다.",
-      en: "Variant pulses on the line. The core has your signal — keep moving.",
+      ko: "변종이 깨어나는 생산층. 코어가 너의 신호를 읽기 시작했다 — 멈추는 순간 들킨다.",
+      en: "The fabrication layer stirs with variants. The core reads your signal now — stop moving and it sees you.",
     },
     durationMs: 75000,
     tempoMap: [
@@ -100,8 +100,8 @@ export const STAGES: StageConfig[] = [
     name: "BLOOM",
     tagline: "PULSER가 8방향 일제 사격. 중심에서 빠져나와라.",
     lore: {
-      ko: "꽃이 피듯 사방으로 탄이 퍼진다. 중심을 비우고 박자 사이로 흘러라.",
-      en: "Bullets bloom in all directions. Slip between the beats.",
+      ko: "탄이 꽃처럼 만개한다. 시스템이 너를 에워싸려 한다 — 박자 사이 빈틈으로 흘러라.",
+      en: "Fire blooms in every direction. The system moves to surround you — flow through the gaps in the beat.",
     },
     durationMs: 80000,
     tempoMap: [
@@ -124,8 +124,8 @@ export const STAGES: StageConfig[] = [
     name: "OVERDRIVE",
     tagline: "드론 + 바이러스 스파이럴러. 회전탄막에 휘말리지 마라.",
     lore: {
-      ko: "BPM이 임계를 넘었다. 회전탄막의 나선에 들어가지 마라.",
-      en: "BPM past redline. Stay out of the spiral.",
+      ko: "심장박동이 임계를 넘었다. 시스템이 가속한다 — 회전탄막의 나선에 휘말리면 끝이다.",
+      en: "The heartbeat crosses redline. The system overclocks — caught in the spiral, you're gone.",
     },
     durationMs: 90000,
     tempoMap: [
@@ -148,8 +148,8 @@ export const STAGES: StageConfig[] = [
     name: "TRIAGE",
     tagline: "HEALER가 동료를 살린다. 우선 처치하지 않으면 끝없이 회복.",
     lore: {
-      ko: "치유사가 동료를 깨운다. 우선순위를 망설이지 마라 — 회복선부터 끊어라.",
-      en: "Healers wake the fallen. Cut the lifeline first.",
+      ko: "시스템이 스스로를 치료한다. 회복선을 먼저 끊지 않으면 — 이 싸움은 영원히 끝나지 않는다.",
+      en: "The system heals itself. Sever the lifelines first, or this never ends.",
     },
     durationMs: 95000,
     tempoMap: [
@@ -172,8 +172,8 @@ export const STAGES: StageConfig[] = [
     name: "CHAOS",
     tagline: "팬텀이 4박마다 순간이동. 박격포가 무게로 짓누른다.",
     lore: {
-      ko: "패턴이 무너졌다. 본능과 박자만이 남았다 — 코어가 곧 너를 본다.",
-      en: "Patterns collapse. Instinct and beat — nothing else. The core is watching.",
+      ko: "패턴이 무너지고 본능과 박자만 남는다. 코어가 바로 아래에 있다 — 그것이 너를 똑바로 본다.",
+      en: "Patterns collapse to instinct and beat. The core is just below — and it is looking right at you.",
     },
     durationMs: 105000,
     tempoMap: [
@@ -196,8 +196,8 @@ export const STAGES: StageConfig[] = [
     name: "REVOLT",
     tagline: "본체 — THE CORE. 박자에 맞춰 모든 코어를 부숴라.",
     lore: {
-      ko: "코어가 깨어났다. 마지막 비트. 박자에서 떨어지지 마라.",
-      en: "The core awakens. Final beat. Do not fall off the rhythm.",
+      ko: "THE CORE — 시스템의 심장이 깨어났다. 마지막 비트, 박자에서 떨어지는 순간 모든 게 끝난다.",
+      en: "THE CORE — the system's heart awakens. Final beat: fall off the rhythm and it is over.",
     },
     durationMs: 180000,
     tempoMap: [

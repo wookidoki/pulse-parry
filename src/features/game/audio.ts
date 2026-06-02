@@ -215,16 +215,26 @@ function noiseBurst(durSec: number, gainPeak: number, filterFreq: number) {
 
 const PITCH_VAR = () => 0.92 + Math.random() * 0.16;
 
+// Player blade signature: all of the player's positive actions share a clean
+// triangle voice around a fifth motif (1320 root → 1980), so parry/reflect/
+// perfect/on-beat read as one "instrument" — distinct from the enemies'
+// race-coded timbres (omnic square / virus noise / drone saw).
 export function playParryHit() {
   playSample("clash", { gain: 0.35, pitch: PITCH_VAR() });
-  envOsc(1400, 2400, 0.06, "square", 0.05);
+  envOsc(1320, 1980, 0.06, "triangle", 0.05);
 }
 
 export function playReflect() {
   playSample("slash", { gain: 0.5, pitch: PITCH_VAR() });
   playSample("clash", { gain: 0.4, pitch: 0.95 + Math.random() * 0.1, delayMs: 25 });
-  envOsc(900, 2200, 0.12, "sawtooth", 0.08);
+  envOsc(1320, 1980, 0.12, "triangle", 0.08);
   envOsc(80, 38, 0.14, "sine", 0.22);
+}
+
+// Short signature tick on an on-beat parry — reinforces both rhythm and the
+// player's sonic identity (same triangle root).
+export function playOnBeat() {
+  envOsc(1320, 1980, 0.05, "triangle", 0.06);
 }
 
 export function playSlashWoosh() {

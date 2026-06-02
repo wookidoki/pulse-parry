@@ -207,7 +207,9 @@ export function VictoryCutscene() {
         </span>
         <h2 className={styles.victoryTitle}>VICTORY</h2>
         <p className={styles.victorySubtitle}>
-          {locale === "ko" ? "비트가 너의 편이었다" : "THE BEAT WAS YOURS"}
+          {locale === "ko"
+            ? "시스템이 다시 숨 쉰다 — 비트는 너의 것이었다"
+            : "THE SYSTEM BREATHES AGAIN — THE BEAT WAS YOURS"}
         </p>
       </div>
       <div className={styles.scanlines} />

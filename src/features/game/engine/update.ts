@@ -131,7 +131,9 @@ export function createEngineState(
     characterId,
     modifierId,
     hazards: [],
-    nextHazardAtMs: nowMs + HAZARD_FIRST_SPAWN_DELAY_MS,
+    // In practice mode, hold hazards back so the player clears the core-action
+    // lessons before environmental dangers start appearing.
+    nextHazardAtMs: nowMs + (tutorialMode ? 38000 : HAZARD_FIRST_SPAWN_DELAY_MS),
     tutorialMode,
     countdownMsLeft: 2300,
     countdownLastSecond: 3,
@@ -410,6 +412,7 @@ function handleParryRelease(
       cb.onScore(SCORE_ONBEAT_BONUS * result.count);
       cb.onCombo(1);
       cb.onOnBeat();
+      sfx.playOnBeat();
       applyHitStop(state, 24);
       spawnScreenFlash(state, PALETTE.yellow, 0.22);
       spawnScorePop(state, state.playerX, state.playerY - 66, "ON BEAT!", PALETTE.yellow, 1.1);
@@ -610,7 +613,7 @@ export function update(ctx: UpdateContext): void {
   updatePlayerMovement(state, input, dt);
   recomputeAimAngle(state, input);
 
-  if (!state.tutorialMode) maybeSpawnHazard(state, nowMs);
+  maybeSpawnHazard(state, nowMs);
   const hazardInfo = updateHazards(state, nowMs);
   if (hazardInfo.damaged) {
     applyShake(state, SHAKE_ON_PLAYER_HIT);
