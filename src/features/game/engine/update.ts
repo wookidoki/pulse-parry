@@ -288,7 +288,7 @@ function spawnEnemyIfNeeded(
   cb: EngineCallbacks,
 ): void {
   const stage = currentStage(state.stageIndex);
-  if (!shouldSpawnEnemy(state, stage)) return;
+  if (!shouldSpawnEnemy(state, stage, nowMs)) return;
   const enemy = createEnemy(state, nowMs, canvasW, canvasH, stage);
   state.enemies.push(enemy);
   state.lastEnemySpawnBeat = state.beat.currentBeat;

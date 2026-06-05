@@ -56,9 +56,44 @@ function pickSpawnAngle(state: EngineState): number {
   return baseAngle;
 }
 
-function pickEnemyKind(stage: StageConfig): EnemyKind {
+// Threat rating per kind (1 easy … 5 boss). Drives a per-stage difficulty ramp
+// so a fresh/early stage spawns easy kinds and the harder ones only emerge once
+// the stage is underway — not a tough kind ambushing on the first beat.
+const KIND_THREAT: Record<EnemyKind, number> = {
+  shooter: 1,
+  shard: 1,
+  spreader: 2,
+  sniper: 2,
+  burster: 2,
+  healer: 2,
+  phantom: 3,
+  spiraler: 3,
+  charger: 3,
+  mortar: 3,
+  mirror: 3,
+  splitter: 3,
+  rusher: 3,
+  pulser: 4,
+  bomber: 4,
+  boss: 5,
+};
+
+function stageProgressNow(state: EngineState, stage: StageConfig, nowMs: number): number {
+  if (stage.durationMs <= 0) return 1;
+  return Math.max(0, Math.min(1, (nowMs - state.stageStartMs) / stage.durationMs));
+}
+
+function pickEnemyKind(stage: StageConfig, progress: number): EnemyKind {
   const list = stage.enemyKinds;
-  return list[Math.floor(Math.random() * list.length)];
+  const ceiling = 1 + progress * 4; // 1 → 5 across the stage
+  const allowed = list.filter((k) => KIND_THREAT[k] <= ceiling);
+  if (allowed.length > 0) {
+    return allowed[Math.floor(Math.random() * allowed.length)];
+  }
+  // Before anything clears the ceiling, fall back to the stage's easiest kind.
+  let easiest = list[0];
+  for (const k of list) if (KIND_THREAT[k] < KIND_THREAT[easiest]) easiest = k;
+  return easiest;
 }
 
 export function getEffectiveConfig(enemy: Enemy): EnemyKindConfig {
@@ -103,7 +138,9 @@ export function createEnemy(
   canvasH: number,
   stage: StageConfig,
 ): Enemy {
-  const kind = pickEnemyKind(stage);
+  const kind = stage.isBoss
+    ? "boss"
+    : pickEnemyKind(stage, stageProgressNow(state, stage, nowMs));
   const angle = kind === "boss" ? -Math.PI / 2 : pickSpawnAngle(state);
   const config = ENEMY_KINDS[kind];
   const id = state.nextEnemyId++;
@@ -138,6 +175,7 @@ export function createEnemy(
 export function shouldSpawnEnemy(
   state: EngineState,
   stage: StageConfig,
+  nowMs: number,
 ): boolean {
   if (stage.isBoss && state.bossSpawned) return false;
   let alive = 0;
@@ -152,15 +190,18 @@ export function shouldSpawnEnemy(
   const diffConfig = DIFFICULTIES[state.difficulty];
   const modConfig = MODIFIERS[state.modifierId];
   const effectiveSpawnRate = modConfig.spawnRateMul * endlessLoopMul(state);
-  const maxEnemies = stage.isBoss
-    ? 1
-    : Math.max(
-        1,
-        Math.round(
-          (stage.maxEnemies + ENEMY_COUNT_BONUS + diffConfig.enemyCountDelta) *
-            effectiveSpawnRate,
-        ),
-      );
+  const fullMax = Math.max(
+    1,
+    Math.round(
+      (stage.maxEnemies + ENEMY_COUNT_BONUS + diffConfig.enemyCountDelta) *
+        effectiveSpawnRate,
+    ),
+  );
+  // Concurrent count builds up over the stage (start sparse → fill to fullMax)
+  // so each stage opens calm and accumulates pressure instead of a flat wall.
+  const progress = stageProgressNow(state, stage, nowMs);
+  const ramped = Math.max(1, Math.round(2 + (fullMax - 2) * progress));
+  const maxEnemies = stage.isBoss ? 1 : Math.min(fullMax, ramped);
   if (alive >= maxEnemies) return false;
   const beatsSinceLastSpawn = state.beat.currentBeat - state.lastEnemySpawnBeat;
   const effectiveSpawnBeats = Math.max(
