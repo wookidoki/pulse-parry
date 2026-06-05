@@ -1,13 +1,22 @@
 .page {
   position: relative;
   z-index: 1;
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  overflow: hidden;
+  padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+  overflow-x: hidden;
+}
+
+/* Tall views (character/stage) on small/portrait screens exceed the viewport —
+   anchor to top + let the page scroll instead of centre-clipping the buttons. */
+@media (max-height: 760px), (max-width: 540px) {
+  .page {
+    justify-content: flex-start;
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
 }
 
 .transitionOverlay {
@@ -979,4 +988,55 @@
   font-size: 10px;
   letter-spacing: 0.06em;
   color: rgba(240, 246, 255, 0.7);
+}
+
+/* ============ MOBILE / NARROW (≤540px) ============ */
+@media (max-width: 540px) {
+  /* Character view (arrows + 280px portrait ≈ 432px wide) scaled to fit. */
+  .characterStage {
+    transform: scale(0.78);
+    transform-origin: top center;
+    margin-bottom: -8%;
+  }
+  .arrowBtn {
+    width: 40px;
+    height: 40px;
+  }
+  /* Title-view buttons fill the width instead of a fixed 280px min. */
+  .menu {
+    min-width: 0;
+    width: 100%;
+    max-width: 340px;
+  }
+  .menuItem {
+    letter-spacing: 0.16em;
+    padding: 13px 14px;
+    font-size: 13px;
+  }
+  .startBtn {
+    padding: 14px 20px;
+    letter-spacing: 0.2em;
+    font-size: 14px;
+  }
+  .stageGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .settingsRow {
+    flex-direction: column;
+    gap: 14px;
+    align-items: stretch;
+  }
+  .cornerTop {
+    top: max(10px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+  }
+  .cornerBottom {
+    bottom: max(10px, env(safe-area-inset-bottom));
+    padding: 0 12px;
+  }
+  /* Long license line crowds the footer on narrow screens. */
+  .attribution {
+    display: none;
+  }
 }

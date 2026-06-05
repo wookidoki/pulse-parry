@@ -131,6 +131,15 @@
   min-width: 240px;
 }
 
+@media (max-width: 540px) {
+  .lg {
+    min-width: 0;
+    width: 100%;
+    padding: 15px 18px;
+    letter-spacing: 0.2em;
+  }
+}
+
 .md {
   padding: 13px 22px;
   font-size: 12px;

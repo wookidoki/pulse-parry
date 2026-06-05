@@ -2,7 +2,11 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  padding: 24px 32px;
+  padding:
+    max(24px, env(safe-area-inset-top))
+    max(32px, env(safe-area-inset-right))
+    24px
+    max(32px, env(safe-area-inset-left));
   display: flex;
   justify-content: space-between;
   align-items: flex-start;

@@ -18,18 +18,17 @@
 
 html,
 body {
-  height: 100%;
   width: 100%;
-  overflow: hidden;
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   -webkit-font-smoothing: antialiased;
   user-select: none;
-  /* Mobile: stop scroll bounce / pull-to-refresh fighting touch controls. */
+  /* Allow vertical scroll (menus can exceed viewport on small/portrait
+     screens) but kill horizontal scroll + bounce. The /play canvas is
+     position:fixed and covers the viewport, so the game itself never scrolls. */
+  overflow-x: hidden;
   overscroll-behavior: none;
-  position: fixed;
-  inset: 0;
   -webkit-text-size-adjust: 100%;
 }
 
