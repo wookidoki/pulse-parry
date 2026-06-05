@@ -26,6 +26,20 @@ body {
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   -webkit-font-smoothing: antialiased;
   user-select: none;
+  /* Mobile: stop scroll bounce / pull-to-refresh fighting touch controls. */
+  overscroll-behavior: none;
+  position: fixed;
+  inset: 0;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+canvas {
+  /* Let JS own all touch gestures (no browser pan/zoom on the play field). */
+  touch-action: none;
 }
 
 a {

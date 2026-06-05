@@ -212,6 +212,36 @@ export function GameCanvas({
       if (useHud.getState().status === "playing") togglePause();
     };
 
+    // Touch controls: one finger = aim toward the touch point + parry (release =
+    // reflect, tap = TAP counter, hold = CHARGE). A second finger = dash. Bound
+    // to the canvas so UI buttons (separate DOM, on top) keep their own taps.
+    const setAimFromTouch = (t: Touch) => {
+      inputRef.current.rawMouseX = t.clientX - window.innerWidth / 2;
+      inputRef.current.rawMouseY = t.clientY - window.innerHeight / 2;
+    };
+    const syncTouch = (e: TouchEvent) => {
+      const playing = useHud.getState().status === "playing";
+      inputRef.current.parryHeld = playing && e.touches.length >= 1;
+      inputRef.current.dashPressed = playing && e.touches.length >= 2;
+    };
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      // preventDefault can suppress the synthetic pointerdown that resumes audio
+      // on first gesture, so resume here too (idempotent).
+      resumeAudio();
+      setupAudioAnalysis();
+      if (e.touches[0]) setAimFromTouch(e.touches[0]);
+      syncTouch(e);
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches[0]) setAimFromTouch(e.touches[0]);
+    };
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      syncTouch(e);
+    };
+
     window.addEventListener("resize", resize);
     window.addEventListener("pointerdown", gestureHandler);
     window.addEventListener("keydown", gestureHandler);
@@ -219,6 +249,10 @@ export function GameCanvas({
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     window.addEventListener("blur", handleBlur);
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+    canvas.addEventListener("touchcancel", handleTouchEnd, { passive: false });
 
     const startTime = performance.now();
     engineRef.current = createEngineState(
@@ -312,6 +346,10 @@ export function GameCanvas({
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
+      canvas.removeEventListener("touchcancel", handleTouchEnd);
     };
   }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, triggerBossPhaseAlert, setEndlessLoop, setEnemyCount, incTap, incCharge, incDash, incOnBeat, incGather, startStage, difficulty, characterId, modifierId, tutorialMode, endlessMode, restartKey]);
 
