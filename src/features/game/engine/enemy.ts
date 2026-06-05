@@ -32,7 +32,8 @@ const ORBIT_RINGS = [0.62, 0.68, 0.75, 0.82, 0.88, 0.94, 1.0];
 // Inner rings never come closer than this (keeps space around the player).
 const MIN_ORBIT_R = 230;
 // Extra concurrent enemies on top of the stage base, now that rings give room.
-const ENEMY_COUNT_BONUS = 3;
+// Kept at +1: +3 made even Normal a bullet wall.
+const ENEMY_COUNT_BONUS = 1;
 
 function pickOrbitRing(id: number): number {
   return ORBIT_RINGS[id % ORBIT_RINGS.length];

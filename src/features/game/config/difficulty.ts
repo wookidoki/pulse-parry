@@ -26,8 +26,8 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
   },
   normal: {
     label: "NORMAL",
-    flightBeatsMul: 1.0,
-    perfectWindowMul: 1.0,
+    flightBeatsMul: 1.2,
+    perfectWindowMul: 1.2,
     enemyCountDelta: 0,
     scoreMul: 1.0,
     beatGridPattern: [0.5, 0.5, 0.25, 0.5],
