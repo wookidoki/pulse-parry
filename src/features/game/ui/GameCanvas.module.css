@@ -4,3 +4,61 @@
   display: block;
   cursor: crosshair;
 }
+
+/* On-screen DASH/PAUSE — only on touch devices (coarse pointer). */
+.touchControls {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .touchControls {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 7;
+    pointer-events: none;
+  }
+
+  .dashBtn,
+  .pauseBtn {
+    position: fixed;
+    pointer-events: auto;
+    font-family: var(--font-geist-mono, monospace);
+    font-weight: 900;
+    color: var(--neon-cyan);
+    background: rgba(5, 3, 10, 0.55);
+    border: 1px solid rgba(28, 240, 255, 0.5);
+    border-radius: 999px;
+    backdrop-filter: blur(2px);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  .dashBtn {
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(28px, env(safe-area-inset-bottom));
+    width: 92px;
+    height: 92px;
+    font-size: 15px;
+    letter-spacing: 0.15em;
+    color: var(--neon-yellow);
+    border-color: rgba(247, 255, 58, 0.55);
+  }
+
+  .dashBtn:active {
+    background: rgba(247, 255, 58, 0.22);
+  }
+
+  .pauseBtn {
+    right: max(14px, env(safe-area-inset-right));
+    top: max(14px, env(safe-area-inset-top));
+    width: 44px;
+    height: 44px;
+    font-size: 14px;
+  }
+
+  .pauseBtn:active {
+    background: rgba(28, 240, 255, 0.22);
+  }
+}

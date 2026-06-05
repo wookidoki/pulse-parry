@@ -212,17 +212,36 @@ export function GameCanvas({
       if (useHud.getState().status === "playing") togglePause();
     };
 
-    // Touch controls: one finger = aim toward the touch point + parry (release =
-    // reflect, tap = TAP counter, hold = CHARGE). A second finger = dash. Bound
-    // to the canvas so UI buttons (separate DOM, on top) keep their own taps.
+    // Dual-zone touch: LEFT side = floating movement joystick (8-way → WASD
+    // booleans); RIGHT side = aim toward finger + parry (release = reflect,
+    // tap = TAP, hold = CHARGE). Bound to the canvas so UI buttons (separate
+    // DOM on top) keep their own taps. DASH/PAUSE are on-screen buttons.
+    let moveTouchId: number | null = null;
+    let aimTouchId: number | null = null;
+    let moveStartX = 0;
+    let moveStartY = 0;
+    const clearMove = () => {
+      inputRef.current.moveUp = false;
+      inputRef.current.moveDown = false;
+      inputRef.current.moveLeft = false;
+      inputRef.current.moveRight = false;
+    };
     const setAimFromTouch = (t: Touch) => {
       inputRef.current.rawMouseX = t.clientX - window.innerWidth / 2;
       inputRef.current.rawMouseY = t.clientY - window.innerHeight / 2;
     };
-    const syncTouch = (e: TouchEvent) => {
-      const playing = useHud.getState().status === "playing";
-      inputRef.current.parryHeld = playing && e.touches.length >= 1;
-      inputRef.current.dashPressed = playing && e.touches.length >= 2;
+    const applyJoystick = (dx: number, dy: number) => {
+      const mag = Math.hypot(dx, dy);
+      if (mag < 16) {
+        clearMove();
+        return;
+      }
+      const nx = dx / mag;
+      const ny = dy / mag;
+      inputRef.current.moveLeft = nx < -0.38;
+      inputRef.current.moveRight = nx > 0.38;
+      inputRef.current.moveUp = ny < -0.38;
+      inputRef.current.moveDown = ny > 0.38;
     };
     const handleTouchStart = (e: TouchEvent) => {
       e.preventDefault();
@@ -230,16 +249,40 @@ export function GameCanvas({
       // on first gesture, so resume here too (idempotent).
       resumeAudio();
       setupAudioAnalysis();
-      if (e.touches[0]) setAimFromTouch(e.touches[0]);
-      syncTouch(e);
+      const playing = useHud.getState().status === "playing";
+      const moveZone = window.innerWidth * 0.42;
+      for (const t of Array.from(e.changedTouches)) {
+        if (t.clientX < moveZone && moveTouchId === null) {
+          moveTouchId = t.identifier;
+          moveStartX = t.clientX;
+          moveStartY = t.clientY;
+        } else if (aimTouchId === null) {
+          aimTouchId = t.identifier;
+          setAimFromTouch(t);
+          if (playing) inputRef.current.parryHeld = true;
+        }
+      }
     };
     const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault();
-      if (e.touches[0]) setAimFromTouch(e.touches[0]);
+      for (const t of Array.from(e.changedTouches)) {
+        if (t.identifier === aimTouchId) setAimFromTouch(t);
+        else if (t.identifier === moveTouchId) {
+          applyJoystick(t.clientX - moveStartX, t.clientY - moveStartY);
+        }
+      }
     };
     const handleTouchEnd = (e: TouchEvent) => {
       e.preventDefault();
-      syncTouch(e);
+      for (const t of Array.from(e.changedTouches)) {
+        if (t.identifier === aimTouchId) {
+          aimTouchId = null;
+          inputRef.current.parryHeld = false;
+        } else if (t.identifier === moveTouchId) {
+          moveTouchId = null;
+          clearMove();
+        }
+      }
     };
 
     window.addEventListener("resize", resize);
@@ -353,5 +396,37 @@ export function GameCanvas({
     };
   }, [addScore, bumpCombo, breakCombo, bumpParries, bumpEnemiesKilled, damage, heal, setStage, victory, togglePause, startBossCutscene, triggerBossPhaseAlert, setEndlessLoop, setEnemyCount, incTap, incCharge, incDash, incOnBeat, incGather, startStage, difficulty, characterId, modifierId, tutorialMode, endlessMode, restartKey]);
 
-  return <canvas ref={canvasRef} className={styles.canvas} />;
+  return (
+    <>
+      <canvas ref={canvasRef} className={styles.canvas} />
+      <div className={styles.touchControls} aria-hidden>
+        <button
+          type="button"
+          className={styles.pauseBtn}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            togglePause();
+          }}
+        >
+          ❚❚
+        </button>
+        <button
+          type="button"
+          className={styles.dashBtn}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            inputRef.current.dashPressed = true;
+          }}
+          onPointerUp={() => {
+            inputRef.current.dashPressed = false;
+          }}
+          onPointerLeave={() => {
+            inputRef.current.dashPressed = false;
+          }}
+        >
+          DASH
+        </button>
+      </div>
+    </>
+  );
 }
