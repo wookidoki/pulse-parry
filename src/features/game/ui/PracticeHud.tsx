@@ -31,6 +31,19 @@ const STEPS: Step[] = [
   { ko: "완료! 자유 연습 — 곧 환경위험도 등장합니다", en: "Done! Free practice — hazards appear soon" },
 ];
 
+// Touch wording (same lessons, mobile controls). Chosen on coarse pointers.
+const STEPS_TOUCH: Step[] = [
+  { ko: "오른쪽 화면을 꾹 눌러 막기 (손가락 방향으로 조준)", en: "Hold the right side to block (aim toward your finger)" },
+  { ko: "오른쪽을 톡! 눌렀다 떼면 자동 카운터 (TAP)", en: "Quick tap on the right = auto counter (TAP)" },
+  { ko: "오른쪽을 길게 눌러 강한 반격 (CHARGE)", en: "Long-hold on the right = stronger counter (CHARGE)" },
+  { ko: "흡수 직후 빠르게 떼면 PERFECT", en: "Release right after absorbing = PERFECT" },
+  { ko: "박자에 맞춰 막으면 ON BEAT 보너스", en: "Block on the beat for an ON BEAT bonus" },
+  { ko: "여러 탄을 모았다가 한 방향으로 한 번에 반격", en: "Gather bullets, then reflect them all one way" },
+  { ko: "왼쪽을 드래그해 이동 · DASH 버튼으로 무적 회피", en: "Drag the left side to move · DASH button to dodge" },
+  { ko: "환경위험은 막기 불가 — DASH 버튼으로만 통과", en: "Hazards can't be blocked — only the DASH button gets through" },
+  { ko: "완료! 자유 연습 — 곧 환경위험도 등장합니다", en: "Done! Free practice — hazards appear soon" },
+];
+
 // Immersive enemy-pattern subtitles, cycled during free play (final step).
 const PATTERN_TIPS_KO = [
   "OMNIC — 정밀 단발. 다이아몬드 실루엣",
@@ -66,6 +79,11 @@ export function PracticeHud({ active }: Props) {
   const dashCount = useHud((s) => s.dashCount);
   const gatherCount = useHud((s) => s.gatherCount);
   const [locale] = useState<Locale>(initialLocale);
+  const [isTouch] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(pointer: coarse)")?.matches === true,
+  );
   const [patternIdx, setPatternIdx] = useState(0);
 
   const lastStep = STEPS.length - 1;
@@ -99,7 +117,7 @@ export function PracticeHud({ active }: Props) {
 
   const label = locale === "ko" ? "연습 모드" : "PRACTICE";
   const exitLabel = locale === "ko" ? "← 메뉴" : "← MENU";
-  const mainText = STEPS[step][locale];
+  const mainText = (isTouch ? STEPS_TOUCH : STEPS)[step][locale];
   const patternText = (locale === "ko" ? PATTERN_TIPS_KO : PATTERN_TIPS_EN)[patternIdx];
 
   return (

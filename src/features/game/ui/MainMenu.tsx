@@ -369,7 +369,12 @@ function CharacterView({
         >
           ◀
         </button>
-        <CharacterPortrait characterId={characterId} active={true} size={280} />
+        <CharacterPortrait
+          characterId={characterId}
+          active={true}
+          size={280}
+          className={styles.bigPortrait}
+        />
         <button
           className={styles.arrowBtn}
           onClick={() => {

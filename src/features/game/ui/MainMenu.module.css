@@ -412,14 +412,12 @@
   box-shadow: 0 0 18px rgba(28, 240, 255, 0.4);
 }
 
+/* Responsive size override on the portrait frame (beats the inline size prop).
+   min() keeps 280px on desktop, shrinks to fit narrow/portrait screens. */
 .bigPortrait {
-  position: relative;
-  width: 280px;
-  height: 280px;
-  border: 3px solid;
-  border-radius: 12px;
-  overflow: hidden;
-  background: linear-gradient(180deg, rgba(5, 3, 10, 0.9), rgba(20, 10, 32, 0.7));
+  width: min(280px, 64vw) !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1;
 }
 
 .bigPortraitImg {
@@ -992,15 +990,16 @@
 
 /* ============ MOBILE / NARROW (≤540px) ============ */
 @media (max-width: 540px) {
-  /* Character view (arrows + 280px portrait ≈ 432px wide) scaled to fit. */
+  /* Character view fits by shrinking the portrait (.bigPortrait, 64vw) + gap,
+     not a transform-scale hack — keeps text crisp and arrows tappable. */
   .characterStage {
-    transform: scale(0.78);
-    transform-origin: top center;
-    margin-bottom: -8%;
+    gap: clamp(6px, 3vw, 24px);
+    max-width: 100%;
   }
   .arrowBtn {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
   }
   /* Title-view buttons fill the width instead of a fixed 280px min. */
   .menu {

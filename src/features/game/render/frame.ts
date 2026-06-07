@@ -54,7 +54,11 @@ export function render(
 
   const beatPulse = Math.exp(-state.beat.beatPhase * 5);
   const beatZoom = 1 + beatPulse * 0.022;
-  const effectiveZoom = state.cameraZoom * beatZoom;
+  // Fit the whole 360° world to the viewport on small/portrait screens so the
+  // orbit, enemies and beat-guide ring don't fall off the sides. Desktop (large)
+  // stays 1.0. Input is angle-based (aim/dash) so no input remap is needed.
+  const worldScale = Math.min(1, Math.min(w, h) / 760);
+  const effectiveZoom = state.cameraZoom * beatZoom * worldScale;
 
   c.save();
   c.translate(cx + shakeX, cy + shakeY);
