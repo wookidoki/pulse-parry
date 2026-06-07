@@ -85,7 +85,6 @@ export function spawnScreenFlash(
 
 export function updateEffects(state: EngineState, dt: number, nowMs: number): void {
   for (const p of state.scorePops) {
-    p.x += 0;
     p.y += p.vy * dt;
     p.vy += dt * 90;
     p.life -= (dt * 1000) / p.maxLifeMs;

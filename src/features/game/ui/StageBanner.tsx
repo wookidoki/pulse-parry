@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useHud } from "../state";
 import { STAGES, tempoRangeOf } from "../config/stages";
-import { initialLocale, t } from "../i18n";
+import { initialLocale, t, type Locale } from "../i18n";
 import styles from "./StageBanner.module.css";
 
 export function StageBanner() {
@@ -11,7 +12,7 @@ export function StageBanner() {
   const endlessLoop = useHud((s) => s.endlessLoop);
   const stage = STAGES[Math.min(stageIndex, STAGES.length - 1)];
   const range = tempoRangeOf(stage);
-  const locale = initialLocale();
+  const [locale] = useState<Locale>(initialLocale);
 
   // Skip during cutscenes - intro/boss/death/victory already show their own banners
   if (

@@ -30,9 +30,9 @@ function quantizeFlightMs(
   pattern: number[],
 ): number {
   const period = state.beat.beatPeriodMs;
-  if (pattern.length === 0 || !Number.isFinite(period) || period <= 0) {
-    return flightBeats * period;
-  }
+  // Fallback period (120 BPM) keeps speed finite if the clock is ever invalid.
+  if (!Number.isFinite(period) || period <= 0) return flightBeats * 500;
+  if (pattern.length === 0) return flightBeats * period;
   const elapsedBeats = (nowMs - state.beat.startedAtMs) / period;
   const rawArrival = elapsedBeats + flightBeats;
   const beatInBar = ((Math.floor(rawArrival) % pattern.length) + pattern.length) % pattern.length;
