@@ -23,6 +23,15 @@ import styles from "./GameCanvas.module.css";
 
 const MAX_DT_SEC = 0.05;
 
+// Haptic feedback (no-op on desktop / unsupported). Reinforces hit/beat/dodge.
+const buzz = (ms: number) => {
+  try {
+    navigator.vibrate?.(ms);
+  } catch {
+    /* unsupported */
+  }
+};
+
 const MOVE_KEYS: Record<string, keyof Pick<PlayerInput, "moveUp" | "moveDown" | "moveLeft" | "moveRight">> = {
   KeyW: "moveUp",
   KeyS: "moveDown",
@@ -64,6 +73,8 @@ export function GameCanvas({
     dashPressed: false,
   });
   const rafRef = useRef<number | null>(null);
+  const joyBaseRef = useRef<HTMLDivElement | null>(null);
+  const joyKnobRef = useRef<HTMLDivElement | null>(null);
 
   const start = useHud((s) => s.start);
   const damage = useHud((s) => s.damage);
@@ -234,14 +245,36 @@ export function GameCanvas({
       const mag = Math.hypot(dx, dy);
       if (mag < 16) {
         clearMove();
-        return;
+      } else {
+        const nx = dx / mag;
+        const ny = dy / mag;
+        inputRef.current.moveLeft = nx < -0.38;
+        inputRef.current.moveRight = nx > 0.38;
+        inputRef.current.moveUp = ny < -0.38;
+        inputRef.current.moveDown = ny > 0.38;
       }
-      const nx = dx / mag;
-      const ny = dy / mag;
-      inputRef.current.moveLeft = nx < -0.38;
-      inputRef.current.moveRight = nx > 0.38;
-      inputRef.current.moveUp = ny < -0.38;
-      inputRef.current.moveDown = ny > 0.38;
+      // Move the visual knob (clamped to the base ring).
+      const knob = joyKnobRef.current;
+      if (knob) {
+        const max = 46;
+        const cl = mag > max ? max / mag : 1;
+        knob.style.left = `${moveStartX + dx * cl}px`;
+        knob.style.top = `${moveStartY + dy * cl}px`;
+      }
+    };
+    const showJoystick = (x: number, y: number) => {
+      for (const el of [joyBaseRef.current, joyKnobRef.current]) {
+        if (el) {
+          el.style.left = `${x}px`;
+          el.style.top = `${y}px`;
+          el.style.opacity = "1";
+        }
+      }
+    };
+    const hideJoystick = () => {
+      for (const el of [joyBaseRef.current, joyKnobRef.current]) {
+        if (el) el.style.opacity = "0";
+      }
     };
     const handleTouchStart = (e: TouchEvent) => {
       e.preventDefault();
@@ -256,6 +289,7 @@ export function GameCanvas({
           moveTouchId = t.identifier;
           moveStartX = t.clientX;
           moveStartY = t.clientY;
+          showJoystick(t.clientX, t.clientY);
         } else if (aimTouchId === null) {
           aimTouchId = t.identifier;
           setAimFromTouch(t);
@@ -281,6 +315,7 @@ export function GameCanvas({
         } else if (t.identifier === moveTouchId) {
           moveTouchId = null;
           clearMove();
+          hideJoystick();
         }
       }
     };
@@ -349,7 +384,10 @@ export function GameCanvas({
             onScore: (n) => addScore(Math.round(n * scoreMul)),
             onCombo: bumpCombo,
             onComboBreak: breakCombo,
-            onDamage: damage,
+            onDamage: (n) => {
+              damage(n);
+              buzz(45);
+            },
             onHeal: heal,
             onStageUp: setStage,
             onVictory: victory,
@@ -359,10 +397,16 @@ export function GameCanvas({
             onBossPhaseChange: triggerBossPhaseAlert,
             onEndlessLoop: setEndlessLoop,
             onEnemyCount: setEnemyCount,
-            onDash: incDash,
+            onDash: () => {
+              incDash();
+              buzz(8);
+            },
             onTapCounter: incTap,
             onCharge: incCharge,
-            onOnBeat: incOnBeat,
+            onOnBeat: () => {
+              incOnBeat();
+              buzz(12);
+            },
             onGather: incGather,
           });
         }
@@ -400,6 +444,8 @@ export function GameCanvas({
     <>
       <canvas ref={canvasRef} className={styles.canvas} />
       <div className={styles.touchControls} aria-hidden>
+        <div ref={joyBaseRef} className={styles.joyBase} />
+        <div ref={joyKnobRef} className={styles.joyKnob} />
         <button
           type="button"
           className={styles.pauseBtn}

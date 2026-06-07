@@ -68,6 +68,13 @@
   font-family: var(--font-geist-mono), monospace;
 }
 
+/* Clear the top-right PAUSE touch button on small screens. */
+@media (pointer: coarse) and (max-width: 600px) {
+  .scoreBox {
+    margin-top: 48px;
+  }
+}
+
 .scoreLabel {
   font-size: 11px;
   letter-spacing: 0.4em;
