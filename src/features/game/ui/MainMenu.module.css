@@ -1034,6 +1034,10 @@
     bottom: max(10px, env(safe-area-inset-bottom));
     padding: 0 12px;
   }
+  /* Room so the last button can scroll clear of the fixed footer. */
+  .page {
+    padding-bottom: max(56px, env(safe-area-inset-bottom));
+  }
   /* Long license line crowds the footer on narrow screens. */
   .attribution {
     display: none;

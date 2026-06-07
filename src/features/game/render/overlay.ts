@@ -109,7 +109,7 @@ export function drawBossHpBar(
   c.strokeRect(barX, barY, barW, barH);
 
   c.fillStyle = "#ffffff";
-  c.font = "bold 11px ui-monospace, monospace";
+  c.font = "bold 14px ui-monospace, monospace";
   c.textAlign = "center";
   c.textBaseline = "bottom";
   c.fillText(`THE CORE  —  ${boss.hp} / ${boss.maxHp}`, w / 2, barY - 6);
@@ -203,7 +203,7 @@ function drawLiveBpm(
   const bpm = Math.round(state.beat.bpm);
   c.save();
   c.fillStyle = "rgba(240, 246, 255, 0.7)";
-  c.font = "11px ui-monospace, monospace";
+  c.font = "13px ui-monospace, monospace";
   c.textBaseline = "top";
   c.fillText(`${bpm} BPM ♪`, x, 6);
   c.restore();
