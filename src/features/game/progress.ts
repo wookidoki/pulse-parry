@@ -208,8 +208,14 @@ export function loadSelection(): RunSelection {
     const raw = localStorage.getItem(SELECTION_STORAGE_KEY);
     if (!raw) return DEFAULT_SELECTION;
     const parsed = JSON.parse(raw) as Partial<RunSelection>;
+    // Validate characterId — a removed/stale id (e.g. an old "conductor" save)
+    // would otherwise crash CHARACTERS[id] lookups.
+    const charId =
+      parsed.characterId && CHARACTER_ORDER.includes(parsed.characterId)
+        ? parsed.characterId
+        : DEFAULT_SELECTION.characterId;
     return {
-      characterId: parsed.characterId ?? DEFAULT_SELECTION.characterId,
+      characterId: charId,
       modifierId: parsed.modifierId ?? DEFAULT_SELECTION.modifierId,
       difficulty: parsed.difficulty ?? DEFAULT_SELECTION.difficulty,
     };
