@@ -3,7 +3,8 @@ import { KIND_RACE, RACE_LABEL } from "../types";
 import { PALETTE } from "../config/palette";
 import { BULLET_KINDS, ENEMY_KINDS } from "../config/enemy-kinds";
 import {
-  BOSS_NOVA_TELEGRAPH_MS,
+  BOSS_PATTERN_TELEGRAPH_MS,
+  BOSS_WEAK_ARC,
   ENEMY_DEATH_MS,
   ENEMY_RADIUS,
   ENEMY_SPAWN_DELAY_MS,
@@ -357,52 +358,49 @@ function drawCore(
   c.stroke();
   c.restore();
 
-  // --- Shield / vent gimmick layer ---
-  const novaCharge =
-    e.novaTelegraphMsLeft > 0
-      ? 1 - Math.max(0, e.novaTelegraphMsLeft) / BOSS_NOVA_TELEGRAPH_MS
+  // --- Attack telegraph + weak-point layer ---
+  const charge =
+    e.attackTelegraphMsLeft > 0
+      ? 1 - Math.max(0, e.attackTelegraphMsLeft) / BOSS_PATTERN_TELEGRAPH_MS
       : 0;
-  if (novaCharge > 0) {
-    // Charging NOVA — a bright ring contracts inward as the blast builds.
+  if (charge > 0) {
+    // Incoming attack — a bright ring contracts inward as the pattern builds.
     c.save();
-    const warnR = baseR * (3.4 - novaCharge * 1.6);
-    c.globalAlpha = 0.4 + novaCharge * 0.5;
+    const warnR = baseR * (3.4 - charge * 1.6);
+    c.globalAlpha = 0.35 + charge * 0.5;
     c.strokeStyle = "#ffffff";
     c.shadowColor = PALETTE.red;
     c.shadowBlur = 30;
-    c.lineWidth = 2 + novaCharge * 5;
+    c.lineWidth = 2 + charge * 5;
     c.beginPath();
     c.arc(0, 0, Math.max(baseR, warnR), 0, Math.PI * 2);
     c.stroke();
     c.restore();
   }
-  if (e.shieldUp) {
-    // Hex energy shield — boss is invulnerable while it holds.
+  // Weak point — the ONLY spot that takes damage. Glowing node + highlighted
+  // shell arc at weakAngle (boss space == world space here; shell isn't rotated).
+  {
+    const wr = baseR * 1.55;
+    const wa = e.weakAngle;
+    const wob = 0.7 + Math.sin(nowMs / 110) * 0.3;
     c.save();
-    c.rotate(nowMs * 0.0002);
-    const shieldR = baseR * 2.4 * beat;
-    c.globalAlpha = 0.5 + Math.sin(nowMs / 300) * 0.12;
-    c.strokeStyle = PALETTE.cyan;
-    c.shadowColor = PALETTE.cyan;
-    c.shadowBlur = 18;
-    c.lineWidth = 3;
-    drawPolygon(c, 6, shieldR);
-    c.stroke();
-    c.globalAlpha *= 0.4;
-    c.lineWidth = 1.5;
-    drawPolygon(c, 6, shieldR * 0.86);
-    c.stroke();
-    c.restore();
-  } else if (e.ventMsLeft > 0) {
-    // Core exposed — vulnerable. Hot pulsing halo signals the strike window.
-    c.save();
-    const vp = 0.6 + Math.sin(nowMs / 90) * 0.4;
-    c.globalAlpha = 0.55 * vp;
-    c.fillStyle = PALETTE.cyan;
-    c.shadowColor = PALETTE.cyan;
-    c.shadowBlur = 40;
+    c.strokeStyle = PALETTE.yellow;
+    c.shadowColor = PALETTE.yellow;
+    c.shadowBlur = 22 * wob;
+    c.lineWidth = 6;
     c.beginPath();
-    c.arc(0, 0, baseR * (1.2 + vp * 0.25), 0, Math.PI * 2);
+    c.arc(0, 0, wr, wa - BOSS_WEAK_ARC, wa + BOSS_WEAK_ARC);
+    c.stroke();
+    const nx = Math.cos(wa) * wr;
+    const ny = Math.sin(wa) * wr;
+    c.fillStyle = "#ffffff";
+    c.shadowBlur = 30 * wob;
+    c.beginPath();
+    c.arc(nx, ny, 7 + wob * 4, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = PALETTE.yellow;
+    c.beginPath();
+    c.arc(nx, ny, 4 + wob * 2, 0, Math.PI * 2);
     c.fill();
     c.restore();
   }

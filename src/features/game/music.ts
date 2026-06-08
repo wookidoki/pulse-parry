@@ -358,7 +358,9 @@ export function playStageBgm(stageIndex: number): void {
 
   const pool = stagePools[safeIdx];
   if (pool.length === 0) return;
-  const trackIdx = Math.floor(Math.random() * pool.length);
+  // One round = one song: always the stage's signature (first) track, so the
+  // round has a consistent identity every run (no random pick).
+  const trackIdx = 0;
   const next = pool[trackIdx];
   next.preload = "auto";
   startTrack(next, CROSSFADE_MS);

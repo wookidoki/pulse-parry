@@ -76,15 +76,10 @@ export function drawBossHpBar(
   w: number,
   nowMs: number,
 ): void {
-  let boss: { hp: number; maxHp: number; shieldUp: boolean; venting: boolean } | null = null;
+  let boss: { hp: number; maxHp: number } | null = null;
   for (const e of state.enemies) {
     if (e.kind === "boss" && e.state !== "dead") {
-      boss = {
-        hp: Math.max(0, e.hp),
-        maxHp: e.maxHp,
-        shieldUp: e.shieldUp,
-        venting: !e.shieldUp && e.ventMsLeft > 0,
-      };
+      boss = { hp: Math.max(0, e.hp), maxHp: e.maxHp };
       break;
     }
   }
@@ -120,18 +115,13 @@ export function drawBossHpBar(
   c.textBaseline = "bottom";
   c.fillText(`THE CORE  —  ${boss.hp} / ${boss.maxHp}`, w / 2, barY - 6);
 
-  // Shield/vent status so the player reads when the core can actually be hit.
-  const status = boss.venting ? "◆ CORE EXPOSED — STRIKE" : boss.shieldUp ? "◇ SHIELDED" : "";
-  if (status) {
-    c.font = "bold 11px ui-monospace, monospace";
-    c.fillStyle = boss.venting ? PALETTE.cyan : "rgba(240, 246, 255, 0.55)";
-    if (boss.venting) {
-      c.shadowColor = PALETTE.cyan;
-      c.shadowBlur = 10 * pulse;
-    }
-    c.textBaseline = "top";
-    c.fillText(status, w / 2, barY + barH + 6);
-  }
+  // Hint: damage only lands on the glowing weak point.
+  c.font = "bold 11px ui-monospace, monospace";
+  c.fillStyle = PALETTE.yellow;
+  c.shadowColor = PALETTE.yellow;
+  c.shadowBlur = 8 * pulse;
+  c.textBaseline = "top";
+  c.fillText("◆ STRIKE THE WEAK POINT", w / 2, barY + barH + 6);
   c.restore();
 }
 

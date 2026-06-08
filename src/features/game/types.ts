@@ -70,14 +70,18 @@ export interface Enemy {
   // Melee "rusher" lunge state: counts down while charging the player; 0 = orbiting.
   lungeMsLeft: number;
   nextLungeAtMs: number;
-  // Boss "shield/vent" gimmick (THE CORE). Shield blocks all reflect damage;
-  // the core only vents (becomes vulnerable) for a window right after each NOVA.
-  shieldUp: boolean;
-  ventMsLeft: number;
-  nextNovaBeat: number;
-  novaTelegraphMsLeft: number;
-  novaEchoAtMs: number;
-  novaEchoShots: number;
+  // Boss "weak point + patterns" gimmick (THE CORE). A glowing weak point orbits
+  // the armored shell; only reflects hitting it (weakAngle ± BOSS_WEAK_ARC) deal
+  // damage. The boss runs a choreographed cycle of attack patterns.
+  weakAngle: number;            // current angle of the weak point (rad)
+  attackId: number;             // running pattern id (-1 = idle)
+  attackStep: number;           // sub-shot counter within the running pattern
+  attackNextMs: number;         // next sub-shot timestamp
+  attackTelegraphMsLeft: number;// pre-attack warning countdown
+  attackCycleIdx: number;       // index into the phase's pattern cycle
+  nextAttackBeat: number;       // beat to launch the next pattern
+  novaEchoAtMs: number;         // delayed echo ring fire time
+  novaEchoShots: number;        // pending echo ring bullet count
 }
 
 export interface ScorePop {

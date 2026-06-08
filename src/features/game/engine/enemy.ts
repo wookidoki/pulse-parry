@@ -4,9 +4,13 @@ import { ENEMY_KINDS, type EnemyKindConfig } from "../config/enemy-kinds";
 import { DIFFICULTIES } from "../config/difficulty";
 import { MODIFIERS } from "../config/modifiers";
 import {
+  BOSS_ATTACK_GAP_BEATS,
   BOSS_NOVA_ECHO_DELAY_MS,
-  BOSS_NOVA_TELEGRAPH_MS,
-  BOSS_PHASES,
+  BOSS_PATTERN_CYCLE,
+  BOSS_PATTERN_TELEGRAPH_MS,
+  BOSS_RING_COUNT,
+  BOSS_RING_ECHO,
+  BOSS_WEAK_SPIN,
   ENEMY_ORBIT_DRIFT_RAD_PER_SEC,
   ENEMY_ORBIT_FACTOR,
   ENEMY_ORBIT_MARGIN,
@@ -180,11 +184,14 @@ export function createEnemy(
     beatOffsetFraction: ((id - 1) % 4) * 0.25,
     lungeMsLeft: 0,
     nextLungeAtMs: kind === "rusher" ? nowMs + 4000 + Math.random() * 4000 : 0,
-    // Boss starts shielded; first NOVA a few beats after it engages.
-    shieldUp: kind === "boss",
-    ventMsLeft: 0,
-    nextNovaBeat: kind === "boss" ? state.beat.currentBeat + 4 : 0,
-    novaTelegraphMsLeft: 0,
+    // Boss weak-point + pattern state; first attack a few beats after it engages.
+    weakAngle: kind === "boss" ? Math.PI / 2 : 0,
+    attackId: -1,
+    attackStep: 0,
+    attackNextMs: 0,
+    attackTelegraphMsLeft: 0,
+    attackCycleIdx: 0,
+    nextAttackBeat: kind === "boss" ? state.beat.currentBeat + 4 : 0,
     novaEchoAtMs: 0,
     novaEchoShots: 0,
   };
@@ -245,10 +252,10 @@ export interface EnemyTickResult {
   bomberDetonations: BomberDetonation[];
   healerPulses: HealerPulse[];
   meleeHits: { x: number; y: number; hit: boolean }[];
-  // Boss NOVA gimmick signals (sfx + screen juice handled in update.ts).
+  // Boss signals (sfx + screen juice handled in update.ts). novaTelegraphs =
+  // any pattern's pre-attack warning; novaFires = a RING/echo blast.
   novaTelegraphs: { x: number; y: number }[];
   novaFires: { x: number; y: number; ringCount: number }[];
-  ventOpens: number;
 }
 
 function tryFireMainShot(
@@ -438,9 +445,88 @@ function emitNovaRing(enemy: Enemy, count: number, result: EnemyTickResult): voi
   }
 }
 
-// THE CORE attack brain: manage the shield/vent cycle and the NOVA ring. The
-// boss still fires aimed "ammo" bursts through the normal path (so the player
-// has bullets to reflect); this only adds the shield gating + nova spectacle.
+// Pattern ids (mirror config/tuning BOSS_PATTERN_CYCLE).
+const PAT_RING = 0;
+const PAT_SPIRAL = 1;
+const PAT_FAN = 2;
+const PAT_LANCE = 3;
+
+function bossShot(enemy: Enemy, angleOffset: number, silent: boolean, result: EnemyTickResult): void {
+  result.shotsFired.push({ enemyId: enemy.id, x: enemy.x, y: enemy.y, angleOffset, silent });
+}
+
+function endPattern(enemy: Enemy, phaseIdx: number, state: EngineState): void {
+  enemy.attackId = -1;
+  enemy.attackStep = 0;
+  enemy.nextAttackBeat = state.beat.currentBeat + BOSS_ATTACK_GAP_BEATS[phaseIdx];
+}
+
+// Run the currently-active choreographed pattern. Each pattern emits its bullets
+// over time (stepped), so they read as designed waves, not a random spray.
+function runBossPattern(
+  enemy: Enemy,
+  phaseIdx: number,
+  state: EngineState,
+  nowMs: number,
+  result: EnemyTickResult,
+): void {
+  switch (enemy.attackId) {
+    case PAT_RING: {
+      const count = BOSS_RING_COUNT[phaseIdx];
+      emitNovaRing(enemy, count, result);
+      enemy.pulse = 1.5;
+      result.novaFires.push({ x: enemy.x, y: enemy.y, ringCount: count });
+      const echo = BOSS_RING_ECHO[phaseIdx];
+      if (echo > 0) {
+        enemy.novaEchoShots = echo;
+        enemy.novaEchoAtMs = nowMs + BOSS_NOVA_ECHO_DELAY_MS;
+      }
+      endPattern(enemy, phaseIdx, state);
+      break;
+    }
+    case PAT_SPIRAL: {
+      // Two opposite arms sweeping outward — weave through the rotating gaps.
+      const STEPS = 14;
+      if (nowMs < enemy.attackNextMs) break;
+      const a = enemy.attackStep * 0.42;
+      bossShot(enemy, a, true, result);
+      bossShot(enemy, a + Math.PI, true, result);
+      if (enemy.attackStep === 0) result.novaTelegraphs.push({ x: enemy.x, y: enemy.y });
+      enemy.attackStep += 1;
+      enemy.attackNextMs = nowMs + 85;
+      enemy.pulse = Math.max(enemy.pulse, 0.8);
+      if (enemy.attackStep >= STEPS) endPattern(enemy, phaseIdx, state);
+      break;
+    }
+    case PAT_FAN: {
+      // Wide aimed fan at the player — a parry wall to read on the beat.
+      const N = 5 + phaseIdx * 2; // 5 / 7 / 9
+      const SPREAD = 0.95;
+      for (let i = 0; i < N; i++) {
+        bossShot(enemy, -SPREAD / 2 + (i / (N - 1)) * SPREAD, i !== 0, result);
+      }
+      enemy.pulse = 1.2;
+      endPattern(enemy, phaseIdx, state);
+      break;
+    }
+    case PAT_LANCE: {
+      // Fast tight aimed volley — read the line and dash through it.
+      const STEPS = 5;
+      if (nowMs < enemy.attackNextMs) break;
+      bossShot(enemy, (enemy.attackStep - 2) * 0.04, enemy.attackStep !== 0, result);
+      enemy.attackStep += 1;
+      enemy.attackNextMs = nowMs + 70;
+      enemy.pulse = Math.max(enemy.pulse, 0.9);
+      if (enemy.attackStep >= STEPS) endPattern(enemy, phaseIdx, state);
+      break;
+    }
+    default:
+      enemy.attackId = -1;
+  }
+}
+
+// THE CORE attack brain: spin the weak point, run choreographed patterns, and
+// fire a delayed echo ring. Damage gating (weak-point hit test) lives in bullet.ts.
 function tickBoss(
   enemy: Enemy,
   state: EngineState,
@@ -448,54 +534,42 @@ function tickBoss(
   dt: number,
   result: EnemyTickResult,
 ): void {
-  const phase = BOSS_PHASES[bossPhaseIndex(enemy)];
+  const phaseIdx = bossPhaseIndex(enemy);
 
-  // Vent window: core exposed, shield down. Reflects damage only here.
-  if (enemy.ventMsLeft > 0) {
-    enemy.ventMsLeft -= dt * 1000;
-    if (enemy.ventMsLeft <= 0) {
-      enemy.ventMsLeft = 0;
-      enemy.shieldUp = true;
-    }
-  }
+  // The weak point orbits the shell — strike it when it faces your shot.
+  enemy.weakAngle = normalizeAngle(enemy.weakAngle + BOSS_WEAK_SPIN[phaseIdx] * dt);
 
-  // Charging a nova — telegraph glow ramps, then the ring fires and vents.
-  if (enemy.novaTelegraphMsLeft > 0) {
-    enemy.novaTelegraphMsLeft -= dt * 1000;
-    const charge = 1 - Math.max(0, enemy.novaTelegraphMsLeft) / BOSS_NOVA_TELEGRAPH_MS;
-    enemy.pulse = Math.max(enemy.pulse, charge);
-    if (enemy.novaTelegraphMsLeft <= 0) {
-      enemy.novaTelegraphMsLeft = 0;
-      emitNovaRing(enemy, phase.ringCount, result);
-      enemy.pulse = 1.5;
-      enemy.shieldUp = false;
-      enemy.ventMsLeft = phase.ventMs;
-      result.novaFires.push({ x: enemy.x, y: enemy.y, ringCount: phase.ringCount });
-      result.ventOpens += 1;
-      if (phase.echoCount > 0) {
-        enemy.novaEchoShots = phase.echoCount;
-        enemy.novaEchoAtMs = nowMs + BOSS_NOVA_ECHO_DELAY_MS;
-      }
-    }
-  }
-
-  // Delayed echo ring (P2 only).
+  // Delayed echo ring from the last RING pattern (P2).
   if (enemy.novaEchoShots > 0 && nowMs >= enemy.novaEchoAtMs) {
     emitNovaRing(enemy, enemy.novaEchoShots, result);
     result.novaFires.push({ x: enemy.x, y: enemy.y, ringCount: enemy.novaEchoShots });
     enemy.novaEchoShots = 0;
   }
 
-  // Schedule the next nova on a downbeat, only while idle (not charging/venting).
-  if (
-    enemy.novaTelegraphMsLeft <= 0 &&
-    enemy.ventMsLeft <= 0 &&
-    enemy.novaEchoShots <= 0 &&
-    state.beat.isBeatTick &&
-    state.beat.currentBeat >= enemy.nextNovaBeat
-  ) {
-    enemy.novaTelegraphMsLeft = BOSS_NOVA_TELEGRAPH_MS;
-    enemy.nextNovaBeat = state.beat.currentBeat + phase.novaBeats;
+  // Telegraph the upcoming pattern, then start running it.
+  if (enemy.attackTelegraphMsLeft > 0) {
+    enemy.attackTelegraphMsLeft -= dt * 1000;
+    const charge = 1 - Math.max(0, enemy.attackTelegraphMsLeft) / BOSS_PATTERN_TELEGRAPH_MS;
+    enemy.pulse = Math.max(enemy.pulse, charge);
+    if (enemy.attackTelegraphMsLeft <= 0) {
+      enemy.attackTelegraphMsLeft = 0;
+      enemy.attackNextMs = nowMs; // begin firing immediately
+    }
+    return;
+  }
+
+  if (enemy.attackId >= 0) {
+    runBossPattern(enemy, phaseIdx, state, nowMs, result);
+    return;
+  }
+
+  // Idle → schedule the next pattern in the phase's cycle on a downbeat.
+  if (state.beat.isBeatTick && state.beat.currentBeat >= enemy.nextAttackBeat) {
+    const cycle = BOSS_PATTERN_CYCLE[phaseIdx];
+    enemy.attackId = cycle[enemy.attackCycleIdx % cycle.length];
+    enemy.attackCycleIdx += 1;
+    enemy.attackStep = 0;
+    enemy.attackTelegraphMsLeft = BOSS_PATTERN_TELEGRAPH_MS;
     result.novaTelegraphs.push({ x: enemy.x, y: enemy.y });
   }
 }
@@ -515,7 +589,6 @@ export function updateEnemies(
     meleeHits: [],
     novaTelegraphs: [],
     novaFires: [],
-    ventOpens: 0,
   };
   const baseR = orbitRadius(canvasW, canvasH);
   const burstBonus = MODIFIERS[state.modifierId].burstShotsBonus;
@@ -619,9 +692,12 @@ export function updateEnemies(
 
     if (e.state !== "alive") continue;
 
-    // Boss runs its shield/vent/nova brain, then falls through to fire aimed
-    // ammo bursts via the normal path below.
-    if (e.kind === "boss") tickBoss(e, state, nowMs, dt, result);
+    // Boss runs its own pattern brain (which supplies all its bullets) — skip
+    // the generic aimed-fire path entirely.
+    if (e.kind === "boss") {
+      tickBoss(e, state, nowMs, dt, result);
+      continue;
+    }
 
     maybeTeleportPhantom(e, state, canvasW, canvasH, result);
     if (e.kind === "healer") maybeHealNeighbors(e, state, result, nowMs);
@@ -666,10 +742,13 @@ export function createShard(
     beatOffsetFraction: ((id - 1) % 4) * 0.25,
     lungeMsLeft: 0,
     nextLungeAtMs: 0,
-    shieldUp: false,
-    ventMsLeft: 0,
-    nextNovaBeat: 0,
-    novaTelegraphMsLeft: 0,
+    weakAngle: 0,
+    attackId: -1,
+    attackStep: 0,
+    attackNextMs: 0,
+    attackTelegraphMsLeft: 0,
+    attackCycleIdx: 0,
+    nextAttackBeat: 0,
     novaEchoAtMs: 0,
     novaEchoShots: 0,
   };

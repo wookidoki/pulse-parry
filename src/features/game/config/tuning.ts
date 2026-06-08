@@ -3,6 +3,11 @@ export const HIT_RADIUS = 22;
 export const PLAYER_MAX_DIST = 180;
 export const PLAYER_MOVE_SPEED = 300;
 export const DASH_DURATION_MS = 160;
+// I-frame window granted by a dash — a touch longer than the movement itself so
+// the dodge "판정" is more forgiving than the visible slide.
+export const DASH_IFRAME_MS = 240;
+// Small extra reach added at dash start (px), on top of the speed×duration slide.
+export const DASH_DISTANCE_BONUS_PX = 10;
 
 export const ENEMY_RADIUS = 22;
 export const ENEMY_ORBIT_FACTOR = 0.48;
@@ -77,21 +82,26 @@ export const SCORE_ONBEAT_BONUS = 20;
 
 export const COMBO_MILESTONES = [10, 25, 50, 100, 200] as const;
 
-// THE CORE boss — shield/vent gimmick. The shield is up by default and blocks
-// ALL reflect damage (a button-mash counter just sparks off it). The boss vents
-// its core for a short window right after each NOVA ring; that vent is the only
-// time reflected bullets hurt it. So the fight is: read the nova telegraph →
-// survive/parry the ring → dump reflects into the exposed core before it seals.
-export const BOSS_NOVA_TELEGRAPH_MS = 640;
+// THE CORE boss — WEAK POINT gimmick + choreographed attack patterns.
+// The shell is armored: reflects that strike the armor just spark off. A single
+// glowing WEAK POINT orbits the core; only reflects that hit it deal damage. You
+// can still mash — but the hit only lands while the weak point faces your shot,
+// so it's about WHERE/WHEN you strike, not how fast. The weak point spins faster
+// each phase, so the windows tighten as the boss dies.
+export const BOSS_WEAK_ARC = 0.62; // ±rad around the weak point that takes damage (~71° span)
+export const BOSS_WEAK_SPIN = [0.85, 1.35, 2.0]; // rad/s, per phase (P0/P1/P2)
+export const BOSS_PATTERN_TELEGRAPH_MS = 600;
 export const BOSS_NOVA_ECHO_DELAY_MS = 420;
-export const BOSS_VENT_DAMAGE = 1; // HP per reflected bullet while vented
-// Per phase (P0 >66% HP, P1 33-66%, P2 <33%):
-//   novaBeats   — beats between NOVA rings (tighter as it dies)
-//   ringCount   — bullets in the 360° ring
-//   ventMs      — how long the core stays exposed after a nova
-//   echoCount   — extra delayed ring (0 = none); P2 only, adds a second wave
-export const BOSS_PHASES = [
-  { novaBeats: 8, ringCount: 14, ventMs: 3000, echoCount: 0 },
-  { novaBeats: 6, ringCount: 18, ventMs: 2500, echoCount: 0 },
-  { novaBeats: 4, ringCount: 22, ventMs: 2100, echoCount: 10 },
-] as const;
+// Choreographed pattern cycle per phase. Pattern ids:
+//   0 RING   — full 360° ring burst (one boom)
+//   1 SPIRAL — two rotating arms sweeping outward (weave through the gaps)
+//   2 FAN    — wide aimed fan at the player (parry wall)
+//   3 LANCE  — fast tight aimed volley (read + dash the line)
+export const BOSS_PATTERN_CYCLE: readonly (readonly number[])[] = [
+  [2, 0],
+  [2, 1, 0],
+  [2, 1, 3, 0],
+];
+export const BOSS_ATTACK_GAP_BEATS = [4, 3, 2]; // idle beats between patterns, per phase
+export const BOSS_RING_COUNT = [14, 18, 22]; // ring bullets, per phase
+export const BOSS_RING_ECHO = [0, 0, 10]; // extra delayed echo ring (P2 only)

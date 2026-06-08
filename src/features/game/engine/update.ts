@@ -13,7 +13,9 @@ import {
   CAMERA_ZOOM_LERP_PER_SEC,
   CAMERA_ZOOM_PUNCH,
   CHARGE_THRESHOLD_MS,
+  DASH_DISTANCE_BONUS_PX,
   DASH_DURATION_MS,
+  DASH_IFRAME_MS,
   DEFAULT_BPM,
   HIT_STOP_MS_ENEMY_KILL,
   HIT_STOP_MS_PARRY,
@@ -551,6 +553,11 @@ function processDashTrigger(state: EngineState, input: PlayerInput, cb: EngineCa
   state.dashDirY = dy / mag;
   state.dashActiveMsLeft = DASH_DURATION_MS;
   state.dashCooldownMsLeft = char.dashCooldownMs * MODIFIERS[state.modifierId].dashCooldownMul;
+  // Forgiving dodge window: i-frames outlast the visible slide.
+  state.invulnMsLeft = Math.max(state.invulnMsLeft, DASH_IFRAME_MS);
+  // Small extra reach on top of the speed×duration slide (clamped next frame).
+  state.playerX += state.dashDirX * DASH_DISTANCE_BONUS_PX;
+  state.playerY += state.dashDirY * DASH_DISTANCE_BONUS_PX;
   sfx.playDashWhoosh();
   cb.onDash();
 }
@@ -677,13 +684,6 @@ export function update(ctx: UpdateContext): void {
     applyShake(state, SHAKE_ON_REFLECT * 2);
     applyHitStop(state, 40);
     sfx.playShockwave();
-  }
-  if (enemyResult.ventOpens > 0) {
-    // Core exposed — the only window to deal damage. Cyan cue + chime so the
-    // player learns to strike now.
-    spawnScreenFlash(state, PALETTE.cyan, 0.26);
-    spawnScorePop(state, state.playerX, state.playerY - 52, "CORE EXPOSED", PALETTE.cyan, 1.1);
-    sfx.playPerfectChime();
   }
   for (const tp of enemyResult.teleported) {
     emitBurst(state, tp.oldX, tp.oldY, BURSTS.parryCatch());

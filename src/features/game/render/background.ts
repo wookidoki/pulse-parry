@@ -46,15 +46,14 @@ export function drawBackground(
   c.fillRect(0, 0, w, h);
   c.globalAlpha = 1;
 
-  // BPM-aware streak intensity
+  // BPM-aware streak intensity. These three are the shared atmosphere kept across
+  // every stage (subtle); the distinct per-stage *environment* is drawStageScene.
   const bpmIntensity = Math.max(0.6, Math.min(1.6, state.beat.bpm / 120));
   drawRhythmStreaks(c, w, h, nowMs, state.beat.beatPhase, state.stageIndex, bpmIntensity);
   drawTunnel(c, cx, cy, nowMs, state.stageIndex, state.beat.beatPhase);
   drawDriftingGrid(c, w, h, nowMs);
-  drawCityscape(c, w, h, nowMs, state.stageIndex);
-  drawParallaxRadialLines(c, cx, cy, nowMs, state.stageIndex, pulseEnv);
+  drawStageScene(c, w, h, nowMs, state.stageIndex, state.beat.beatPhase, pulseEnv);
   drawBeatRing(c, cx, cy, state.beat.beatPhase);
-  drawStageThemeOverlay(c, w, h, nowMs, state.stageIndex, state.beat.beatPhase, pulseEnv);
 
   // Boss-only effects
   if (bossActive && bossPhase >= 1) {
@@ -335,9 +334,9 @@ function drawBeatRing(
   c.restore();
 }
 
-// Stage-specific atmospheric overlays. Drawn on top of the shared background
-// pieces so each stage feels distinct without rewriting the whole pipeline.
-function drawStageThemeOverlay(
+// Per-stage ENVIRONMENT. Each round draws a distinct scene (not the same city +
+// a minor overlay) so moving to the next round visibly reads as a new place.
+function drawStageScene(
   c: CanvasRenderingContext2D,
   w: number,
   h: number,
@@ -346,31 +345,171 @@ function drawStageThemeOverlay(
   beatPhase: number,
   pulseEnv: number,
 ): void {
+  const cx = w / 2;
+  const cy = h / 2;
   switch (stageIndex) {
-    case 0: // INFILTRATION — already neon city; light scanline added.
-      drawScanlines(c, w, h, "rgba(28, 240, 255, 0.04)", 4);
+    case 0: // INFILTRATION — neon city skyline (the entry point).
+      drawCityscape(c, w, h, nowMs, stageIndex);
+      drawScanlines(c, w, h, "rgba(28, 240, 255, 0.05)", 4);
       break;
-    case 1: // ECHO — vertical mirror reflections, ghosting effect.
+    case 1: // ECHO — hall of mirrors: reflective panels + ghost radials.
       drawMirrorReflections(c, w, h, nowMs);
+      drawParallaxRadialLines(c, cx, cy, nowMs, stageIndex, pulseEnv);
       break;
-    case 2: // FACTORY — existing cityscape + warm sodium tone (no extra).
-      drawScanlines(c, w, h, "rgba(247, 255, 58, 0.04)", 6);
+    case 2: // FACTORY — industrial: conveyor bands + turning gears.
+      drawFactory(c, w, h, nowMs);
+      drawScanlines(c, w, h, "rgba(247, 255, 58, 0.05)", 6);
       break;
-    case 3: // BLOOM — expanding pulse rings tied to beat.
-      drawBloomPulses(c, w / 2, h / 2, nowMs, beatPhase);
+    case 3: // BLOOM — organic: rotating petals + beat-tied pulse rings.
+      drawBloomField(c, cx, cy, nowMs, beatPhase);
       break;
-    case 4: // OVERDRIVE — fast diagonal streaks (motion).
+    case 4: // OVERDRIVE — warp speed: heavy diagonal motion streaks.
       drawDiagonalStreaks(c, w, h, nowMs);
+      drawParallaxRadialLines(c, cx, cy, nowMs, stageIndex, pulseEnv);
       break;
-    case 5: // TRIAGE — soft green cross/medical grid + pulse heartbeat.
+    case 5: // TRIAGE — medical bay: EKG grid + heartbeat pulse.
       drawMedicalCross(c, w, h, nowMs, beatPhase);
       break;
-    case 6: // CHAOS — random jitter blocks, glitch.
+    case 6: // CHAOS — corrupted void: glitch blocks + datamosh bands.
       drawChaosJitter(c, w, h, nowMs, pulseEnv);
+      drawGlitchLines(c, w, h, nowMs);
       break;
-    case 7: // REVOLT (boss) — handled by existing boss vignette + glitch.
+    case 7: // REVOLT — the core chamber: concentric red rings, no city.
+      drawCoreChamber(c, cx, cy, nowMs, beatPhase, pulseEnv);
       break;
+    default:
+      drawCityscape(c, w, h, nowMs, stageIndex);
   }
+}
+
+// FACTORY (stage 2): scrolling conveyor bands along the bottom + slow gear rings
+// flanking the field. Industrial, not a skyline.
+function drawFactory(
+  c: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  nowMs: number,
+): void {
+  c.save();
+  // Conveyor bands
+  const bandCount = 3;
+  for (let b = 0; b < bandCount; b++) {
+    const by = h * (0.72 + b * 0.09);
+    const speed = 0.06 + b * 0.03;
+    const step = 56;
+    const scroll = (nowMs * speed) % step;
+    c.strokeStyle = `rgba(247, 255, 58, ${0.05 + b * 0.02})`;
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(0, by);
+    c.lineTo(w, by);
+    c.stroke();
+    c.fillStyle = `rgba(247, 255, 58, ${0.06 + b * 0.02})`;
+    for (let x = -scroll; x < w; x += step) {
+      c.fillRect(x, by - 4, 22, 4);
+    }
+  }
+  // Gear rings (two slow turning cogs in the corners)
+  const gears = [
+    { gx: w * 0.12, gy: h * 0.22, r: 90, dir: 1 },
+    { gx: w * 0.88, gy: h * 0.3, r: 120, dir: -1 },
+  ];
+  for (const g of gears) {
+    const rot = nowMs * 0.0003 * g.dir;
+    c.strokeStyle = "rgba(177, 75, 255, 0.10)";
+    c.lineWidth = 6;
+    c.beginPath();
+    c.arc(g.gx, g.gy, g.r, 0, Math.PI * 2);
+    c.stroke();
+    const teeth = 12;
+    c.strokeStyle = "rgba(247, 255, 58, 0.10)";
+    c.lineWidth = 4;
+    for (let i = 0; i < teeth; i++) {
+      const a = rot + (i / teeth) * Math.PI * 2;
+      c.beginPath();
+      c.moveTo(g.gx + Math.cos(a) * g.r, g.gy + Math.sin(a) * g.r);
+      c.lineTo(g.gx + Math.cos(a) * (g.r + 14), g.gy + Math.sin(a) * (g.r + 14));
+      c.stroke();
+    }
+  }
+  c.restore();
+}
+
+// BLOOM (stage 3): slowly rotating petal arcs radiating from center + the
+// existing beat-tied bloom pulse rings. Organic, no buildings.
+function drawBloomField(
+  c: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  nowMs: number,
+  beatPhase: number,
+): void {
+  c.save();
+  const petals = 10;
+  const rot = nowMs * 0.00018;
+  const breathe = 1 + Math.sin(nowMs / 900) * 0.08;
+  for (let i = 0; i < petals; i++) {
+    const a = rot + (i / petals) * Math.PI * 2;
+    const len = 360 * breathe;
+    const hue = i % 2 === 0 ? "28, 247, 143" : "28, 240, 255";
+    c.strokeStyle = `rgba(${hue}, 0.07)`;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(cx, cy);
+    c.quadraticCurveTo(
+      cx + Math.cos(a + 0.3) * len * 0.6,
+      cy + Math.sin(a + 0.3) * len * 0.6,
+      cx + Math.cos(a) * len,
+      cy + Math.sin(a) * len,
+    );
+    c.quadraticCurveTo(
+      cx + Math.cos(a - 0.3) * len * 0.6,
+      cy + Math.sin(a - 0.3) * len * 0.6,
+      cx,
+      cy,
+    );
+    c.stroke();
+  }
+  c.restore();
+  drawBloomPulses(c, cx, cy, nowMs, beatPhase);
+}
+
+// REVOLT (stage 7): the core's lair — concentric red rings breathing on the beat
+// over a dark floor. Deliberately not a city; this is the heart of the system.
+function drawCoreChamber(
+  c: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  nowMs: number,
+  beatPhase: number,
+  pulseEnv: number,
+): void {
+  c.save();
+  const ringCount = 7;
+  const beatPush = (1 - beatPhase) * 0.25;
+  for (let i = 0; i < ringCount; i++) {
+    const base = 70 + i * 80;
+    const r = base * (1 + beatPush) + Math.sin(nowMs / 600 + i) * 8;
+    const alpha = 0.05 + (i / ringCount) * 0.06 + pulseEnv * 0.05;
+    c.strokeStyle = `rgba(255, 56, 99, ${alpha})`;
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.arc(cx, cy, r, 0, Math.PI * 2);
+    c.stroke();
+  }
+  // Slow radial spokes — cathedral-of-the-core feel.
+  const spokes = 16;
+  const rot = nowMs * 0.0001;
+  c.strokeStyle = "rgba(255, 43, 214, 0.05)";
+  c.lineWidth = 1;
+  for (let i = 0; i < spokes; i++) {
+    const a = rot + (i / spokes) * Math.PI * 2;
+    c.beginPath();
+    c.moveTo(cx + Math.cos(a) * 50, cy + Math.sin(a) * 50);
+    c.lineTo(cx + Math.cos(a) * 700, cy + Math.sin(a) * 700);
+    c.stroke();
+  }
+  c.restore();
 }
 
 function drawScanlines(

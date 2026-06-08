@@ -4,6 +4,7 @@ import { DIFFICULTIES } from "../config/difficulty";
 import { CHARACTERS } from "../config/characters";
 import { MODIFIERS } from "../config/modifiers";
 import {
+  BOSS_WEAK_ARC,
   ENEMY_KNOCKBACK_AMOUNT,
   ENEMY_RADIUS,
   HIT_RADIUS,
@@ -338,16 +339,20 @@ export function updateBullets(
           break;
         }
 
-        // THE CORE shield: while up, reflects spark off harmlessly. The core is
-        // only vulnerable during the vent window opened by its own nova — so the
-        // boss can't be button-mashed down; you must time the vent.
-        if (e.kind === "boss" && e.shieldUp) {
-          b.state = "dead";
-          e.pulse = Math.max(e.pulse, 0.7);
-          e.hitFlashMsLeft = 50;
-          effects.bossShieldBlocks += 1;
-          emitBurst(state, b.x, b.y, BURSTS.parryCatch());
-          break;
+        // THE CORE weak point: only reflects that strike the glowing weak point
+        // (weakAngle ± BOSS_WEAK_ARC) damage the boss. Hits on the armored shell
+        // spark off. You can mash, but the hit only lands when the weak point
+        // faces your shot — so it's about where/when you strike.
+        if (e.kind === "boss") {
+          const impactAngle = Math.atan2(b.y - e.y, b.x - e.x);
+          if (Math.abs(normalizeAngle(impactAngle - e.weakAngle)) > BOSS_WEAK_ARC) {
+            b.state = "dead";
+            e.pulse = Math.max(e.pulse, 0.6);
+            e.hitFlashMsLeft = 40;
+            effects.bossShieldBlocks += 1;
+            emitBurst(state, b.x, b.y, BURSTS.parryCatch());
+            break;
+          }
         }
 
         const baseDamage = b.kind === "heavy" ? 2 : 1;
