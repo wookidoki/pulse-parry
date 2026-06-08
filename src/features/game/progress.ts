@@ -65,6 +65,13 @@ export function unlockStage(stageIndex: number): void {
   }
 }
 
+// Cheat: unlock every stage at once (hidden menu code).
+export function unlockAllStages(): void {
+  const p = loadProgress();
+  p.unlockedStage = STAGES.length - 1;
+  saveProgress(p);
+}
+
 function scoreKey(stageIndex: number, difficulty: Difficulty, endless = false): string {
   return endless ? `endless:${difficulty}` : `s${stageIndex}:${difficulty}`;
 }

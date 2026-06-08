@@ -13,6 +13,7 @@ import {
   loadSelection,
   saveSelection,
   totalAchievements,
+  unlockAllStages,
 } from "../progress";
 import { ACHIEVEMENTS, ACHIEVEMENT_ORDER } from "../config/achievements";
 import type { Difficulty } from "../types";
@@ -95,11 +96,28 @@ export function MainMenu() {
     setModifierIdRaw(id);
     saveSelection({ modifierId: id });
   };
-  const [unlockedStage] = useState<number>(() =>
+  const [unlockedStage, setUnlockedStage] = useState<number>(() =>
     typeof window === "undefined" ? 0 : loadProgress().unlockedStage,
   );
   const [transitioning, setTransitioning] = useState(false);
   const [trackInfo, setTrackInfo] = useState(() => getMenuTrackInfo());
+
+  // Hidden cheat: a near-invisible spot in the footer opens a code box; typing
+  // "pulse" unlocks every round.
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [codeValue, setCodeValue] = useState("");
+  const [codeMsg, setCodeMsg] = useState("");
+  const submitCode = () => {
+    if (codeValue.trim().toLowerCase() === "pulse") {
+      unlockAllStages();
+      setUnlockedStage(STAGES.length - 1);
+      setCodeMsg(locale === "ko" ? "모든 라운드 해금됨" : "ALL ROUNDS UNLOCKED");
+      setCodeValue("");
+      playUiTap();
+    } else {
+      setCodeMsg(locale === "ko" ? "잘못된 코드" : "INVALID CODE");
+    }
+  };
 
   const handleCycleTrack = () => {
     click();
@@ -189,6 +207,33 @@ export function MainMenu() {
 
         <div className={styles.cornerBottom}>
           <span className={styles.version}>v0.5.0</span>
+          {codeOpen ? (
+            <div className={styles.codeBox}>
+              <input
+                className={styles.codeInput}
+                autoFocus
+                spellCheck={false}
+                autoComplete="off"
+                value={codeValue}
+                placeholder="enter code"
+                onChange={(e) => setCodeValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitCode();
+                  else if (e.key === "Escape") setCodeOpen(false);
+                }}
+              />
+              {codeMsg && <span className={styles.codeMsg}>{codeMsg}</span>}
+            </div>
+          ) : (
+            <button
+              className={styles.codeTrigger}
+              aria-label="."
+              onClick={() => {
+                setCodeMsg("");
+                setCodeOpen(true);
+              }}
+            />
+          )}
           <span className={styles.attribution}>
             BGM CC0/OGA · Art CC0/OGA-BY · OpenGameArt
           </span>

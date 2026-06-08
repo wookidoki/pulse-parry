@@ -912,6 +912,48 @@
   display: inline-block;
 }
 
+/* Hidden cheat trigger — a tiny near-invisible hit area in the footer center. */
+.codeTrigger {
+  width: 22px;
+  height: 14px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: default;
+  opacity: 0;
+}
+
+.codeBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.codeInput {
+  width: 120px;
+  padding: 3px 8px;
+  background: rgba(5, 3, 10, 0.8);
+  border: 1px solid rgba(28, 240, 255, 0.4);
+  border-radius: 4px;
+  color: #1cf0ff;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: lowercase;
+  outline: none;
+}
+
+.codeInput:focus {
+  border-color: #1cf0ff;
+  box-shadow: 0 0 8px rgba(28, 240, 255, 0.4);
+}
+
+.codeMsg {
+  color: #f7ff3a;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+}
+
 /* ============ ACHIEVEMENTS VIEW ============ */
 .achievementsView {
   gap: 18px;
