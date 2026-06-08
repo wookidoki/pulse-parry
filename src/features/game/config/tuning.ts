@@ -41,7 +41,7 @@ export const HEAL_COMBO_MILESTONES = [25, 50, 100, 200] as const;
 
 export const SHIELD_SPAWN_INTERVAL_MS = 70000;
 export const SHIELD_BULLET_SPEED = 140;
-export const SHIELD_INVULN_MS = 5000;
+export const SHIELD_INVULN_MS = 10000;
 // I-frames after taking a hit — player blinks and is immune so a single hazard
 // or bullet can't chain into instant death.
 export const POST_HIT_INVULN_MS = 2200;
@@ -76,3 +76,22 @@ export const ON_BEAT_WINDOW = 0.16;
 export const SCORE_ONBEAT_BONUS = 20;
 
 export const COMBO_MILESTONES = [10, 25, 50, 100, 200] as const;
+
+// THE CORE boss — shield/vent gimmick. The shield is up by default and blocks
+// ALL reflect damage (a button-mash counter just sparks off it). The boss vents
+// its core for a short window right after each NOVA ring; that vent is the only
+// time reflected bullets hurt it. So the fight is: read the nova telegraph →
+// survive/parry the ring → dump reflects into the exposed core before it seals.
+export const BOSS_NOVA_TELEGRAPH_MS = 640;
+export const BOSS_NOVA_ECHO_DELAY_MS = 420;
+export const BOSS_VENT_DAMAGE = 1; // HP per reflected bullet while vented
+// Per phase (P0 >66% HP, P1 33-66%, P2 <33%):
+//   novaBeats   — beats between NOVA rings (tighter as it dies)
+//   ringCount   — bullets in the 360° ring
+//   ventMs      — how long the core stays exposed after a nova
+//   echoCount   — extra delayed ring (0 = none); P2 only, adds a second wave
+export const BOSS_PHASES = [
+  { novaBeats: 8, ringCount: 14, ventMs: 3000, echoCount: 0 },
+  { novaBeats: 6, ringCount: 18, ventMs: 2500, echoCount: 0 },
+  { novaBeats: 4, ringCount: 22, ventMs: 2100, echoCount: 10 },
+] as const;

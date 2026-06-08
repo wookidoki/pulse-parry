@@ -4,6 +4,9 @@ import { ENEMY_KINDS, type EnemyKindConfig } from "../config/enemy-kinds";
 import { DIFFICULTIES } from "../config/difficulty";
 import { MODIFIERS } from "../config/modifiers";
 import {
+  BOSS_NOVA_ECHO_DELAY_MS,
+  BOSS_NOVA_TELEGRAPH_MS,
+  BOSS_PHASES,
   ENEMY_ORBIT_DRIFT_RAD_PER_SEC,
   ENEMY_ORBIT_FACTOR,
   ENEMY_ORBIT_MARGIN,
@@ -96,17 +99,25 @@ function pickEnemyKind(stage: StageConfig, progress: number): EnemyKind {
   return easiest;
 }
 
+export function bossPhaseIndex(enemy: Enemy): number {
+  const hpFrac = enemy.maxHp > 0 ? enemy.hp / enemy.maxHp : 0;
+  return hpFrac > 0.66 ? 0 : hpFrac > 0.33 ? 1 : 2;
+}
+
 export function getEffectiveConfig(enemy: Enemy): EnemyKindConfig {
   if (enemy.kind !== "boss") return ENEMY_KINDS[enemy.kind];
   const base = ENEMY_KINDS.boss;
-  const hpFrac = enemy.hp / enemy.maxHp;
-  if (hpFrac <= 0.33) {
-    return { ...base, beatsPerShot: 1, burstShots: 4, burstIntervalBeatFraction: 0.18 };
+  // Aimed "ammo" fire — kept modest on purpose. These parryable shots give the
+  // player bullets to reflect back during the vent window; the NOVA (handled in
+  // tickBoss) is the real threat, not a wall of aimed bursts.
+  switch (bossPhaseIndex(enemy)) {
+    case 2:
+      return { ...base, beatsPerShot: 2, burstShots: 3, burstIntervalBeatFraction: 0.18 };
+    case 1:
+      return { ...base, beatsPerShot: 2, burstShots: 2, burstIntervalBeatFraction: 0.22 };
+    default:
+      return { ...base, beatsPerShot: 3, burstShots: 2, burstIntervalBeatFraction: 0.28 };
   }
-  if (hpFrac <= 0.66) {
-    return { ...base, beatsPerShot: 1, burstShots: 3, burstIntervalBeatFraction: 0.06 };
-  }
-  return base;
 }
 
 function angleOffsetForShot(
@@ -169,6 +180,13 @@ export function createEnemy(
     beatOffsetFraction: ((id - 1) % 4) * 0.25,
     lungeMsLeft: 0,
     nextLungeAtMs: kind === "rusher" ? nowMs + 4000 + Math.random() * 4000 : 0,
+    // Boss starts shielded; first NOVA a few beats after it engages.
+    shieldUp: kind === "boss",
+    ventMsLeft: 0,
+    nextNovaBeat: kind === "boss" ? state.beat.currentBeat + 4 : 0,
+    novaTelegraphMsLeft: 0,
+    novaEchoAtMs: 0,
+    novaEchoShots: 0,
   };
 }
 
@@ -216,6 +234,9 @@ export interface EnemyShot {
   x: number;
   y: number;
   angleOffset: number;
+  // Nova ring bullets fire as one event — suppress the per-bullet shoot SFX so a
+  // 22-shot ring is a single boom, not 22 stacked sounds.
+  silent?: boolean;
 }
 
 export interface EnemyTickResult {
@@ -224,6 +245,10 @@ export interface EnemyTickResult {
   bomberDetonations: BomberDetonation[];
   healerPulses: HealerPulse[];
   meleeHits: { x: number; y: number; hit: boolean }[];
+  // Boss NOVA gimmick signals (sfx + screen juice handled in update.ts).
+  novaTelegraphs: { x: number; y: number }[];
+  novaFires: { x: number; y: number; ringCount: number }[];
+  ventOpens: number;
 }
 
 function tryFireMainShot(
@@ -398,6 +423,83 @@ function maybeHealNeighbors(
   });
 }
 
+function emitNovaRing(enemy: Enemy, count: number, result: EnemyTickResult): void {
+  // A full 360° ring. angleOffset is added to the to-player base angle in
+  // createBullet, so offsets spanning 0..2π give a uniform ring regardless of
+  // where the player stands.
+  for (let i = 0; i < count; i++) {
+    result.shotsFired.push({
+      enemyId: enemy.id,
+      x: enemy.x,
+      y: enemy.y,
+      angleOffset: (i / count) * Math.PI * 2,
+      silent: true,
+    });
+  }
+}
+
+// THE CORE attack brain: manage the shield/vent cycle and the NOVA ring. The
+// boss still fires aimed "ammo" bursts through the normal path (so the player
+// has bullets to reflect); this only adds the shield gating + nova spectacle.
+function tickBoss(
+  enemy: Enemy,
+  state: EngineState,
+  nowMs: number,
+  dt: number,
+  result: EnemyTickResult,
+): void {
+  const phase = BOSS_PHASES[bossPhaseIndex(enemy)];
+
+  // Vent window: core exposed, shield down. Reflects damage only here.
+  if (enemy.ventMsLeft > 0) {
+    enemy.ventMsLeft -= dt * 1000;
+    if (enemy.ventMsLeft <= 0) {
+      enemy.ventMsLeft = 0;
+      enemy.shieldUp = true;
+    }
+  }
+
+  // Charging a nova — telegraph glow ramps, then the ring fires and vents.
+  if (enemy.novaTelegraphMsLeft > 0) {
+    enemy.novaTelegraphMsLeft -= dt * 1000;
+    const charge = 1 - Math.max(0, enemy.novaTelegraphMsLeft) / BOSS_NOVA_TELEGRAPH_MS;
+    enemy.pulse = Math.max(enemy.pulse, charge);
+    if (enemy.novaTelegraphMsLeft <= 0) {
+      enemy.novaTelegraphMsLeft = 0;
+      emitNovaRing(enemy, phase.ringCount, result);
+      enemy.pulse = 1.5;
+      enemy.shieldUp = false;
+      enemy.ventMsLeft = phase.ventMs;
+      result.novaFires.push({ x: enemy.x, y: enemy.y, ringCount: phase.ringCount });
+      result.ventOpens += 1;
+      if (phase.echoCount > 0) {
+        enemy.novaEchoShots = phase.echoCount;
+        enemy.novaEchoAtMs = nowMs + BOSS_NOVA_ECHO_DELAY_MS;
+      }
+    }
+  }
+
+  // Delayed echo ring (P2 only).
+  if (enemy.novaEchoShots > 0 && nowMs >= enemy.novaEchoAtMs) {
+    emitNovaRing(enemy, enemy.novaEchoShots, result);
+    result.novaFires.push({ x: enemy.x, y: enemy.y, ringCount: enemy.novaEchoShots });
+    enemy.novaEchoShots = 0;
+  }
+
+  // Schedule the next nova on a downbeat, only while idle (not charging/venting).
+  if (
+    enemy.novaTelegraphMsLeft <= 0 &&
+    enemy.ventMsLeft <= 0 &&
+    enemy.novaEchoShots <= 0 &&
+    state.beat.isBeatTick &&
+    state.beat.currentBeat >= enemy.nextNovaBeat
+  ) {
+    enemy.novaTelegraphMsLeft = BOSS_NOVA_TELEGRAPH_MS;
+    enemy.nextNovaBeat = state.beat.currentBeat + phase.novaBeats;
+    result.novaTelegraphs.push({ x: enemy.x, y: enemy.y });
+  }
+}
+
 export function updateEnemies(
   state: EngineState,
   dt: number,
@@ -411,6 +513,9 @@ export function updateEnemies(
     bomberDetonations: [],
     healerPulses: [],
     meleeHits: [],
+    novaTelegraphs: [],
+    novaFires: [],
+    ventOpens: 0,
   };
   const baseR = orbitRadius(canvasW, canvasH);
   const burstBonus = MODIFIERS[state.modifierId].burstShotsBonus;
@@ -514,6 +619,10 @@ export function updateEnemies(
 
     if (e.state !== "alive") continue;
 
+    // Boss runs its shield/vent/nova brain, then falls through to fire aimed
+    // ammo bursts via the normal path below.
+    if (e.kind === "boss") tickBoss(e, state, nowMs, dt, result);
+
     maybeTeleportPhantom(e, state, canvasW, canvasH, result);
     if (e.kind === "healer") maybeHealNeighbors(e, state, result, nowMs);
 
@@ -557,6 +666,12 @@ export function createShard(
     beatOffsetFraction: ((id - 1) % 4) * 0.25,
     lungeMsLeft: 0,
     nextLungeAtMs: 0,
+    shieldUp: false,
+    ventMsLeft: 0,
+    nextNovaBeat: 0,
+    novaTelegraphMsLeft: 0,
+    novaEchoAtMs: 0,
+    novaEchoShots: 0,
   };
 }
 

@@ -168,6 +168,7 @@ export interface BulletTickEffects {
   nearMisses: number;
   healCaught: number;
   shieldCaught: number;
+  bossShieldBlocks: number;
 }
 
 // Incoming bullets that miss fly straight forever — without these they pile up
@@ -199,6 +200,7 @@ export function updateBullets(
     nearMisses: 0,
     healCaught: 0,
     shieldCaught: 0,
+    bossShieldBlocks: 0,
   };
   const offscreenLimit = Math.max(canvasW, canvasH);
   const beatPhase = state.beat.beatPhase;
@@ -224,13 +226,18 @@ export function updateBullets(
     if (b.state === "dead") continue;
     const radius = radiusOf(b.kind);
 
+    const isCatch = b.kind === "heal" || b.kind === "shield";
+
     if (b.state === "incoming") {
       applyIncomingMotion(b, dt, beatPhase, nowMs);
-      // Retire bullets that flew off-screen or lingered too long.
+      // Retire bullets that flew off-screen or lingered too long. Catch items
+      // (heal/shield) fly edge-to-edge and only die off-screen on the far side —
+      // never the max-life cull — so a missed pickup passes through, not vanishes
+      // mid-field at the player.
       if (
         Math.abs(b.x) > offscreenLimit ||
         Math.abs(b.y) > offscreenLimit ||
-        nowMs - b.spawnedAt > BULLET_MAX_LIFE_MS
+        (!isCatch && nowMs - b.spawnedAt > BULLET_MAX_LIFE_MS)
       ) {
         b.state = "dead";
         continue;
@@ -248,14 +255,14 @@ export function updateBullets(
           char.parryRange,
           char.coneAngleRad,
         );
-      if (b.kind === "heal" || b.kind === "shield") {
+      if (isCatch) {
+        // Catch only on parry; a miss flies straight through to the far edge
+        // (no center despawn) so it reads as a passing pickup, not a vanish.
         if (inCone) {
           b.state = "dead";
           if (b.kind === "heal") effects.healCaught += 1;
           else effects.shieldCaught += 1;
           emitBurst(state, b.x, b.y, BURSTS.healCatch());
-        } else if (distToPlayer <= HIT_RADIUS + radius) {
-          b.state = "dead";
         }
       } else if (inCone) {
         b.state = "absorbed";
@@ -327,6 +334,18 @@ export function updateBullets(
           b.ownerEnemyId = e.id;
           e.pulse = 1;
           e.hitFlashMsLeft = 60;
+          emitBurst(state, b.x, b.y, BURSTS.parryCatch());
+          break;
+        }
+
+        // THE CORE shield: while up, reflects spark off harmlessly. The core is
+        // only vulnerable during the vent window opened by its own nova — so the
+        // boss can't be button-mashed down; you must time the vent.
+        if (e.kind === "boss" && e.shieldUp) {
+          b.state = "dead";
+          e.pulse = Math.max(e.pulse, 0.7);
+          e.hitFlashMsLeft = 50;
+          effects.bossShieldBlocks += 1;
           emitBurst(state, b.x, b.y, BURSTS.parryCatch());
           break;
         }

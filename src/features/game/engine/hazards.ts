@@ -9,9 +9,7 @@ import {
   HAZARD_MISSILE_FADE_MS,
   HAZARD_MISSILE_TELEGRAPH_MS,
   HAZARD_SHOCKWAVE_ACTIVE_MS,
-  HAZARD_SHOCKWAVE_BAND,
   HAZARD_SHOCKWAVE_FADE_MS,
-  HAZARD_SHOCKWAVE_MAX_RADIUS,
   HAZARD_SHOCKWAVE_TELEGRAPH_MS,
   HAZARD_SPAWN_MAX_INTERVAL_MS,
   HAZARD_SPAWN_MIN_INTERVAL_MS,
@@ -24,9 +22,9 @@ const SHOCKWAVE_DAMAGE_GRACE_MS = 150;
 
 function pickKind(state: EngineState): HazardKind {
   const stage = state.stageIndex;
+  // shockwave (center-origin double ring) retired — only laser + missile.
   const choices: HazardKind[] = ["laserSweep"];
   if (stage >= 1) choices.push("missile");
-  if (stage >= 2) choices.push("shockwave");
   return choices[Math.floor(Math.random() * choices.length)];
 }
 
@@ -66,22 +64,6 @@ function spawnMissile(nowMs: number, state: EngineState): Hazard {
   };
 }
 
-function spawnShockwave(nowMs: number): Hazard {
-  return {
-    id: nextHazardId++,
-    kind: "shockwave",
-    state: "telegraph",
-    startedAtMs: nowMs,
-    angle: 0,
-    width: HAZARD_SHOCKWAVE_BAND,
-    centerX: 0,
-    centerY: 0,
-    blastRadius: HAZARD_SHOCKWAVE_MAX_RADIUS,
-    currentRadius: 0,
-    consumed: false,
-  };
-}
-
 export function maybeSpawnHazard(state: EngineState, nowMs: number): void {
   if (nowMs < state.nextHazardAtMs) return;
   const kind = pickKind(state);
@@ -90,12 +72,6 @@ export function maybeSpawnHazard(state: EngineState, nowMs: number): void {
     const count = 2 + Math.floor(Math.random() * 2); // 2 or 3
     for (let i = 0; i < count; i++) {
       state.hazards.push(spawnMissile(nowMs + i * 280, state));
-    }
-  } else if (kind === "shockwave") {
-    state.hazards.push(spawnShockwave(nowMs));
-    // Echo wave 600ms later
-    if (Math.random() < 0.5) {
-      state.hazards.push(spawnShockwave(nowMs + 600));
     }
   } else {
     state.hazards.push(spawnLaser(nowMs));

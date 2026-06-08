@@ -346,6 +346,7 @@ function processEnemyShots(
     if (!enemy) continue;
     const bullet = createBullet(state, enemy, nowMs, s.angleOffset);
     state.bullets.push(bullet);
+    if (s.silent) continue; // nova ring — one boom played in the main loop
     const race = KIND_RACE[enemy.kind];
     if (race === "core") {
       sfx.playBossShoot();
@@ -666,6 +667,24 @@ export function update(ctx: UpdateContext): void {
 
   const enemyResult = updateEnemies(state, dt, nowMs, canvasW, canvasH);
   processEnemyShots(state, enemyResult.shotsFired, nowMs);
+  for (let i = 0; i < enemyResult.novaTelegraphs.length; i++) {
+    sfx.playShockwaveTelegraph();
+    applyShake(state, 6);
+  }
+  for (const nova of enemyResult.novaFires) {
+    spawnShockwave(state, nova.x, nova.y, nowMs, PALETTE.red);
+    spawnScreenFlash(state, PALETTE.red, 0.32);
+    applyShake(state, SHAKE_ON_REFLECT * 2);
+    applyHitStop(state, 40);
+    sfx.playShockwave();
+  }
+  if (enemyResult.ventOpens > 0) {
+    // Core exposed — the only window to deal damage. Cyan cue + chime so the
+    // player learns to strike now.
+    spawnScreenFlash(state, PALETTE.cyan, 0.26);
+    spawnScorePop(state, state.playerX, state.playerY - 52, "CORE EXPOSED", PALETTE.cyan, 1.1);
+    sfx.playPerfectChime();
+  }
   for (const tp of enemyResult.teleported) {
     emitBurst(state, tp.oldX, tp.oldY, BURSTS.parryCatch());
   }
@@ -677,6 +696,11 @@ export function update(ctx: UpdateContext): void {
 
   const bulletEffects = updateBullets(state, dt, canvasW, canvasH, nowMs);
   for (let i = 0; i < bulletEffects.parriedCount; i++) sfx.playParryHit();
+  if (bulletEffects.bossShieldBlocks > 0) {
+    // Reflect sparked off the core's shield — ping + tiny shake, no score.
+    sfx.playParryHit();
+    applyShake(state, 3);
+  }
   if (bulletEffects.damageDealt > 0) {
     applyShake(state, SHAKE_ON_PLAYER_HIT);
     applyHitStop(state, HIT_STOP_MS_PLAYER_HIT);
@@ -785,7 +809,7 @@ export function update(ctx: UpdateContext): void {
       state,
       state.playerX,
       state.playerY - 36,
-      "SHIELD 5s",
+      "SHIELD 10s",
       PALETTE.cyan,
       1.3,
     );

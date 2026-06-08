@@ -70,6 +70,14 @@ export interface Enemy {
   // Melee "rusher" lunge state: counts down while charging the player; 0 = orbiting.
   lungeMsLeft: number;
   nextLungeAtMs: number;
+  // Boss "shield/vent" gimmick (THE CORE). Shield blocks all reflect damage;
+  // the core only vents (becomes vulnerable) for a window right after each NOVA.
+  shieldUp: boolean;
+  ventMsLeft: number;
+  nextNovaBeat: number;
+  novaTelegraphMsLeft: number;
+  novaEchoAtMs: number;
+  novaEchoShots: number;
 }
 
 export interface ScorePop {

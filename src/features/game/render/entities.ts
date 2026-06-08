@@ -3,6 +3,7 @@ import { KIND_RACE, RACE_LABEL } from "../types";
 import { PALETTE } from "../config/palette";
 import { BULLET_KINDS, ENEMY_KINDS } from "../config/enemy-kinds";
 import {
+  BOSS_NOVA_TELEGRAPH_MS,
   ENEMY_DEATH_MS,
   ENEMY_RADIUS,
   ENEMY_SPAWN_DELAY_MS,
@@ -355,6 +356,56 @@ function drawCore(
   drawPolygon(c, 6, baseR * 0.65);
   c.stroke();
   c.restore();
+
+  // --- Shield / vent gimmick layer ---
+  const novaCharge =
+    e.novaTelegraphMsLeft > 0
+      ? 1 - Math.max(0, e.novaTelegraphMsLeft) / BOSS_NOVA_TELEGRAPH_MS
+      : 0;
+  if (novaCharge > 0) {
+    // Charging NOVA — a bright ring contracts inward as the blast builds.
+    c.save();
+    const warnR = baseR * (3.4 - novaCharge * 1.6);
+    c.globalAlpha = 0.4 + novaCharge * 0.5;
+    c.strokeStyle = "#ffffff";
+    c.shadowColor = PALETTE.red;
+    c.shadowBlur = 30;
+    c.lineWidth = 2 + novaCharge * 5;
+    c.beginPath();
+    c.arc(0, 0, Math.max(baseR, warnR), 0, Math.PI * 2);
+    c.stroke();
+    c.restore();
+  }
+  if (e.shieldUp) {
+    // Hex energy shield — boss is invulnerable while it holds.
+    c.save();
+    c.rotate(nowMs * 0.0002);
+    const shieldR = baseR * 2.4 * beat;
+    c.globalAlpha = 0.5 + Math.sin(nowMs / 300) * 0.12;
+    c.strokeStyle = PALETTE.cyan;
+    c.shadowColor = PALETTE.cyan;
+    c.shadowBlur = 18;
+    c.lineWidth = 3;
+    drawPolygon(c, 6, shieldR);
+    c.stroke();
+    c.globalAlpha *= 0.4;
+    c.lineWidth = 1.5;
+    drawPolygon(c, 6, shieldR * 0.86);
+    c.stroke();
+    c.restore();
+  } else if (e.ventMsLeft > 0) {
+    // Core exposed — vulnerable. Hot pulsing halo signals the strike window.
+    c.save();
+    const vp = 0.6 + Math.sin(nowMs / 90) * 0.4;
+    c.globalAlpha = 0.55 * vp;
+    c.fillStyle = PALETTE.cyan;
+    c.shadowColor = PALETTE.cyan;
+    c.shadowBlur = 40;
+    c.beginPath();
+    c.arc(0, 0, baseR * (1.2 + vp * 0.25), 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+  }
 
   c.shadowBlur = 32 + phase * 14;
   c.fillStyle = "#ffffff";

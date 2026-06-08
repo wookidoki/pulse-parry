@@ -1,6 +1,7 @@
 import type { EngineState } from "../types";
 import { STAGES, currentStage } from "../config/stages";
 import { CHARACTERS } from "../config/characters";
+import { PALETTE } from "../config/palette";
 import { ON_BEAT_WINDOW } from "../config/tuning";
 import { bpmAt } from "../engine/tempo";
 
@@ -75,10 +76,15 @@ export function drawBossHpBar(
   w: number,
   nowMs: number,
 ): void {
-  let boss: { hp: number; maxHp: number } | null = null;
+  let boss: { hp: number; maxHp: number; shieldUp: boolean; venting: boolean } | null = null;
   for (const e of state.enemies) {
     if (e.kind === "boss" && e.state !== "dead") {
-      boss = { hp: Math.max(0, e.hp), maxHp: e.maxHp };
+      boss = {
+        hp: Math.max(0, e.hp),
+        maxHp: e.maxHp,
+        shieldUp: e.shieldUp,
+        venting: !e.shieldUp && e.ventMsLeft > 0,
+      };
       break;
     }
   }
@@ -113,6 +119,19 @@ export function drawBossHpBar(
   c.textAlign = "center";
   c.textBaseline = "bottom";
   c.fillText(`THE CORE  —  ${boss.hp} / ${boss.maxHp}`, w / 2, barY - 6);
+
+  // Shield/vent status so the player reads when the core can actually be hit.
+  const status = boss.venting ? "◆ CORE EXPOSED — STRIKE" : boss.shieldUp ? "◇ SHIELDED" : "";
+  if (status) {
+    c.font = "bold 11px ui-monospace, monospace";
+    c.fillStyle = boss.venting ? PALETTE.cyan : "rgba(240, 246, 255, 0.55)";
+    if (boss.venting) {
+      c.shadowColor = PALETTE.cyan;
+      c.shadowBlur = 10 * pulse;
+    }
+    c.textBaseline = "top";
+    c.fillText(status, w / 2, barY + barH + 6);
+  }
   c.restore();
 }
 
